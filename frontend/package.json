@@ -1,0 +1,36 @@
+{
+  "name": "email-warmup-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.6",
+    "@mui/material": "^5.15.6",
+    "@mui/material-nextjs": "^7.0.0",
+    "@mui/x-data-grid": "^6.19.2",
+    "@types/axios": "^0.9.36",
+    "axios": "^1.8.4",
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-query": "^3.39.3",
+    "recharts": "^2.10.3",
+    "swr": "^2.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "@types/parse-json": "^4.0.2",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "eslint": "^8.55.0",
+    "eslint-config-next": "14.0.4",
+    "typescript": "^5.3.3"
+  }
+}
