@@ -16,16 +16,25 @@
 | Core Features | Account management, action automation, proxy rotation, human-like behavior |
 | Tech Stack | Electron, React, TypeScript, Python, PostgreSQL |
 | Target Users | Email marketers, sales teams |
+| Input Format | CSV/TXT files containing email credentials and proxy lists |
+| Proxy Management | Round-robin rotation with health checks and failover |
 
 ## Architecture
 
 ### High-Level Architecture
 ```mermaid
 graph TD
+    I[Input Files] --> P[Parser Service]
+    P --> B[Control Center]
+    P --> PM[Proxy Pool]
     A[Desktop App] --> B[Control Center]
     B --> C[Task Queue]
     B --> D[Proxy Manager]
     B --> E[Account Manager]
+    PM --> D
+    D --> PR[Proxy Rotation Engine]
+    PR --> HC[Health Checker]
+    HC --> PM
     C --> F[Browser Extension]
     D --> F
     E --> F
@@ -39,11 +48,65 @@ graph TD
 | Component | Technology | Responsibility |
 |-----------|------------|----------------|
 | Desktop App | Electron + React | User interface, task management |
+| Parser Service | Python | Process input files, validate data |
 | Control Center | Python | Task orchestration, proxy rotation |
+| Proxy Pool | Redis | Store and manage proxy list |
+| Proxy Rotation Engine | Python | Implement rotation strategies |
+| Health Checker | Python | Monitor proxy health and performance |
 | Browser Extension | Chrome Extension | Email interaction automation |
-| Proxy Manager | Python | Proxy rotation, IP management |
 | Account Manager | Python | Account credentials, session management |
 | Database | PostgreSQL | Data persistence, analytics |
+
+## Input Processing & Proxy Rotation
+
+### Input File Formats
+```
+# emails.txt/csv
+email,password
+user1@example.com,pass123
+user2@example.com,pass456
+
+# proxies.txt/csv
+ip,port,username,password,type
+192.168.1.1,8080,user1,pass1,http
+192.168.1.2,8080,user2,pass2,socks5
+```
+
+### Proxy Rotation Strategy
+
+| Component | Description |
+|-----------|-------------|
+| Pool Management | Maintains active and backup proxy pools |
+| Health Check | Regular testing of proxy performance and availability |
+| Rotation Algorithm | Round-robin with weighted distribution based on proxy performance |
+| Failover | Automatic switching to backup proxies on failure |
+| Session Binding | Consistent proxy assignment for ongoing tasks |
+
+### Proxy Health Metrics
+| Metric | Threshold | Action |
+|--------|-----------|---------|
+| Response Time | < 500ms | Keep in active pool |
+| Success Rate | > 95% | Maintain priority status |
+| Failure Count | < 3 in 1h | Remove from active pool |
+| Availability | > 99% | Keep in primary rotation |
+
+### Rotation Process Flow
+```mermaid
+sequenceDiagram
+    participant Task
+    participant RotationEngine
+    participant HealthChecker
+    participant ProxyPool
+
+    Task->>RotationEngine: Request Proxy
+    RotationEngine->>ProxyPool: Get Next Proxy
+    ProxyPool->>HealthChecker: Verify Health
+    HealthChecker-->>ProxyPool: Health Status
+    ProxyPool-->>RotationEngine: Return Healthy Proxy
+    RotationEngine-->>Task: Assign Proxy
+    
+    Note over HealthChecker,ProxyPool: Continuous Health Monitoring
+```
 
 ## Database Design
 
