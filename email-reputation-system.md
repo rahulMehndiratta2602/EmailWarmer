@@ -95,6 +95,16 @@ sequenceDiagram
 | Star Email | Add star to email | Variable click position |
 | Open Email | Open and read email | Scroll behavior, reading time |
 | Reply Email | Send simple reply | Typing speed variation |
+| Archive Email | Move email to archive | Natural selection movement |
+| Label Management | Create/Apply labels | Multiple click patterns |
+| Search Interaction | Search for specific emails | Typing pauses, backspaces |
+| Folder Organization | Move between folders | Drag-drop variation |
+| Contact Addition | Add sender to contacts | Form fill timing variation |
+| Draft Creation | Create and save drafts | Writing pace changes |
+| Filter Creation | Set up email filters | Multi-step interaction |
+| Settings Adjustment | Modify email settings | Navigation patterns |
+| Attachment Handling | Download/View attachments | Loading wait times |
+| Link Clicking | Click safe email links | Hover behavior, click timing |
 
 ## Challenges & Mitigations
 
@@ -199,12 +209,3 @@ class ProxyManager:
 | Proxy Cost | Custom Dashboard | < $0.01/action |
 | Action Speed | Grafana | 2-5s/action |
 | Error Rate | ELK Stack | < 1% |
-
-## Future Enhancements
-
-| Feature | Priority | Description |
-|---------|----------|-------------|
-| AI Behavior | High | ML-based human behavior simulation |
-| Multi-provider | High | Support for more email providers |
-| Advanced Analytics | Medium | Predictive analytics |
-| Mobile App | Low | Remote monitoring | 
