@@ -1,75 +1,110 @@
-from typing import Optional, Dict, Any
-import aiohttp
+from typing import List, Dict, Optional
+import time
 import random
-from app.core.config import settings
+from datetime import datetime, timedelta
+import redis
+from fastapi import HTTPException
+
+class Proxy:
+    def __init__(self, ip: str, port: int, username: str, password: str, proxy_type: str):
+        self.ip = ip
+        self.port = port
+        self.username = username
+        self.password = password
+        self.type = proxy_type
+        self.last_used = None
+        self.failure_count = 0
+        self.response_time = 0
+        self.health_status = True
 
 class ProxyManager:
-    def __init__(self):
-        self.proxy_service = settings.PROXY_SERVICE
-        self.api_key = settings.PROXY_API_KEY
-        self.session = None
-        self.proxy_pool = []
-        self.current_proxy = None
+    def __init__(self, redis_url: str = "redis://localhost:6379"):
+        self.redis = redis.Redis.from_url(redis_url)
+        self.active_pool: List[Proxy] = []
+        self.backup_pool: List[Proxy] = []
+        self.health_check_interval = 300  # 5 minutes
+        self.max_failures = 3
+        self.response_time_threshold = 500  # ms
 
-    async def _init_session(self):
-        """Initialize aiohttp session if not already initialized"""
-        if not self.session:
-            self.session = aiohttp.ClientSession()
+    async def load_proxies_from_file(self, file_path: str) -> None:
+        """Load proxies from a CSV/TXT file"""
+        try:
+            with open(file_path, 'r') as f:
+                lines = f.readlines()
+                for line in lines[1:]:  # Skip header
+                    ip, port, username, password, proxy_type = line.strip().split(',')
+                    proxy = Proxy(ip, int(port), username, password, proxy_type)
+                    self.active_pool.append(proxy)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error loading proxies: {str(e)}")
 
-    async def _fetch_proxies(self):
-        """Fetch proxies from the selected proxy service"""
-        await self._init_session()
+    async def get_next_proxy(self) -> Proxy:
+        """Get the next available proxy using weighted round-robin"""
+        if not self.active_pool:
+            if not self.backup_pool:
+                raise HTTPException(status_code=503, detail="No available proxies")
+            # Move a proxy from backup to active
+            proxy = self.backup_pool.pop(0)
+            self.active_pool.append(proxy)
+
+        # Weighted selection based on response time and failure count
+        weights = [
+            1 / (proxy.response_time + 1) * (1 / (proxy.failure_count + 1))
+            for proxy in self.active_pool
+        ]
+        total_weight = sum(weights)
+        weights = [w / total_weight for w in weights]
         
-        if self.proxy_service == "brightdata":
-            url = "https://api.brightdata.com/proxy"
-            headers = {"Authorization": f"Bearer {self.api_key}"}
-        elif self.proxy_service == "smartproxy":
-            url = "https://api.smartproxy.com/proxies"
-            headers = {"Authorization": f"Basic {self.api_key}"}
+        proxy = random.choices(self.active_pool, weights=weights, k=1)[0]
+        proxy.last_used = datetime.now()
+        return proxy
+
+    async def check_proxy_health(self, proxy: Proxy) -> bool:
+        """Check if a proxy is healthy"""
+        try:
+            start_time = time.time()
+            # Implement actual health check logic here
+            # For now, just simulate a check
+            response_time = (time.time() - start_time) * 1000
+            
+            if response_time > self.response_time_threshold:
+                proxy.health_status = False
+                return False
+            
+            proxy.response_time = response_time
+            proxy.health_status = True
+            return True
+        except Exception:
+            proxy.health_status = False
+            return False
+
+    async def update_proxy_status(self, proxy: Proxy, success: bool) -> None:
+        """Update proxy status based on task result"""
+        if success:
+            proxy.failure_count = max(0, proxy.failure_count - 1)
         else:
-            raise ValueError(f"Unsupported proxy service: {self.proxy_service}")
+            proxy.failure_count += 1
+            if proxy.failure_count >= self.max_failures:
+                self.active_pool.remove(proxy)
+                self.backup_pool.append(proxy)
 
-        async with self.session.get(url, headers=headers) as response:
-            if response.status == 200:
-                data = await response.json()
-                self.proxy_pool = data.get("proxies", [])
-            else:
-                raise Exception(f"Failed to fetch proxies: {response.status}")
+    async def rotate_proxies(self) -> None:
+        """Periodically rotate and check proxy health"""
+        for proxy in self.active_pool + self.backup_pool:
+            is_healthy = await self.check_proxy_health(proxy)
+            if not is_healthy and proxy in self.active_pool:
+                self.active_pool.remove(proxy)
+                self.backup_pool.append(proxy)
+            elif is_healthy and proxy in self.backup_pool:
+                self.backup_pool.remove(proxy)
+                self.active_pool.append(proxy)
 
-    async def get_proxy(self) -> Dict[str, Any]:
-        """Get a random proxy from the pool"""
-        if not self.proxy_pool:
-            await self._fetch_proxies()
-
-        if not self.proxy_pool:
-            raise Exception("No proxies available")
-
-        # Select a random proxy
-        self.current_proxy = random.choice(self.proxy_pool)
-        
-        # Format proxy based on service
-        if self.proxy_service == "brightdata":
-            proxy_url = f"http://{self.current_proxy['username']}:{self.current_proxy['password']}@{self.current_proxy['host']}:{self.current_proxy['port']}"
-        elif self.proxy_service == "smartproxy":
-            proxy_url = f"http://{self.current_proxy['ip']}:{self.current_proxy['port']}"
-        else:
-            raise ValueError(f"Unsupported proxy service: {self.proxy_service}")
-
+    def get_proxy_stats(self) -> Dict:
+        """Get proxy pool statistics"""
         return {
-            "server": proxy_url,
-            "username": self.current_proxy.get("username"),
-            "password": self.current_proxy.get("password")
-        }
-
-    async def mark_proxy_failed(self, proxy: Dict[str, Any]):
-        """Mark a proxy as failed and remove it from the pool"""
-        if proxy in self.proxy_pool:
-            self.proxy_pool.remove(proxy)
-            if self.current_proxy == proxy:
-                self.current_proxy = None
-
-    async def close(self):
-        """Close the aiohttp session"""
-        if self.session:
-            await self.session.close()
-            self.session = None 
+            "active_proxies": len(self.active_pool),
+            "backup_proxies": len(self.backup_pool),
+            "total_proxies": len(self.active_pool) + len(self.backup_pool),
+            "average_response_time": sum(p.response_time for p in self.active_pool) / len(self.active_pool) if self.active_pool else 0,
+            "unhealthy_proxies": sum(1 for p in self.active_pool + self.backup_pool if not p.health_status)
+        } 

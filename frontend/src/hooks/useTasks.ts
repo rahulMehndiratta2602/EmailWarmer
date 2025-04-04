@@ -1,89 +1,108 @@
 import { useState } from 'react'
-import useSWR from 'swr'
-import * as api from '@/api/client'
-import { Task, ApiResponse } from '@/types/api'
+import { Task } from '@/types/api'
+import api from '@/api/client'
 
-export function useTasks() {
+export const useTasks = () => {
+  const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { data, error: swrError, mutate } = useSWR<ApiResponse<Task[]>>('/api/v1/tasks', api.getTasks)
-
-  const handleError = (err: unknown): string => {
-    if (err instanceof Error) {
-      return err.message
-    }
-    if (typeof err === 'string') {
-      return err
-    }
-    if (err && typeof err === 'object' && 'message' in err) {
-      return String(err.message)
-    }
-    return 'An unexpected error occurred'
-  }
-
-  const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    setIsLoading(true)
+  const fetchTasks = async () => {
     try {
-      const response = await api.createTask(task)
-      await mutate()
-      return response.data
+      setIsLoading(true)
+      const response = await api.get<Task[]>('/tasks')
+      setTasks(response.data)
+      setError(null)
     } catch (err) {
-      const errorMessage = handleError(err)
-      setError(errorMessage)
-      throw new Error(errorMessage)
+      setError(err instanceof Error ? err.message : 'Failed to fetch tasks')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const updateTask = async (id: number, task: Partial<Task>) => {
-    setIsLoading(true)
+  const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const response = await api.updateTask(id, task)
-      await mutate()
+      setIsLoading(true)
+      const response = await api.post<Task>('/tasks', task)
+      setTasks(prev => [...prev, response.data])
+      setError(null)
       return response.data
     } catch (err) {
-      const errorMessage = handleError(err)
-      setError(errorMessage)
-      throw new Error(errorMessage)
+      setError(err instanceof Error ? err.message : 'Failed to add task')
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const editTask = async (id: number, task: Partial<Task>) => {
+    try {
+      setIsLoading(true)
+      const response = await api.patch<Task>(`/tasks/${id}`, task)
+      setTasks(prev => prev.map(t => t.id === id ? response.data : t))
+      setError(null)
+      return response.data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to edit task')
+      throw err
     } finally {
       setIsLoading(false)
     }
   }
 
   const removeTask = async (id: number) => {
-    setIsLoading(true)
     try {
-      await api.deleteTask(id)
-      await mutate()
+      setIsLoading(true)
+      await api.delete(`/tasks/${id}`)
+      setTasks(prev => prev.filter(t => t.id !== id))
+      setError(null)
     } catch (err) {
-      const errorMessage = handleError(err)
-      setError(errorMessage)
-      throw new Error(errorMessage)
+      setError(err instanceof Error ? err.message : 'Failed to remove task')
+      throw err
     } finally {
       setIsLoading(false)
     }
   }
 
   const startTask = async (id: number) => {
-    return updateTask(id, { status: 'running' })
+    try {
+      setIsLoading(true)
+      const response = await api.post<Task>(`/tasks/${id}/start`)
+      setTasks(prev => prev.map(t => t.id === id ? response.data : t))
+      setError(null)
+      return response.data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start task')
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const stopTask = async (id: number) => {
-    return updateTask(id, { status: 'failed' })
+    try {
+      setIsLoading(true)
+      const response = await api.post<Task>(`/tasks/${id}/stop`)
+      setTasks(prev => prev.map(t => t.id === id ? response.data : t))
+      setError(null)
+      return response.data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to stop task')
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return {
-    tasks: data?.data || [],
-    isLoading: isLoading || !data,
-    error: error || (swrError ? handleError(swrError) : null),
+    tasks,
+    isLoading,
+    error,
+    fetchTasks,
     addTask,
-    updateTask,
+    editTask,
     removeTask,
     startTask,
     stopTask,
   }
-}
-
-export default useTasks 
+} 

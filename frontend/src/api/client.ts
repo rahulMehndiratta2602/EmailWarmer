@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { EmailAccount, Task, TaskStats, AccountStats, Activity, Settings, ApiResponse } from '@/types/api'
+import { EmailAccount, Task, TaskStats, AccountStats, Activity, Settings, ApiResponse, ProxyStats } from '@/types/api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -9,6 +9,38 @@ const client = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+// Add response interceptor to handle errors
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const errorMessage = error.response?.data?.message || error.message || 'An error occurred'
+    return Promise.reject(new Error(errorMessage))
+  }
+)
+
+// File Upload
+export const uploadEmailFile = async (file: File): Promise<ApiResponse<EmailAccount[]>> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await client.post<ApiResponse<EmailAccount[]>>('/api/v1/files/emails', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+  return response.data
+}
+
+export const uploadProxyFile = async (file: File): Promise<ApiResponse<void>> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await client.post<ApiResponse<void>>('/api/v1/files/proxies', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+  return response.data
+}
 
 // Accounts
 export const getAccounts = async (): Promise<ApiResponse<EmailAccount[]>> => {
@@ -49,6 +81,17 @@ export const updateTask = async (id: number, task: Partial<Task>): Promise<ApiRe
 
 export const deleteTask = async (id: number): Promise<ApiResponse<void>> => {
   const response = await client.delete<ApiResponse<void>>(`/api/v1/tasks/${id}`)
+  return response.data
+}
+
+// Proxy Management
+export const getProxyStats = async (): Promise<ApiResponse<ProxyStats>> => {
+  const response = await client.get<ApiResponse<ProxyStats>>('/api/v1/proxies/stats')
+  return response.data
+}
+
+export const rotateProxies = async (): Promise<ApiResponse<void>> => {
+  const response = await client.post<ApiResponse<void>>('/api/v1/proxies/rotate')
   return response.data
 }
 

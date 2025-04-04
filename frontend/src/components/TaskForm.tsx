@@ -10,21 +10,16 @@ import {
   TextField,
   MenuItem,
   Box,
+  Grid,
+  Typography,
+  Slider,
   FormControl,
   InputLabel,
   Select,
 } from '@mui/material'
-import { Task } from '@/types/api'
-import useTasks from '@/hooks/useTasks'
-import useAccounts from '@/hooks/useAccounts'
+import { Task, TaskType, TaskStatus } from '@/types/api'
+import { useTasks } from '@/hooks/useTasks'
 import LoadingErrorState from './LoadingErrorState'
-import {
-  validateAccountId,
-  validateTaskType,
-  validateTaskStatus,
-  validateProgress,
-  ValidationError,
-} from '@/utils/validation'
 
 interface TaskFormProps {
   open: boolean
@@ -33,57 +28,60 @@ interface TaskFormProps {
 }
 
 const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
-  const { addTask, editTask, isLoading: isTasksLoading, error: tasksError } = useTasks()
-  const { accounts, isLoading: isAccountsLoading, error: accountsError } = useAccounts()
+  const { addTask, editTask, isLoading, isError: error } = useTasks()
   const [formData, setFormData] = useState<Partial<Task>>({
     accountId: task?.accountId || 0,
-    type: task?.type || 'move_from_spam',
-    status: task?.status || 'pending',
-    progress: task?.progress || 0,
+    actionType: task?.actionType || TaskType.MARK_IMPORTANT,
+    status: task?.status || TaskStatus.PENDING,
+    schedule: task?.schedule || {
+      startTime: new Date().toISOString(),
+      frequency: 'daily',
+      interval: 24,
+    },
+    humanBehavior: task?.humanBehavior || {
+      minDelay: 1000,
+      maxDelay: 3000,
+      mouseMovementVariation: 0.2,
+      typingSpeedVariation: 0.3,
+      scrollBehavior: {
+        speedVariation: 0.2,
+        pauseProbability: 0.3,
+        pauseDuration: [500, 2000],
+      },
+    },
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (open) {
       setFormData({
         accountId: task?.accountId || 0,
-        type: task?.type || 'move_from_spam',
-        status: task?.status || 'pending',
-        progress: task?.progress || 0,
+        actionType: task?.actionType || TaskType.MARK_IMPORTANT,
+        status: task?.status || TaskStatus.PENDING,
+        schedule: task?.schedule || {
+          startTime: new Date().toISOString(),
+          frequency: 'daily',
+          interval: 24,
+        },
+        humanBehavior: task?.humanBehavior || {
+          minDelay: 1000,
+          maxDelay: 3000,
+          mouseMovementVariation: 0.2,
+          typingSpeedVariation: 0.3,
+          scrollBehavior: {
+            speedVariation: 0.2,
+            pauseProbability: 0.3,
+            pauseDuration: [500, 2000],
+          },
+        },
       })
       setFormErrors({})
     }
   }, [open, task])
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {}
-    
-    const accountIdError = validateAccountId(formData.accountId || 0)
-    if (accountIdError) errors[accountIdError.field] = accountIdError.message
-
-    const typeError = validateTaskType(formData.type || '')
-    if (typeError) errors[typeError.field] = typeError.message
-
-    const statusError = validateTaskStatus(formData.status || '')
-    if (statusError) errors[statusError.field] = statusError.message
-
-    const progressError = validateProgress(formData.progress || 0)
-    if (progressError) errors[progressError.field] = progressError.message
-
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormErrors({})
-
-    if (!validateForm()) {
-      return
-    }
-
-    setIsSubmitting(true)
 
     try {
       if (task) {
@@ -95,8 +93,6 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred while saving the task'
       setFormErrors({ submit: errorMessage })
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -104,7 +100,6 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     
-    // Clear error for the field being changed
     if (formErrors[name]) {
       setFormErrors(prev => {
         const newErrors = { ...prev }
@@ -114,91 +109,158 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
     }
   }
 
-  const isLoading = isTasksLoading || isAccountsLoading
-  const error = tasksError || accountsError
+  const handleHumanBehaviorChange = (field: string, value: number) => {
+    setFormData(prev => ({
+      ...prev,
+      humanBehavior: {
+        ...prev.humanBehavior,
+        [field]: value,
+      },
+    }))
+  }
+
+  const handleScheduleChange = (field: string, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      schedule: {
+        ...prev.schedule,
+        [field]: value,
+      },
+    }))
+  }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {task ? 'Edit Task' : 'Create New Task'}
         </DialogTitle>
         <DialogContent>
           <LoadingErrorState isLoading={isLoading} error={error}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-              <FormControl fullWidth error={!!formErrors.accountId}>
-                <InputLabel>Account</InputLabel>
-                <Select
-                  required
-                  name="accountId"
-                  value={formData.accountId}
-                  onChange={handleChange}
-                  label="Account"
-                >
-                  {accounts.map(account => (
-                    <MenuItem key={account.id} value={account.id}>
-                      {account.email}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formErrors.accountId && (
-                  <Box sx={{ color: 'error.main', mt: 1 }}>
-                    {formErrors.accountId}
-                  </Box>
-                )}
-              </FormControl>
-              <FormControl fullWidth error={!!formErrors.type}>
-                <InputLabel>Task Type</InputLabel>
-                <Select
-                  required
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  label="Task Type"
-                >
-                  <MenuItem value="move_from_spam">Move from Spam</MenuItem>
-                  <MenuItem value="mark_important">Mark as Important</MenuItem>
-                  <MenuItem value="star">Star Email</MenuItem>
-                  <MenuItem value="click_link">Click Link</MenuItem>
-                  <MenuItem value="reply">Reply to Email</MenuItem>
-                </Select>
-                {formErrors.type && (
-                  <Box sx={{ color: 'error.main', mt: 1 }}>
-                    {formErrors.type}
-                  </Box>
-                )}
-              </FormControl>
-              <FormControl fullWidth error={!!formErrors.status}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  required
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  label="Status"
-                >
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="running">Running</MenuItem>
-                  <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="failed">Failed</MenuItem>
-                </Select>
-                {formErrors.status && (
-                  <Box sx={{ color: 'error.main', mt: 1 }}>
-                    {formErrors.status}
-                  </Box>
-                )}
-              </FormControl>
-              <TextField
-                label="Progress"
-                name="progress"
-                type="number"
-                value={formData.progress}
-                onChange={handleChange}
-                fullWidth
-                error={!!formErrors.progress}
-                helperText={formErrors.progress}
-                inputProps={{ min: 0, max: 100 }}
-              />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    required
+                    type="number"
+                    label="Account ID"
+                    name="accountId"
+                    value={formData.accountId}
+                    onChange={handleChange}
+                    fullWidth
+                    error={!!formErrors.accountId}
+                    helperText={formErrors.accountId}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Action Type</InputLabel>
+                    <Select
+                      value={formData.actionType}
+                      onChange={(e) => setFormData(prev => ({ ...prev, actionType: e.target.value as TaskType }))}
+                      label="Action Type"
+                    >
+                      {Object.values(TaskType).map((type) => (
+                        <MenuItem key={type} value={type}>
+                          {type.replace(/_/g, ' ').toUpperCase()}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+
+              <Typography variant="h6" gutterBottom>
+                Schedule
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    required
+                    type="datetime-local"
+                    label="Start Time"
+                    value={formData.schedule?.startTime?.split('.')[0]}
+                    onChange={(e) => handleScheduleChange('startTime', e.target.value)}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Frequency</InputLabel>
+                    <Select
+                      value={formData.schedule?.frequency}
+                      onChange={(e) => handleScheduleChange('frequency', e.target.value)}
+                      label="Frequency"
+                    >
+                      <MenuItem value="daily">Daily</MenuItem>
+                      <MenuItem value="weekly">Weekly</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography gutterBottom>Interval (hours)</Typography>
+                  <Slider
+                    value={formData.schedule?.interval || 24}
+                    onChange={(_, value) => handleScheduleChange('interval', value as number)}
+                    min={1}
+                    max={168}
+                    step={1}
+                    marks={[
+                      { value: 1, label: '1h' },
+                      { value: 24, label: '24h' },
+                      { value: 168, label: '168h' },
+                    ]}
+                  />
+                </Grid>
+              </Grid>
+
+              <Typography variant="h6" gutterBottom>
+                Human Behavior Parameters
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>Min Delay (ms)</Typography>
+                  <Slider
+                    value={formData.humanBehavior?.minDelay || 1000}
+                    onChange={(_, value) => handleHumanBehaviorChange('minDelay', value as number)}
+                    min={500}
+                    max={5000}
+                    step={100}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>Max Delay (ms)</Typography>
+                  <Slider
+                    value={formData.humanBehavior?.maxDelay || 3000}
+                    onChange={(_, value) => handleHumanBehaviorChange('maxDelay', value as number)}
+                    min={1000}
+                    max={10000}
+                    step={100}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>Mouse Movement Variation</Typography>
+                  <Slider
+                    value={formData.humanBehavior?.mouseMovementVariation || 0.2}
+                    onChange={(_, value) => handleHumanBehaviorChange('mouseMovementVariation', value as number)}
+                    min={0}
+                    max={1}
+                    step={0.1}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography gutterBottom>Typing Speed Variation</Typography>
+                  <Slider
+                    value={formData.humanBehavior?.typingSpeedVariation || 0.3}
+                    onChange={(_, value) => handleHumanBehaviorChange('typingSpeedVariation', value as number)}
+                    min={0}
+                    max={1}
+                    step={0.1}
+                  />
+                </Grid>
+              </Grid>
+
               {formErrors.submit && (
                 <Box sx={{ color: 'error.main', mt: 1 }}>
                   {formErrors.submit}
@@ -212,9 +274,9 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={isSubmitting || isLoading}
+            disabled={isLoading}
           >
-            {isSubmitting ? 'Saving...' : 'Save'}
+            {isLoading ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </form>

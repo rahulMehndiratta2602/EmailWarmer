@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -7,10 +7,18 @@ class TaskType(str, Enum):
     MOVE_FROM_SPAM = "move_from_spam"
     MARK_IMPORTANT = "mark_important"
     STAR_EMAIL = "star_email"
-    CLICK_LINK = "click_link"
+    OPEN_EMAIL = "open_email"
     REPLY_EMAIL = "reply_email"
-    LOGIN = "login"
-    LOGOUT = "logout"
+    ARCHIVE_EMAIL = "archive_email"
+    LABEL_MANAGEMENT = "label_management"
+    SEARCH_INTERACTION = "search_interaction"
+    FOLDER_ORGANIZATION = "folder_organization"
+    CONTACT_ADDITION = "contact_addition"
+    DRAFT_CREATION = "draft_creation"
+    FILTER_CREATION = "filter_creation"
+    SETTINGS_ADJUSTMENT = "settings_adjustment"
+    ATTACHMENT_HANDLING = "attachment_handling"
+    LINK_CLICKING = "link_clicking"
 
 class TaskStatus(str, Enum):
     PENDING = "pending"
@@ -37,6 +45,20 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     pass
 
+class HumanBehaviorParams(BaseModel):
+    min_delay: int = Field(default=1000, description="Minimum delay in milliseconds")
+    max_delay: int = Field(default=3000, description="Maximum delay in milliseconds")
+    mouse_movement_variation: float = Field(default=0.2, description="Mouse movement variation factor")
+    typing_speed_variation: float = Field(default=0.3, description="Typing speed variation factor")
+    scroll_behavior: Dict[str, Any] = Field(
+        default={
+            "speed_variation": 0.2,
+            "pause_probability": 0.3,
+            "pause_duration": (500, 2000)
+        },
+        description="Scroll behavior parameters"
+    )
+
 class Task(TaskBase):
     id: str
     created_at: datetime
@@ -44,6 +66,21 @@ class Task(TaskBase):
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
     result: Optional[Dict[str, Any]] = None
+    schedule: Dict[str, Any] = Field(
+        default={
+            "start_time": datetime.now(),
+            "frequency": "daily",
+            "interval": 24
+        }
+    )
+    human_behavior: HumanBehaviorParams = Field(default_factory=HumanBehaviorParams)
+    updated_at: datetime = Field(default_factory=datetime.now)
+    last_run: Optional[datetime] = None
+    next_run: Optional[datetime] = None
+    progress: float = 0.0
+    error_count: int = 0
+    success_count: int = 0
+    proxy_id: Optional[int] = None
 
     class Config:
         from_attributes = True
