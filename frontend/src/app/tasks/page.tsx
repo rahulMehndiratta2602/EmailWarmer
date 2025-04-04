@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Typography, Button, Paper, Chip } from '@mui/material'
+import { Box, Typography, Button, Paper, Chip, Alert } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Add as AddIcon, PlayArrow as PlayIcon, Stop as StopIcon } from '@mui/icons-material'
 import TaskForm from '@/components/TaskForm'
@@ -12,6 +12,7 @@ const TasksPage = () => {
   const { tasks, isLoading, error, removeTask, startTask, stopTask } = useTasks()
   const [selectedTask, setSelectedTask] = useState<Task | undefined>()
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const handleEdit = (task: Task) => {
     setSelectedTask(task)
@@ -20,7 +21,30 @@ const TasksPage = () => {
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      await removeTask(id)
+      try {
+        await removeTask(id)
+        setActionError(null)
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : 'Failed to delete task')
+      }
+    }
+  }
+
+  const handleStartTask = async (id: number) => {
+    try {
+      await startTask(id)
+      setActionError(null)
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to start task')
+    }
+  }
+
+  const handleStopTask = async (id: number) => {
+    try {
+      await stopTask(id)
+      setActionError(null)
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to stop task')
     }
   }
 
@@ -65,7 +89,7 @@ const TasksPage = () => {
               size="small"
               color="error"
               startIcon={<StopIcon />}
-              onClick={() => stopTask(params.row.id)}
+              onClick={() => handleStopTask(params.row.id)}
             >
               Stop
             </Button>
@@ -74,7 +98,7 @@ const TasksPage = () => {
               size="small"
               color="primary"
               startIcon={<PlayIcon />}
-              onClick={() => startTask(params.row.id)}
+              onClick={() => handleStartTask(params.row.id)}
             >
               Start
             </Button>
@@ -116,6 +140,12 @@ const TasksPage = () => {
           Create Task
         </Button>
       </Box>
+
+      {(error || actionError) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error || actionError}
+        </Alert>
+      )}
 
       <Paper sx={{ height: 400 }}>
         <DataGrid
