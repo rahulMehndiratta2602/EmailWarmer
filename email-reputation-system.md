@@ -169,6 +169,46 @@ sequenceDiagram
 | Attachment Handling | Download/View attachments | Loading wait times |
 | Link Clicking | Click safe email links | Hover behavior, click timing |
 
+## Requirements
+
+### Functional Requirements
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| FR1 | Import email accounts from CSV/TXT file | High |
+| FR2 | Import proxy list from CSV/TXT file | High |
+| FR3 | Automate email actions with human-like behavior | High |
+| FR4 | Rotate proxies based on performance metrics | High |
+| FR5 | Monitor and report proxy health | High |
+| FR6 | Schedule tasks for email accounts | High |
+| FR7 | Track action success rates | Medium |
+| FR8 | Generate performance reports | Medium |
+| FR9 | Support multiple email providers | Medium |
+| FR10 | Handle proxy failures gracefully | High |
+
+### Technical Requirements
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| TR1 | Desktop application using Electron | High |
+| TR2 | Browser extension for automation | High |
+| TR3 | Proxy rotation engine | High |
+| TR4 | Health monitoring system | High |
+| TR5 | Task scheduling system | High |
+| TR6 | Real-time status updates | Medium |
+| TR7 | Error logging and reporting | Medium |
+| TR8 | Performance metrics collection | Medium |
+| TR9 | Database for persistence | High |
+| TR10 | API for component communication | High |
+
+### Performance Requirements
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| PR1 | Proxy response time | < 500ms |
+| PR2 | Action success rate | > 95% |
+| PR3 | System uptime | > 99% |
+| PR4 | Task execution time | < 5s per action |
+| PR5 | Proxy rotation time | < 1s |
+| PR6 | Error rate | < 1% |
+
 ## Challenges & Mitigations
 
 ### Bot Detection
@@ -186,14 +226,6 @@ sequenceDiagram
 | IP Quality | Regular IP testing and rotation |
 | Connection Stability | Automatic failover, retry mechanisms |
 | Geographic Distribution | Strategic proxy location selection |
-
-### Security
-| Challenge | Mitigation Strategy |
-|-----------|---------------------|
-| Credential Storage | Encrypted storage, secure key management |
-| Data Protection | End-to-end encryption, secure protocols |
-| Access Control | Role-based permissions, audit logging |
-| Compliance | Data retention policies, privacy controls |
 
 ## Development Timeline
 
