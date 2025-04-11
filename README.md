@@ -1,80 +1,117 @@
-# Email Automation Tool
+# Email Warmup Desktop Application
 
-A simple tool for automating email management tasks.
+A desktop application for automating email warmup tasks using browser automation.
 
 ## Features
 
-- Upload email accounts and passwords via CSV
-- Configure proxy servers
-- Set maximum simultaneous browser windows
-- Automate moving spam emails to inbox
+- Upload and manage email accounts
+- Configure and manage proxies
+- Automate email actions:
+  - Move emails from spam to inbox
+  - Mark emails as important
+  - Click links in emails
+- Control concurrent windows and speed
+- Human-like behavior simulation
+- Real-time task monitoring
 
-## Tech Stack
+## Prerequisites
 
-### Frontend
-- React
-- TypeScript
-- Vite
-- Material-UI
-- Axios
+- Node.js (v16 or higher)
+- npm (v7 or higher)
+- MongoDB (v4.4 or higher)
 
-## Setup
+## Installation
 
-### Prerequisites
-- Node.js 16+
-- npm or yarn
-
-### Frontend Setup
-
-1. Install dependencies:
+1. Clone the repository:
 ```bash
-cd frontend
+git clone https://github.com/yourusername/email-warmup-desktop.git
+cd email-warmup-desktop
+```
+
+2. Install dependencies:
+```bash
 npm install
 ```
 
-2. Start the development server:
+3. Create a `.env` file in the root directory with the following variables:
+```env
+MONGODB_URI=mongodb://localhost:27017/email-warmup
+```
+
+## Development
+
+1. Start the development server:
 ```bash
-npm run dev
+npm start
 ```
 
-## Project Structure
-
-```
-.
-├── frontend/
-│   ├── public/           # Static files
-│   ├── src/
-│   │   ├── api/         # API client
-│   │   ├── components/  # React components
-│   │   ├── types/       # TypeScript types
-│   │   └── utils/       # Utility functions
-│   └── package.json     # Frontend dependencies
-└── README.md            # Project documentation
+2. Build the application:
+```bash
+npm run build
 ```
 
 ## Usage
 
-1. Upload a CSV file containing email accounts and passwords
-2. Upload a CSV file containing proxy server information
-3. Set the maximum number of simultaneous browser windows
-4. Click "Start Automation" to begin the process
+1. Launch the application
+2. Upload your email list (CSV format):
+   - Email
+   - Password
+   - Proxy ID
 
-## CSV Format
+3. Upload your proxy list (CSV format):
+   - Host
+   - Port
+   - Username
+   - Password
+   - Protocol
 
-### Email Accounts CSV
-```
-email,password
-user1@example.com,password1
-user2@example.com,password2
+4. Configure settings:
+   - Number of concurrent windows
+   - Speed of automation
+   - Human behavior parameters
+
+5. Start the automation process
+
+## File Formats
+
+### Email List (CSV)
+```csv
+email,password,proxyId
+user1@example.com,password1,proxy1
+user2@example.com,password2,proxy2
 ```
 
-### Proxy Servers CSV
+### Proxy List (CSV)
+```csv
+host,port,username,password,protocol
+proxy1.example.com,8080,user1,pass1,http
+proxy2.example.com,8080,user2,pass2,https
 ```
-host,port,username,password
-proxy1.example.com,8080,user1,pass1
-proxy2.example.com,8080,user2,pass2
-```
+
+## Security Considerations
+
+- Store sensitive data securely
+- Use strong passwords
+- Regularly update the application
+- Monitor system resources
+- Follow email provider terms of service
+
+## Troubleshooting
+
+1. If the application fails to start:
+   - Check MongoDB connection
+   - Verify Node.js version
+   - Check system requirements
+
+2. If automation fails:
+   - Check proxy connectivity
+   - Verify email credentials
+   - Check browser compatibility
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+MIT License
+
+## Support
+
+For support, please open an issue in the GitHub repository. 
