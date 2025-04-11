@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { EmailAccount, Task, TaskStats, AccountStats, Activity, Settings, ApiResponse, ProxyStats } from '@/types/api'
+import { EmailAccount, Task, TaskStats, AccountStats, Activity, Settings, ApiResponse, ProxyStats, Proxy, AutomationConfig } from '@/types/api'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE_URL = 'http://localhost:8000'
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -13,8 +13,8 @@ const client = axios.create({
 // Add response interceptor to handle errors
 client.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const errorMessage = error.response?.data?.message || error.message || 'An error occurred'
+  (error: AxiosError<ApiResponse<unknown>>) => {
+    const errorMessage = error.response?.data?.error || error.message || 'An error occurred'
     return Promise.reject(new Error(errorMessage))
   }
 )
@@ -31,10 +31,10 @@ export const uploadEmailFile = async (file: File): Promise<ApiResponse<EmailAcco
   return response.data
 }
 
-export const uploadProxyFile = async (file: File): Promise<ApiResponse<void>> => {
+export const uploadProxyFile = async (file: File): Promise<ApiResponse<Proxy[]>> => {
   const formData = new FormData()
   formData.append('file', file)
-  const response = await client.post<ApiResponse<void>>('/api/v1/files/proxies', formData, {
+  const response = await client.post<ApiResponse<Proxy[]>>('/api/v1/files/proxies', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -63,6 +63,42 @@ export const deleteAccount = async (id: number): Promise<ApiResponse<void>> => {
   return response.data
 }
 
+export const assignProxy = async (accountId: number, proxyId: number): Promise<ApiResponse<EmailAccount>> => {
+  const response = await client.post<ApiResponse<EmailAccount>>(`/api/v1/accounts/${accountId}/proxy`, { proxyId })
+  return response.data
+}
+
+export const setRecoveryEmail = async (accountId: number, recoveryEmail: string): Promise<ApiResponse<EmailAccount>> => {
+  const response = await client.post<ApiResponse<EmailAccount>>(`/api/v1/accounts/${accountId}/recovery-email`, { recoveryEmail })
+  return response.data
+}
+
+// Proxies
+export const getProxies = async (): Promise<ApiResponse<Proxy[]>> => {
+  const response = await client.get<ApiResponse<Proxy[]>>('/api/v1/proxies')
+  return response.data
+}
+
+export const createProxy = async (proxy: Omit<Proxy, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Proxy>> => {
+  const response = await client.post<ApiResponse<Proxy>>('/api/v1/proxies', proxy)
+  return response.data
+}
+
+export const updateProxy = async (id: number, proxy: Partial<Proxy>): Promise<ApiResponse<Proxy>> => {
+  const response = await client.put<ApiResponse<Proxy>>(`/api/v1/proxies/${id}`, proxy)
+  return response.data
+}
+
+export const deleteProxy = async (id: number): Promise<ApiResponse<void>> => {
+  const response = await client.delete<ApiResponse<void>>(`/api/v1/proxies/${id}`)
+  return response.data
+}
+
+export const getProxyStats = async (): Promise<ApiResponse<ProxyStats>> => {
+  const response = await client.get<ApiResponse<ProxyStats>>('/api/v1/proxies/stats')
+  return response.data
+}
+
 // Tasks
 export const getTasks = async (): Promise<ApiResponse<Task[]>> => {
   const response = await client.get<ApiResponse<Task[]>>('/api/v1/tasks')
@@ -81,17 +117,6 @@ export const updateTask = async (id: number, task: Partial<Task>): Promise<ApiRe
 
 export const deleteTask = async (id: number): Promise<ApiResponse<void>> => {
   const response = await client.delete<ApiResponse<void>>(`/api/v1/tasks/${id}`)
-  return response.data
-}
-
-// Proxy Management
-export const getProxyStats = async (): Promise<ApiResponse<ProxyStats>> => {
-  const response = await client.get<ApiResponse<ProxyStats>>('/api/v1/proxies/stats')
-  return response.data
-}
-
-export const rotateProxies = async (): Promise<ApiResponse<void>> => {
-  const response = await client.post<ApiResponse<void>>('/api/v1/proxies/rotate')
   return response.data
 }
 
@@ -120,6 +145,11 @@ export const getSettings = async (): Promise<ApiResponse<Settings>> => {
 
 export const updateSettings = async (settings: Partial<Settings>): Promise<ApiResponse<Settings>> => {
   const response = await client.put<ApiResponse<Settings>>('/api/v1/settings', settings)
+  return response.data
+}
+
+export const startAutomation = async (config: AutomationConfig): Promise<ApiResponse<void>> => {
+  const response = await client.post<ApiResponse<void>>('/api/v1/automation/start', config)
   return response.data
 }
 

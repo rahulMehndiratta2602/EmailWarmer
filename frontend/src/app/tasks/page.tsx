@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { Box, Typography, Button, Paper, Chip, Alert } from '@mui/material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Add as AddIcon, PlayArrow as PlayIcon, Stop as StopIcon } from '@mui/icons-material'
 import TaskForm from '@/components/TaskForm'
 import { useTasks } from '@/hooks/useTasks'
 import { Task } from '@/types/api'
+import { TaskStatus } from '@/enums/task'
 
 const TasksPage = () => {
   const { tasks, isLoading, error, removeTask, startTask, stopTask } = useTasks()
@@ -48,13 +49,13 @@ const TasksPage = () => {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'running':
+  const getStatusColor = (status: TaskStatus) => {
+    switch (status) {
+      case TaskStatus.RUNNING:
         return 'primary'
-      case 'completed':
+      case TaskStatus.COMPLETED:
         return 'success'
-      case 'failed':
+      case TaskStatus.FAILED:
         return 'error'
       default:
         return 'default'
@@ -68,13 +69,17 @@ const TasksPage = () => {
       field: 'status', 
       headerName: 'Status', 
       flex: 1,
-      renderCell: (params) => (
-        <Chip 
-          label={params.value}
-          color={getStatusColor(params.value)}
-          size="small"
-        />
-      ),
+      renderCell: (params: GridRenderCellParams<Task, TaskStatus>) => {
+        const status = params.value
+        if (!status) return null
+        return (
+          <Chip 
+            label={status}
+            color={getStatusColor(status)}
+            size="small"
+          />
+        )
+      },
     },
     { field: 'progress', headerName: 'Progress', flex: 1 },
     { field: 'nextRun', headerName: 'Next Run', flex: 1 },
@@ -82,9 +87,9 @@ const TasksPage = () => {
       field: 'actions',
       headerName: 'Actions',
       flex: 1,
-      renderCell: (params) => (
+      renderCell: (params: GridRenderCellParams<Task>) => (
         <Box>
-          {params.row.status === 'running' ? (
+          {params.row.status === TaskStatus.RUNNING ? (
             <Button
               size="small"
               color="error"

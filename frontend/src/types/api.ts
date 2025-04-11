@@ -4,94 +4,97 @@ export interface EmailAccount {
   id: number
   email: string
   password: string
-  provider: string
-  status: string
-  createdAt: string
-  updatedAt: string
+  provider: 'gmail' | 'outlook' | 'yahoo'
+  proxyId?: number
+  status: 'active' | 'inactive'
 }
 
-export interface HumanBehaviorParams {
-  minDelay: number
-  maxDelay: number
-  mouseMovementVariation: number
-  typingSpeedVariation: number
-  scrollBehavior: {
-    speedVariation: number
-    pauseProbability: number
-    pauseDuration: [number, number]
-  }
+export interface Proxy {
+  id: number
+  host: string
+  port: number
+  username?: string
+  password?: string
+  status: 'active' | 'inactive'
+}
+
+export interface ProxyStats {
+  total: number
+  active: number
+  inactive: number
+  errorRate: number
+  successRate: number
+  averageResponseTime: number
+  lastRotation: string
 }
 
 export interface Task {
   id: number
   accountId: number
-  actionType: TaskType
+  type: TaskType
   status: TaskStatus
-  schedule: {
-    startTime: string
-    frequency: 'daily' | 'weekly'
-    interval: number
-  }
-  humanBehavior: HumanBehaviorParams
-  createdAt: string
-  updatedAt: string
+  progress: number
   lastRun?: string
   nextRun?: string
-  progress: number
-  errorCount: number
-  successCount: number
-  proxyId?: number
+  humanBehavior?: HumanBehaviorParams
+}
+
+export interface TaskSchedule {
+  startTime: string
+  frequency: 'hourly' | 'daily' | 'weekly'
+  interval: number
+  priority: number
+}
+
+export interface HumanBehaviorParams {
+  minDelay: number
+  maxDelay: number
+  randomActions: boolean
+  mouseMovement: boolean
+  scrollBehavior: boolean
 }
 
 export interface TaskStats {
-  totalTasks: number
-  activeTasks: number
-  completedTasks: number
-  failedTasks: number
-  averageSuccessRate: number
-  averageExecutionTime: number
+  total: number
+  running: number
+  completed: number
+  failed: number
+  successRate: number
 }
 
 export interface AccountStats {
-  totalAccounts: number
-  activeAccounts: number
-  inactiveAccounts: number
-  averageActionsPerAccount: number
+  total: number
+  active: number
+  inactive: number
+  errorRate: number
   successRate: number
 }
 
 export interface Activity {
   id: number
   accountId: number
-  actionType: string
+  type: string
   status: string
   timestamp: string
-  details: Record<string, any>
+  details: string
 }
 
 export interface Settings {
-  id: number
+  maxTasksPerAccount: number
+  taskIntervalMinutes: number
   proxyRotationInterval: number
-  maxConcurrentTasks: number
-  defaultHumanBehavior: HumanBehaviorParams
-  notificationSettings: {
-    email: boolean
-    desktop: boolean
-  }
-}
-
-export interface ProxyStats {
-  activeProxies: number
-  backupProxies: number
-  totalProxies: number
-  averageResponseTime: number
-  unhealthyProxies: number
-  rotationInterval: number
-  lastRotation: string
+  maxRetries: number
+  retryDelaySeconds: number
 }
 
 export interface ApiResponse<T> {
-  data: T
-  message?: string
+  success: boolean
+  data?: T
   error?: string
+}
+
+export interface AutomationConfig {
+  maxSimultaneousWindows: number
+  emailAccounts: EmailAccount[]
+  proxies: Proxy[]
 } 

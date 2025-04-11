@@ -10,11 +10,15 @@ import {
   TextField,
   MenuItem,
   Box,
+  FormControl,
+  InputLabel,
+  Select,
+  SelectChangeEvent,
 } from '@mui/material'
 import { EmailAccount } from '@/types/api'
-import useAccounts from '@/hooks/useAccounts'
+import { useAccounts } from '@/hooks/useAccounts'
+import { useProxies } from '@/hooks/useProxies'
 import LoadingErrorState from './LoadingErrorState'
-import { validateEmail, validateProvider, validateStatus, ValidationError } from '@/utils/validation'
 
 interface AccountFormProps {
   open: boolean
@@ -23,37 +27,50 @@ interface AccountFormProps {
 }
 
 const AccountForm = ({ open, onClose, account }: AccountFormProps) => {
-  const { addAccount, editAccount, isLoading, isError: error } = useAccounts()
+  const { addAccount, editAccount, isLoading: isAccountLoading, error: accountError } = useAccounts()
+  const { proxies, isLoading: isProxyLoading, error: proxyError } = useProxies()
   const [formData, setFormData] = useState<Partial<EmailAccount>>({
     email: account?.email || '',
+    password: account?.password || '',
     provider: account?.provider || 'gmail',
     status: account?.status || 'active',
+    proxyId: account?.proxyId,
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (open) {
       setFormData({
         email: account?.email || '',
+        password: account?.password || '',
         provider: account?.provider || 'gmail',
         status: account?.status || 'active',
+        proxyId: account?.proxyId,
       })
       setFormErrors({})
     }
   }, [open, account])
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const errors: Record<string, string> = {}
     
-    const emailError = validateEmail(formData.email || '')
-    if (emailError) errors[emailError.field] = emailError.message
+    if (!formData.email) {
+      errors.email = 'Email is required'
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
+      errors.email = 'Invalid email address'
+    }
 
-    const providerError = validateProvider(formData.provider || '')
-    if (providerError) errors[providerError.field] = providerError.message
+    if (!formData.password) {
+      errors.password = 'Password is required'
+    }
 
-    const statusError = validateStatus(formData.status || '')
-    if (statusError) errors[statusError.field] = statusError.message
+    if (!formData.provider) {
+      errors.provider = 'Provider is required'
+    }
+
+    if (!formData.status) {
+      errors.status = 'Status is required'
+    }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -67,28 +84,23 @@ const AccountForm = ({ open, onClose, account }: AccountFormProps) => {
       return
     }
 
-    setIsSubmitting(true)
-
     try {
       if (account) {
         await editAccount(account.id, formData)
       } else {
-        await addAccount(formData as Omit<EmailAccount, 'id' | 'createdAt' | 'updatedAt'>)
+        await addAccount(formData as Omit<EmailAccount, 'id'>)
       }
       onClose()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred while saving the account'
       setFormErrors({ submit: errorMessage })
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     
-    // Clear error for the field being changed
     if (formErrors[name]) {
       setFormErrors(prev => {
         const newErrors = { ...prev }
@@ -97,6 +109,22 @@ const AccountForm = ({ open, onClose, account }: AccountFormProps) => {
       })
     }
   }
+
+  const handleSelectChange = (e: SelectChangeEvent<string | number>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+    
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
+  }
+
+  const isLoading = isAccountLoading || isProxyLoading
+  const error = accountError || proxyError
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -116,6 +144,17 @@ const AccountForm = ({ open, onClose, account }: AccountFormProps) => {
                 fullWidth
                 error={!!formErrors.email}
                 helperText={formErrors.email}
+              />
+              <TextField
+                required
+                label="Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                fullWidth
+                error={!!formErrors.password}
+                helperText={formErrors.password}
               />
               <TextField
                 required
@@ -146,6 +185,25 @@ const AccountForm = ({ open, onClose, account }: AccountFormProps) => {
                 <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="inactive">Inactive</MenuItem>
               </TextField>
+              <FormControl fullWidth>
+                <InputLabel>Proxy</InputLabel>
+                <Select
+                  name="proxyId"
+                  value={formData.proxyId || ''}
+                  onChange={handleSelectChange}
+                  label="Proxy"
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {proxies.map((proxy) => (
+                    <MenuItem
+                      key={proxy.id}
+                      value={proxy.id}
+                    >
+                      {proxy.host}:{proxy.port}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               {formErrors.submit && (
                 <Box sx={{ color: 'error.main', mt: 1 }}>
                   {formErrors.submit}
@@ -159,9 +217,9 @@ const AccountForm = ({ open, onClose, account }: AccountFormProps) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={isSubmitting || isLoading}
+            disabled={isLoading}
           >
-            {isSubmitting ? 'Saving...' : 'Save'}
+            {isLoading ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </form>
