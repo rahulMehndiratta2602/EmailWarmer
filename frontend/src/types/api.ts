@@ -1,5 +1,3 @@
-import { TaskType, TaskStatus } from '@/enums/task'
-
 export interface EmailAccount {
   id: number
   email: string
@@ -15,7 +13,12 @@ export interface Proxy {
   port: number
   username?: string
   password?: string
+  protocol: 'http' | 'https' | 'socks5'
+  useExtension: boolean
   status: 'active' | 'inactive'
+  maxAccounts: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ProxyStats {
@@ -37,13 +40,14 @@ export interface Task {
   lastRun?: string
   nextRun?: string
   humanBehavior?: HumanBehaviorParams
+  schedule?: TaskSchedule
 }
 
 export interface TaskSchedule {
   startTime: string
   frequency: 'hourly' | 'daily' | 'weekly'
   interval: number
-  priority: number
+  priority?: number
 }
 
 export interface HumanBehaviorParams {
@@ -52,6 +56,13 @@ export interface HumanBehaviorParams {
   randomActions: boolean
   mouseMovement: boolean
   scrollBehavior: boolean
+  mouseMovementVariation?: number
+  typingSpeedVariation?: number
+  scrollBehaviorConfig?: {
+    speedVariation: number
+    pauseProbability: number
+    pauseDuration: number[]
+  }
 }
 
 export interface TaskStats {
@@ -97,4 +108,29 @@ export interface AutomationConfig {
   maxSimultaneousWindows: number
   emailAccounts: EmailAccount[]
   proxies: Proxy[]
+}
+
+export enum TaskType {
+  MARK_IMPORTANT = 'MARK_IMPORTANT',
+  MOVE_FROM_SPAM = 'MOVE_FROM_SPAM',
+  ARCHIVE_EMAIL = 'ARCHIVE_EMAIL',
+  DELETE_EMAIL = 'DELETE_EMAIL',
+  MARK_READ = 'MARK_READ',
+  MARK_UNREAD = 'MARK_UNREAD',
+  MOVE_TO_INBOX = 'MOVE_TO_INBOX',
+  MOVE_TO_SPAM = 'MOVE_TO_SPAM',
+  MOVE_TO_TRASH = 'MOVE_TO_TRASH',
+  MOVE_TO_ARCHIVE = 'MOVE_TO_ARCHIVE',
+  MOVE_TO_CATEGORY = 'MOVE_TO_CATEGORY',
+  MOVE_TO_LABEL = 'MOVE_TO_LABEL',
+  MOVE_TO_FOLDER = 'MOVE_TO_FOLDER',
+  MOVE_TO_PRIORITY = 'MOVE_TO_PRIORITY',
+  MOVE_TO_STARRED = 'MOVE_TO_STARRED'
+}
+
+export enum TaskStatus {
+  PENDING = 'PENDING',
+  RUNNING = 'RUNNING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED'
 } 

@@ -17,7 +17,7 @@ import {
   InputLabel,
   Select,
 } from '@mui/material'
-import { Task, TaskType, TaskStatus } from '@/types/api'
+import { Task, TaskType, TaskStatus, HumanBehaviorParams, TaskSchedule } from '@/types/api'
 import { useTasks } from '@/hooks/useTasks'
 import LoadingErrorState from './LoadingErrorState'
 
@@ -28,27 +28,30 @@ interface TaskFormProps {
 }
 
 const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
-  const { addTask, editTask, isLoading, isError: error } = useTasks()
+  const { addTask, editTask, isLoading, error } = useTasks()
   const [formData, setFormData] = useState<Partial<Task>>({
     accountId: task?.accountId || 0,
-    actionType: task?.actionType || TaskType.MARK_IMPORTANT,
+    type: task?.type,
     status: task?.status || TaskStatus.PENDING,
     schedule: task?.schedule || {
       startTime: new Date().toISOString(),
       frequency: 'daily',
-      interval: 24,
+      interval: 24
     },
     humanBehavior: task?.humanBehavior || {
       minDelay: 1000,
       maxDelay: 3000,
+      randomActions: true,
+      mouseMovement: true,
+      scrollBehavior: true,
       mouseMovementVariation: 0.2,
       typingSpeedVariation: 0.3,
-      scrollBehavior: {
+      scrollBehaviorConfig: {
         speedVariation: 0.2,
         pauseProbability: 0.3,
-        pauseDuration: [500, 2000],
-      },
-    },
+        pauseDuration: [500, 2000]
+      }
+    }
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
@@ -56,24 +59,27 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
     if (open) {
       setFormData({
         accountId: task?.accountId || 0,
-        actionType: task?.actionType || TaskType.MARK_IMPORTANT,
+        type: task?.type,
         status: task?.status || TaskStatus.PENDING,
         schedule: task?.schedule || {
           startTime: new Date().toISOString(),
           frequency: 'daily',
-          interval: 24,
+          interval: 24
         },
         humanBehavior: task?.humanBehavior || {
           minDelay: 1000,
           maxDelay: 3000,
+          randomActions: true,
+          mouseMovement: true,
+          scrollBehavior: true,
           mouseMovementVariation: 0.2,
           typingSpeedVariation: 0.3,
-          scrollBehavior: {
+          scrollBehaviorConfig: {
             speedVariation: 0.2,
             pauseProbability: 0.3,
-            pauseDuration: [500, 2000],
-          },
-        },
+            pauseDuration: [500, 2000]
+          }
+        }
       })
       setFormErrors({})
     }
@@ -98,24 +104,19 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    
-    if (formErrors[name]) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
-  const handleHumanBehaviorChange = (field: string, value: number) => {
+  const handleHumanBehaviorChange = (field: string, value: number | boolean) => {
     setFormData(prev => ({
       ...prev,
       humanBehavior: {
         ...prev.humanBehavior,
-        [field]: value,
-      },
+        [field]: value
+      } as HumanBehaviorParams
     }))
   }
 
@@ -124,8 +125,8 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
       ...prev,
       schedule: {
         ...prev.schedule,
-        [field]: value,
-      },
+        [field]: value
+      } as TaskSchedule
     }))
   }
 
@@ -156,8 +157,8 @@ const TaskForm = ({ open, onClose, task }: TaskFormProps) => {
                   <FormControl fullWidth>
                     <InputLabel>Action Type</InputLabel>
                     <Select
-                      value={formData.actionType}
-                      onChange={(e) => setFormData(prev => ({ ...prev, actionType: e.target.value as TaskType }))}
+                      value={formData.type}
+                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as TaskType }))}
                       label="Action Type"
                     >
                       {Object.values(TaskType).map((type) => (

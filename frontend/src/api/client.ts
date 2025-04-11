@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { AxiosError } from 'axios'
 import { EmailAccount, Task, TaskStats, AccountStats, Activity, Settings, ApiResponse, ProxyStats, Proxy, AutomationConfig } from '@/types/api'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -18,6 +19,18 @@ client.interceptors.response.use(
     return Promise.reject(new Error(errorMessage))
   }
 )
+
+// Error handling utility
+const handleError = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.data?.message) {
+      return axiosError.response.data.message;
+    }
+    return axiosError.message || 'An error occurred';
+  }
+  return error instanceof Error ? error.message : 'An unknown error occurred';
+};
 
 // File Upload
 export const uploadEmailFile = async (file: File): Promise<ApiResponse<EmailAccount[]>> => {
