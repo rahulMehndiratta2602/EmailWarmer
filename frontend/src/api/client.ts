@@ -1,6 +1,16 @@
 import axios from 'axios'
-import type { AxiosError } from 'axios'
 import { EmailAccount, Task, TaskStats, AccountStats, Activity, Settings, ApiResponse, ProxyStats, Proxy, AutomationConfig } from '@/types/api'
+
+interface ErrorResponse {
+  isAxiosError?: boolean;
+  response?: {
+    data?: {
+      message?: string;
+      error?: string;
+    };
+  };
+  message?: string;
+}
 
 const API_BASE_URL = 'http://localhost:8000'
 
@@ -14,7 +24,7 @@ const client = axios.create({
 // Add response interceptor to handle errors
 client.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiResponse<unknown>>) => {
+  (error: ErrorResponse) => {
     const errorMessage = error.response?.data?.error || error.message || 'An error occurred'
     return Promise.reject(new Error(errorMessage))
   }
@@ -22,12 +32,9 @@ client.interceptors.response.use(
 
 // Error handling utility
 const handleError = (error: unknown): string => {
-  if (error && typeof error === 'object' && 'isAxiosError' in error) {
-    const axiosError = error as AxiosError;
-    if (axiosError.response?.data?.message) {
-      return axiosError.response.data.message;
-    }
-    return axiosError.message || 'An error occurred';
+  const axiosError = error as ErrorResponse;
+  if (axiosError?.isAxiosError) {
+    return axiosError.response?.data?.message || axiosError.message || 'An error occurred';
   }
   return error instanceof Error ? error.message : 'An unknown error occurred';
 };
