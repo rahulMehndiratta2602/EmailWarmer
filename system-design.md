@@ -1,151 +1,252 @@
 # Email Warmup System Design
 
-## Table of Contents
-1. [System Overview](#system-overview)
-2. [Architecture](#architecture)
-3. [Database Design](#database-design)
-4. [API Endpoints](#api-endpoints)
-5. [Frontend Components](#frontend-components)
-6. [Security Considerations](#security-considerations)
-7. [Deployment Strategy](#deployment-strategy)
-8. [Timeline](#timeline)
-
-## System Overview
-
-| Component | Description |
-|-----------|-------------|
-| Purpose | Automated email warmup system to improve email deliverability |
-| Core Features | Account management, task scheduling, activity monitoring, analytics |
-| Tech Stack | Next.js, TypeScript, Material-UI, FastAPI, PostgreSQL |
-| Target Users | Email marketers, sales teams, business owners |
+## Overview
+A scalable email reputation management system that automates email engagement actions while maintaining human-like behavior patterns.
 
 ## Architecture
 
 ### High-Level Architecture
-```mermaid
-graph TD
-    A[Frontend] --> B[API Gateway]
-    B --> C[Authentication Service]
-    B --> D[Email Service]
-    B --> E[Task Scheduler]
-    B --> F[Analytics Service]
-    C --> G[Database]
-    D --> G
-    E --> G
-    F --> G
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│  Frontend       │◄───►│  Backend API    │◄───►│  Database       │
+│  (React/TS)     │     │  (Node/Express) │     │  (MongoDB)      │
+│                 │     │                 │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                              ▲
+                              │
+                              ▼
+┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │
+│  Proxy Service  │◄───►│  Email Service  │
+│                 │     │                 │
+└─────────────────┘     └─────────────────┘
 ```
 
 ### Component Details
 
-| Component | Technology | Responsibility |
-|-----------|------------|----------------|
-| Frontend | Next.js 14 | User interface, real-time updates |
-| API Gateway | FastAPI | Request routing, rate limiting |
-| Authentication | JWT | User authentication, session management |
-| Email Service | Python | Email sending, warmup logic |
-| Task Scheduler | Celery | Task management, scheduling |
-| Database | PostgreSQL | Data persistence |
-| Cache | Redis | Session storage, rate limiting |
+#### Frontend (React + TypeScript)
+- **Components**
+  - Account Management
+  - Proxy Configuration
+  - Task Automation
+  - Real-time Monitoring
+  - Human Behavior Settings
+- **State Management**
+  - React Context + Custom Hooks
+  - API Client with Axios
+- **UI Framework**
+  - Material-UI
+  - Responsive Design
 
-## Database Design
+#### Backend (Node.js + Express)
+- **API Endpoints**
+  - Authentication
+  - Account Management
+  - Proxy Management
+  - Task Scheduling
+  - Monitoring & Stats
+- **Services**
+  - Email Service
+  - Proxy Service
+  - Task Scheduler
+  - Human Behavior Simulator
+- **Middleware**
+  - Authentication
+  - Rate Limiting
+  - Error Handling
+  - Request Validation
 
-### Tables
+#### Database (MongoDB)
+- **Collections**
+  - Users
+  - Email Accounts
+  - Proxies
+  - Tasks
+  - Activities
+  - Settings
 
-| Table | Description | Key Fields |
-|-------|-------------|------------|
-| users | User accounts | id, email, password_hash, role |
-| email_accounts | Email accounts to warm up | id, email, provider, status |
-| tasks | Warmup tasks | id, account_id, type, schedule |
-| activities | Email activities | id, account_id, action, timestamp |
-| settings | System settings | id, key, value |
+## Data Models
 
-### Relationships
-```mermaid
-erDiagram
-    users ||--o{ email_accounts : manages
-    email_accounts ||--o{ tasks : has
-    email_accounts ||--o{ activities : generates
+### Email Account
+```typescript
+interface EmailAccount {
+  id: number;
+  email: string;
+  password: string;
+  provider: 'gmail' | 'outlook' | 'yahoo';
+  status: 'active' | 'inactive';
+  proxyId?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 ```
 
-## API Endpoints
+### Proxy
+```typescript
+interface Proxy {
+  id: number;
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  protocol: 'http' | 'https' | 'socks5';
+  useExtension: boolean;
+  status: 'active' | 'inactive';
+  maxAccounts: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
 
-| Endpoint | Method | Description | Authentication |
-|----------|--------|-------------|----------------|
-| /api/v1/accounts | GET | List email accounts | Required |
-| /api/v1/accounts | POST | Create new account | Required |
-| /api/v1/tasks | GET | List tasks | Required |
-| /api/v1/tasks | POST | Create task | Required |
-| /api/v1/activities | GET | Get activities | Required |
-| /api/v1/settings | GET/PUT | Manage settings | Required |
+### Task
+```typescript
+interface Task {
+  id: number;
+  accountId: number;
+  type: TaskType;
+  status: TaskStatus;
+  schedule: {
+    startTime: Date;
+    frequency: 'daily' | 'weekly';
+    interval: number;
+  };
+  humanBehavior: {
+    minDelay: number;
+    maxDelay: number;
+    randomActions: boolean;
+    mouseMovement: boolean;
+    scrollBehavior: boolean;
+    mouseMovementVariation: number;
+    typingSpeedVariation: number;
+    scrollBehaviorConfig: {
+      speedVariation: number;
+      pauseProbability: number;
+      pauseDuration: [number, number];
+    };
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
 
-## Frontend Components
+## Workflow
 
-| Component | Description | Technologies |
-|-----------|-------------|--------------|
-| Dashboard | Overview of system status | Material-UI, Recharts |
-| Account Management | Email account CRUD | Material-UI, Formik |
-| Task Management | Task scheduling | Material-UI, DataGrid |
-| Analytics | Performance metrics | Recharts, Material-UI |
-| Settings | System configuration | Material-UI, Formik |
+1. **Account Setup**
+   - Add email accounts
+   - Configure proxies
+   - Set up recovery emails
 
-## Security Considerations
+2. **Task Configuration**
+   - Define task types
+   - Set scheduling parameters
+   - Configure human behavior settings
 
-| Aspect | Implementation |
-|--------|----------------|
-| Authentication | JWT with refresh tokens |
-| Authorization | Role-based access control |
-| Data Encryption | TLS for transit, AES-256 for storage |
-| Rate Limiting | Redis-based rate limiting |
-| Audit Logging | Comprehensive activity tracking |
+3. **Automation**
+   - Task scheduler initiates actions
+   - Human behavior simulator executes tasks
+   - Proxy rotation for IP diversity
+   - Real-time monitoring and logging
 
-## Deployment Strategy
+4. **Monitoring**
+   - Task progress tracking
+   - Account health monitoring
+   - Proxy performance metrics
+   - Error reporting and alerts
 
-| Environment | Configuration |
-|-------------|---------------|
-| Development | Docker Compose |
-| Staging | Kubernetes |
-| Production | Kubernetes with CI/CD |
+## Security Measures
 
-## Timeline
+1. **Authentication**
+   - JWT-based authentication
+   - Secure password storage
+   - Session management
 
-### Phase 1: Foundation (Weeks 1-2)
-- [x] Project setup
-- [x] Basic architecture
-- [ ] Database design
-- [ ] Core API endpoints
+2. **Data Protection**
+   - Encrypted credentials
+   - Secure proxy configuration
+   - Rate limiting per account
 
-### Phase 2: Core Features (Weeks 3-4)
-- [ ] Email service implementation
-- [ ] Task scheduler
-- [ ] Basic frontend
-- [ ] Authentication system
+3. **Compliance**
+   - GDPR compliance
+   - Data retention policies
+   - Audit logging
 
-### Phase 3: Advanced Features (Weeks 5-6)
-- [ ] Analytics dashboard
-- [ ] Advanced scheduling
-- [ ] Email templates
-- [ ] Reporting system
+## Scalability Considerations
 
-### Phase 4: Polish & Launch (Weeks 7-8)
-- [ ] Performance optimization
-- [ ] Security audit
-- [ ] Documentation
-- [ ] Production deployment
+1. **Horizontal Scaling**
+   - Stateless API design
+   - Load balancing
+   - Database sharding
 
-## Monitoring and Maintenance
+2. **Performance**
+   - Caching layer
+   - Connection pooling
+   - Batch processing
 
-| Metric | Tool | Threshold |
-|--------|------|-----------|
-| Response Time | Prometheus | < 200ms |
-| Error Rate | Grafana | < 1% |
-| CPU Usage | Kubernetes | < 70% |
-| Memory Usage | Kubernetes | < 80% |
+3. **Reliability**
+   - Error handling
+   - Retry mechanisms
+   - Fallback strategies
+
+## Development Timeline
+
+1. **Phase 1: Core Infrastructure (2 weeks)**
+   - Basic API setup
+   - Database models
+   - Authentication system
+
+2. **Phase 2: Email Service (2 weeks)**
+   - Email account management
+   - Proxy integration
+   - Basic automation
+
+3. **Phase 3: Automation (2 weeks)**
+   - Task scheduler
+   - Human behavior simulation
+   - Monitoring system
+
+4. **Phase 4: Frontend (2 weeks)**
+   - UI components
+   - State management
+   - Real-time updates
+
+5. **Phase 5: Testing & Optimization (2 weeks)**
+   - Unit testing
+   - Performance optimization
+   - Security audit
+
+## Challenges & Solutions
+
+1. **Email Provider Restrictions**
+   - Solution: Implement provider-specific adapters
+   - Use proxy rotation
+   - Add delay between actions
+
+2. **Human-like Behavior**
+   - Solution: Advanced behavior simulation
+   - Random delays
+   - Mouse movement patterns
+
+3. **Scalability**
+   - Solution: Microservices architecture
+   - Load balancing
+   - Database optimization
+
+4. **Security**
+   - Solution: End-to-end encryption
+   - Regular security audits
+   - Access control
 
 ## Future Enhancements
 
-| Feature | Priority | Description |
-|---------|----------|-------------|
-| AI-powered scheduling | High | Smart task scheduling |
-| Multi-tenant support | Medium | Support for multiple organizations |
-| Advanced analytics | Medium | Predictive analytics |
-| Mobile app | Low | Native mobile experience | 
+1. **Features**
+   - Multi-account management
+   - Advanced analytics
+   - Custom task types
+   - API integrations
+
+2. **Improvements**
+   - Machine learning for behavior patterns
+   - Automated proxy testing
+   - Enhanced monitoring
+   - Mobile application 
