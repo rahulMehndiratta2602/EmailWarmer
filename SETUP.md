@@ -9,6 +9,82 @@ Before you begin, ensure you have the following installed:
 - Git
 - Docker (optional, for containerized deployment)
 
+## Required API Keys and Credentials
+
+### Email Provider APIs
+
+1. **Gmail API**
+   - Create a project in Google Cloud Console
+   - Enable Gmail API
+   - Create OAuth 2.0 credentials
+   - Required credentials:
+     ```env
+     GOOGLE_CLIENT_ID=your-client-id
+     GOOGLE_CLIENT_SECRET=your-client-secret
+     GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
+     ```
+
+2. **Outlook API**
+   - Register application in Azure Portal
+   - Configure OAuth 2.0 settings
+   - Required credentials:
+     ```env
+     OUTLOOK_CLIENT_ID=your-client-id
+     OUTLOOK_CLIENT_SECRET=your-client-secret
+     OUTLOOK_REDIRECT_URI=http://localhost:3000/auth/outlook/callback
+     ```
+
+3. **Yahoo API**
+   - Create application in Yahoo Developer Console
+   - Configure OAuth settings
+   - Required credentials:
+     ```env
+     YAHOO_CLIENT_ID=your-client-id
+     YAHOO_CLIENT_SECRET=your-client-secret
+     YAHOO_REDIRECT_URI=http://localhost:3000/auth/yahoo/callback
+     ```
+
+### Proxy Services
+
+1. **Proxy Provider API**
+   - Sign up with a proxy provider (e.g., Bright Data, Oxylabs)
+   - Required credentials:
+     ```env
+     PROXY_API_KEY=your-proxy-api-key
+     PROXY_USERNAME=your-proxy-username
+     PROXY_PASSWORD=your-proxy-password
+     ```
+
+### Security Keys
+
+1. **JWT and Session Keys**
+   ```env
+   JWT_SECRET=your-jwt-secret-key
+   SESSION_SECRET=your-session-secret-key
+   ```
+
+2. **Database Credentials**
+   ```env
+   MONGODB_USER=your-mongodb-username
+   MONGODB_PASSWORD=your-mongodb-password
+   ```
+
+### Monitoring and Analytics
+
+1. **Error Tracking**
+   - Sign up for Sentry or similar service
+   - Required credentials:
+     ```env
+     SENTRY_DSN=your-sentry-dsn
+     ```
+
+2. **Analytics**
+   - Configure Google Analytics or similar
+   - Required credentials:
+     ```env
+     GA_TRACKING_ID=your-ga-tracking-id
+     ```
+
 ## Project Structure
 
 ```
