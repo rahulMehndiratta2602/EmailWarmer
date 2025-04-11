@@ -1,50 +1,89 @@
-# Frontend
+# Email Warmup Frontend
 
-## Setup
+A modern React-based frontend for the Email Warmup application, built with TypeScript and Material-UI.
 
-1. Install dependencies:
-```bash
-npm install
-```
+## Features
 
-2. Start the development server:
+- Email account management
+- Proxy configuration
+- Task automation
+- Real-time monitoring
+- Human-like behavior simulation
+- Responsive design
+
+## Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+- Backend API running (see backend README)
+
+## Installation
+
+1. Clone the repository
+2. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+## Configuration
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Update the environment variables in `.env`:
+   ```
+   VITE_API_BASE_URL=http://localhost:8000
+   VITE_AUTH_TOKEN_KEY=auth_token
+   ```
+
+## Development
+
+Start the development server:
 ```bash
 npm run dev
 ```
 
-## Environment Variables
+The application will be available at `http://localhost:5173`
 
-Create a `.env` file in the frontend directory with the following variables:
+## Building for Production
 
+```bash
+npm run build
 ```
-VITE_API_BASE_URL=http://localhost:8000
+
+The build output will be in the `dist` directory.
+
+## Testing
+
+Run tests:
+```bash
+npm test
 ```
 
 ## Project Structure
 
 ```
 src/
-├── api/         # API client and endpoints
-├── components/  # React components
-├── types/       # TypeScript type definitions
-└── utils/       # Utility functions
+├── api/          # API client and endpoints
+├── components/   # Reusable UI components
+├── hooks/        # Custom React hooks
+├── types/        # TypeScript type definitions
+├── utils/        # Utility functions
+└── app/          # Main application pages
 ```
 
-## Components
+## Contributing
 
-- `AutomationForm`: Main form for uploading files and starting automation
-- `LoadingErrorState`: Reusable component for loading and error states
+1. Create a feature branch
+2. Make your changes
+3. Run tests
+4. Submit a pull request
 
-## API Client
+## License
 
-The API client (`src/api/client.ts`) handles:
-- Email file upload
-- Proxy file upload
-- Starting automation process
-
-## Type Definitions
-
-- `EmailAccount`: Email account information
-- `Proxy`: Proxy server configuration
-- `AutomationConfig`: Configuration for the automation process
-- `ApiResponse`: Standard API response format 
+MIT 

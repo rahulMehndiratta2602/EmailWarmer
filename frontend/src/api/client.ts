@@ -22,7 +22,7 @@ client.interceptors.response.use(
 
 // Error handling utility
 const handleError = (error: unknown): string => {
-  if (axios.isAxiosError(error)) {
+  if (error && typeof error === 'object' && 'isAxiosError' in error) {
     const axiosError = error as AxiosError;
     if (axiosError.response?.data?.message) {
       return axiosError.response.data.message;
