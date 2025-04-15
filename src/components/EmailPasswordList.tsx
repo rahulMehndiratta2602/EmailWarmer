@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Download } from 'lucide-react';
+import { Plus, Trash2, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import Pagination from './Pagination';
 
 interface EmailPassword {
   id: string;
@@ -19,6 +20,14 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [selectAll, setSelectAll] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Calculate pagination values
+  const totalPages = Math.ceil(emailPasswords.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = emailPasswords.slice(startIndex, endIndex);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -89,9 +98,23 @@ example3@email.com,password789`;
     document.body.removeChild(a);
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectAll(false);
+  };
+
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
+    setSelectAll(false);
+  };
+
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
-    setEmailPasswords(prev => prev.map(item => ({ ...item, selected: checked })));
+    setEmailPasswords(prev => prev.map((item, index) => ({
+      ...item,
+      selected: index >= startIndex && index < endIndex ? checked : item.selected
+    })));
   };
 
   const handleSelectItem = (id: string, checked: boolean) => {
@@ -113,7 +136,7 @@ example3@email.com,password789`;
   };
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="h-full flex flex-col">
       {/* Import Section */}
       <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'}`}>
         <h3 className="text-xl font-semibold mb-4 dark:text-white">Import Email/Password List</h3>
@@ -170,155 +193,172 @@ example3@email.com,password789`;
       </div>
 
       {/* Email/Password List Section */}
-      <div className={`flex-1 p-6 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'}`}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold dark:text-white">Email/Password List</h3>
-          <div className="flex items-center gap-2">
-            {emailPasswords.some(item => item.selected) && (
+      <div className={`flex-1 overflow-y-auto mt-4 ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'} rounded-lg`}>
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold dark:text-white">Email/Password List</h3>
+            <div className="flex items-center gap-2">
+              {emailPasswords.some(item => item.selected) && (
+                <button
+                  onClick={handleDeleteSelected}
+                  className={`p-2 rounded flex items-center justify-center ${
+                    isDarkMode 
+                      ? 'bg-red-600 text-white hover:bg-red-700' 
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                  }`}
+                  title="Delete Selected"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <button
-                onClick={handleDeleteSelected}
+                onClick={() => setShowAddForm(true)}
                 className={`p-2 rounded flex items-center justify-center ${
                   isDarkMode 
-                    ? 'bg-red-600 text-white hover:bg-red-700' 
-                    : 'bg-red-500 text-white hover:bg-red-600'
+                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
-                title="Delete Selected"
               >
-                <Trash2 className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
               </button>
-            )}
-            <button
-              onClick={() => setShowAddForm(true)}
-              className={`p-2 rounded flex items-center justify-center ${
-                isDarkMode 
-                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className={`border-b ${
-                isDarkMode ? 'border-gray-700' : 'border-gray-200'
-              }`}>
-                <th className="w-10 p-3">
-                  {emailPasswords.length > 0 && (
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      className={`h-4 w-4 rounded ${
-                        isDarkMode 
-                          ? 'bg-gray-700 border-gray-600 text-blue-500' 
-                          : 'border-gray-300 text-blue-600'
-                      }`}
-                    />
-                  )}
-                </th>
-                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase p-3">Email</th>
-                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase p-3">Password</th>
-                <th className="w-10 p-3"></th>
-              </tr>
-            </thead>
-            <tbody className={`divide-y ${
-              isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
-            }`}>
-              {emailPasswords.map((entry) => (
-                <tr key={entry.id} className={`hover:${
-                  isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+          {/* Table */}
+          <div className="w-full overflow-x-auto">
+            <table className="w-full border-collapse table-fixed">
+              <thead>
+                <tr className={`border-b ${
+                  isDarkMode ? 'border-gray-700' : 'border-gray-200'
                 }`}>
-                  <td className="p-3">
-                    <input
-                      type="checkbox"
-                      checked={entry.selected || false}
-                      onChange={(e) => handleSelectItem(entry.id, e.target.checked)}
-                      className={`h-4 w-4 rounded ${
-                        isDarkMode 
-                          ? 'bg-gray-700 border-gray-600 text-blue-500' 
-                          : 'border-gray-300 text-blue-600'
-                      }`}
-                    />
-                  </td>
-                  <td className="p-3 text-sm dark:text-gray-300">{entry.email}</td>
-                  <td className="p-3 text-sm dark:text-gray-300">••••••••</td>
-                  <td className="p-3 text-right">
-                    <button
-                      onClick={() => handleDeleteEntry(entry.id)}
-                      className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
+                  <th className="w-10 p-2 sm:p-3">
+                    {currentItems.length > 0 && (
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className={`h-4 w-4 rounded ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600 text-blue-500' 
+                            : 'border-gray-300 text-blue-600'
+                        }`}
+                      />
+                    )}
+                  </th>
+                  <th className="w-12 p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">#</th>
+                  <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
+                  <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Password</th>
+                  <th className="w-10 p-2 sm:p-3"></th>
                 </tr>
-              ))}
-              {emailPasswords.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                    No entries yet
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className={`divide-y ${
+                isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
+              }`}>
+                {currentItems.map((entry, index) => (
+                  <tr key={entry.id} className={`hover:${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                    <td className="p-2 sm:p-3">
+                      <input
+                        type="checkbox"
+                        checked={entry.selected || false}
+                        onChange={(e) => handleSelectItem(entry.id, e.target.checked)}
+                        className={`h-4 w-4 rounded ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600 text-blue-500' 
+                            : 'border-gray-300 text-blue-600'
+                        }`}
+                      />
+                    </td>
+                    <td className="p-2 sm:p-3 text-sm dark:text-gray-300">{startIndex + index + 1}</td>
+                    <td className="p-2 sm:p-3 text-sm dark:text-gray-300 truncate">{entry.email}</td>
+                    <td className="p-2 sm:p-3 text-sm dark:text-gray-300">••••••••</td>
+                    <td className="p-2 sm:p-3 text-right">
+                      <button
+                        onClick={() => handleDeleteEntry(entry.id)}
+                        className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {emailPasswords.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No entries yet
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-        {/* Add Entry Form */}
-        {showAddForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-            <div className={`p-6 rounded-lg w-full max-w-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Add New Entry</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Email</label>
-                  <input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    className={`w-full px-3 py-2 rounded ${
-                      isDarkMode 
-                        ? 'bg-gray-700 text-white border-gray-600' 
-                        : 'bg-white border-gray-300'
-                    }`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className={`w-full px-3 py-2 rounded ${
-                      isDarkMode 
-                        ? 'bg-gray-700 text-white border-gray-600' 
-                        : 'bg-white border-gray-300'
-                    }`}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setShowAddForm(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddEntry}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
-                  >
-                    Add
-                  </button>
-                </div>
+          {/* Pagination */}
+          {emailPasswords.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalItems={emailPasswords.length}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+              isDarkMode={isDarkMode}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Add Entry Form */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className={`p-6 rounded-lg w-full max-w-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <h3 className="text-lg font-semibold mb-4 dark:text-white">Add New Entry</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-300">Email</label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className={`w-full px-3 py-2 rounded ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white border-gray-600' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-300">Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className={`w-full px-3 py-2 rounded ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-white border-gray-600' 
+                      : 'bg-white border-gray-300'
+                  }`}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddEntry}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                >
+                  Add
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
