@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.14",
+    "caniuse-lite": "^1.0.30001713",
     "electron-squirrel-startup": "^1.0.0",
     "postcss": "^8.4.35",
     "react": "^18.2.0",
