@@ -44,21 +44,44 @@ const App = () => {
   };
 
   return (
-    <div className={`flex h-screen transition-colors duration-200 ${isDarkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-      <Sidebar 
-        activePage={activePage} 
-        onPageChange={setActivePage}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={toggleSidebar}
-        isDarkMode={isDarkMode}
-      />
-      <div className={`flex-1 overflow-auto transition-all duration-300`}>
-        <Content 
-          activePage={activePage} 
-          onFileSubmit={handleFileSubmit}
-          isDarkMode={isDarkMode}
-          onToggleTheme={toggleTheme}
-        />
+    <div className={`flex h-screen overflow-y-auto transition-colors duration-200 ${isDarkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+      <style>
+        {`
+          ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+          }
+          ::-webkit-scrollbar-track {
+            background: ${isDarkMode ? '#1f2937' : '#f3f4f6'};
+            border-radius: 3px;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: ${isDarkMode ? '#4b5563' : '#9ca3af'};
+            border-radius: 3px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: ${isDarkMode ? '#6b7280' : '#6b7280'};
+          }
+        `}
+      </style>
+      <div className="flex h-full">
+        <div className="fixed h-full">
+          <Sidebar 
+            activePage={activePage} 
+            onPageChange={setActivePage}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={toggleSidebar}
+            isDarkMode={isDarkMode}
+          />
+        </div>
+        <div className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+          <Content 
+            activePage={activePage} 
+            onFileSubmit={handleFileSubmit}
+            isDarkMode={isDarkMode}
+            onToggleTheme={toggleTheme}
+          />
+        </div>
       </div>
     </div>
   );

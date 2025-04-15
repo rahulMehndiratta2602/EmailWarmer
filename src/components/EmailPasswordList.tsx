@@ -138,7 +138,7 @@ example3@email.com,password789`;
   return (
     <div className="h-full flex flex-col">
       {/* Import Section */}
-      <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'}`}>
+      <div className={`p-4 sm:p-6 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'}`}>
         <h3 className="text-xl font-semibold mb-4 dark:text-white">Import Email/Password List</h3>
         <div className="space-y-4">
           <div>
@@ -193,8 +193,8 @@ example3@email.com,password789`;
       </div>
 
       {/* Email/Password List Section */}
-      <div className={`flex-1 overflow-y-auto mt-4 ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'} rounded-lg`}>
-        <div className="p-4 sm:p-6">
+      <div className={`flex-1 mt-4 ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'} rounded-lg flex flex-col`}>
+        <div className="p-4 sm:p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold dark:text-white">Email/Password List</h3>
             <div className="flex items-center gap-2">
@@ -224,87 +224,91 @@ example3@email.com,password789`;
             </div>
           </div>
 
-          {/* Table */}
-          <div className="w-full overflow-x-auto">
-            <table className="w-full border-collapse table-fixed">
-              <thead>
-                <tr className={`border-b ${
-                  isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                }`}>
-                  <th className="w-10 p-2 sm:p-3">
-                    {currentItems.length > 0 && (
-                      <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className={`h-4 w-4 rounded ${
-                          isDarkMode 
-                            ? 'bg-gray-700 border-gray-600 text-blue-500' 
-                            : 'border-gray-300 text-blue-600'
-                        }`}
-                      />
-                    )}
-                  </th>
-                  <th className="w-12 p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">#</th>
-                  <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
-                  <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Password</th>
-                  <th className="w-10 p-2 sm:p-3"></th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${
-                isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
-              }`}>
-                {currentItems.map((entry, index) => (
-                  <tr key={entry.id} className={`hover:${
-                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+          {/* Table Container */}
+          <div className="flex-1 max-h-[60vh] overflow-y-auto">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse table-fixed">
+                <thead className="sticky top-0 z-10">
+                  <tr className={`border-b ${
+                    isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-white/50'
                   }`}>
-                    <td className="p-2 sm:p-3">
-                      <input
-                        type="checkbox"
-                        checked={entry.selected || false}
-                        onChange={(e) => handleSelectItem(entry.id, e.target.checked)}
-                        className={`h-4 w-4 rounded ${
-                          isDarkMode 
-                            ? 'bg-gray-700 border-gray-600 text-blue-500' 
-                            : 'border-gray-300 text-blue-600'
-                        }`}
-                      />
-                    </td>
-                    <td className="p-2 sm:p-3 text-sm dark:text-gray-300">{startIndex + index + 1}</td>
-                    <td className="p-2 sm:p-3 text-sm dark:text-gray-300 truncate">{entry.email}</td>
-                    <td className="p-2 sm:p-3 text-sm dark:text-gray-300">••••••••</td>
-                    <td className="p-2 sm:p-3 text-right">
-                      <button
-                        onClick={() => handleDeleteEntry(entry.id)}
-                        className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
+                    <th className="w-10 p-2 sm:p-3">
+                      {currentItems.length > 0 && (
+                        <input
+                          type="checkbox"
+                          checked={selectAll}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          className={`h-4 w-4 rounded ${
+                            isDarkMode 
+                              ? 'bg-gray-700 border-gray-600 text-blue-500' 
+                              : 'border-gray-300 text-blue-600'
+                          }`}
+                        />
+                      )}
+                    </th>
+                    <th className="w-12 p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">#</th>
+                    <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
+                    <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Password</th>
+                    <th className="w-10 p-2 sm:p-3"></th>
                   </tr>
-                ))}
-                {emailPasswords.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                      No entries yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={`divide-y ${
+                  isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
+                }`}>
+                  {currentItems.map((entry, index) => (
+                    <tr key={entry.id} className={`hover:${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      <td className="p-2 sm:p-3">
+                        <input
+                          type="checkbox"
+                          checked={entry.selected || false}
+                          onChange={(e) => handleSelectItem(entry.id, e.target.checked)}
+                          className={`h-4 w-4 rounded ${
+                            isDarkMode 
+                              ? 'bg-gray-700 border-gray-600 text-blue-500' 
+                              : 'border-gray-300 text-blue-600'
+                          }`}
+                        />
+                      </td>
+                      <td className="p-2 sm:p-3 text-sm dark:text-gray-300">{startIndex + index + 1}</td>
+                      <td className="p-2 sm:p-3 text-sm dark:text-gray-300 truncate">{entry.email}</td>
+                      <td className="p-2 sm:p-3 text-sm dark:text-gray-300">••••••••</td>
+                      <td className="p-2 sm:p-3 text-right">
+                        <button
+                          onClick={() => handleDeleteEntry(entry.id)}
+                          className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {emailPasswords.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        No entries yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Pagination */}
           {emailPasswords.length > 0 && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              itemsPerPage={itemsPerPage}
-              totalItems={emailPasswords.length}
-              onPageChange={handlePageChange}
-              onItemsPerPageChange={handleItemsPerPageChange}
-              isDarkMode={isDarkMode}
-            />
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                itemsPerPage={itemsPerPage}
+                totalItems={emailPasswords.length}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+                isDarkMode={isDarkMode}
+              />
+            </div>
           )}
         </div>
       </div>
