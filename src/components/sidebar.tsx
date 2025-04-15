@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange, isCollapsed
             "text-xl font-bold transition-opacity duration-300",
             isDarkMode ? "text-white" : "text-gray-800"
           )}>
-            Email Manager
+            Email Warmer
           </h1>
         )}
         <button

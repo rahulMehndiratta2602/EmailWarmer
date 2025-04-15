@@ -5,7 +5,7 @@ import Content from './components/Content';
 
 const App = () => {
   const [activePage, setActivePage] = useState('home');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // Default to dark mode if no theme is set
     return localStorage.getItem('theme') === 'light' ? false : true;
@@ -52,7 +52,7 @@ const App = () => {
         onToggleCollapse={toggleSidebar}
         isDarkMode={isDarkMode}
       />
-      <div className={`flex-1 overflow-auto transition-all duration-300 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+      <div className={`flex-1 overflow-auto transition-all duration-300`}>
         <Content 
           activePage={activePage} 
           onFileSubmit={handleFileSubmit}

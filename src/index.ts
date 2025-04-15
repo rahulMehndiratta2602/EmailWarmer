@@ -16,6 +16,7 @@ const createWindow = (): void => {
     height: 600,
     width: 800,
     autoHideMenuBar: true,
+    title: 'Email Warmer',
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },

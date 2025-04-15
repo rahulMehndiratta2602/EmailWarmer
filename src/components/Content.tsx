@@ -1,5 +1,6 @@
 import React from 'react';
 import * as Switch from '@radix-ui/react-switch';
+import EmailPasswordList from './EmailPasswordList';
 
 interface ContentProps {
   activePage: string;
@@ -13,8 +14,7 @@ const Content: React.FC<ContentProps> = ({ activePage, onFileSubmit, isDarkMode,
     case 'home':
       return (
         <div className="p-8">
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">Welcome to Email Manager</h2>
-          <p className="text-gray-600 dark:text-gray-300">Select a file to import your email/password list.</p>
+          <EmailPasswordList isDarkMode={isDarkMode} />
         </div>
       );
     case 'settings':
