@@ -1,6 +1,7 @@
 import React from 'react';
 import * as Switch from '@radix-ui/react-switch';
 import EmailPasswordList from './EmailPasswordList';
+import ActionPipeline from './ActionPipeline';
 
 interface ContentProps {
   activePage: string;
@@ -13,8 +14,14 @@ const Content: React.FC<ContentProps> = ({ activePage, onFileSubmit, isDarkMode,
   switch (activePage) {
     case 'home':
       return (
-        <div className="p-8">
-          <EmailPasswordList isDarkMode={isDarkMode} />
+        <div className="p-8 space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold mb-4 dark:text-white">Email Accounts</h2>
+            <EmailPasswordList isDarkMode={isDarkMode} />
+          </div>
+          <div>
+            <ActionPipeline />
+          </div>
         </div>
       );
     case 'settings':
