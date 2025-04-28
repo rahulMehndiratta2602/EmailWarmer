@@ -23,20 +23,20 @@ export class PipelineService {
   async getAllPipelines() {
     try {
       // Try to get from cache first
-      const cachedPipelines = await redisService.get(this.getCacheKey());
-      if (cachedPipelines) {
-        return cachedPipelines;
+      const cached = await redisService.get(this.getCacheKey());
+      if (cached) {
+        return JSON.parse(cached);
       }
 
       // If not in cache, get from database
       const pipelines = await prisma.pipeline.findMany({
         include: {
-          nodes: true,
-        },
+          nodes: true
+        }
       });
 
       // Cache the result
-      await redisService.set(this.getCacheKey(), pipelines);
+      await redisService.set(this.getCacheKey(), JSON.stringify(pipelines), 3600); // 1 hour cache
 
       return pipelines;
     } catch (error) {
@@ -48,22 +48,22 @@ export class PipelineService {
   async getPipelineById(id: string) {
     try {
       // Try to get from cache first
-      const cachedPipeline = await redisService.get(this.getCacheKey(id));
-      if (cachedPipeline) {
-        return cachedPipeline;
+      const cached = await redisService.get(this.getCacheKey(id));
+      if (cached) {
+        return JSON.parse(cached);
       }
 
       // If not in cache, get from database
       const pipeline = await prisma.pipeline.findUnique({
         where: { id },
         include: {
-          nodes: true,
-        },
+          nodes: true
+        }
       });
 
       if (pipeline) {
         // Cache the result
-        await redisService.set(this.getCacheKey(id), pipeline);
+        await redisService.set(this.getCacheKey(id), JSON.stringify(pipeline), 3600);
       }
 
       return pipeline;
@@ -79,16 +79,16 @@ export class PipelineService {
         data: {
           name: data.name,
           nodes: {
-            create: data.nodes,
-          },
+            create: data.nodes
+          }
         },
         include: {
-          nodes: true,
-        },
+          nodes: true
+        }
       });
 
-      // Clear the all pipelines cache
-      await redisService.clearCache('pipelines:*');
+      // Invalidate cache
+      await redisService.delete(this.getCacheKey());
 
       return pipeline;
     } catch (error) {
@@ -99,27 +99,27 @@ export class PipelineService {
 
   async updatePipeline(id: string, data: { name: string; nodes: { action: string }[] }) {
     try {
-      // Delete existing nodes
+      // First delete existing nodes
       await prisma.node.deleteMany({
-        where: { pipelineId: id },
+        where: { pipelineId: id }
       });
 
-      // Update pipeline and create new nodes
       const pipeline = await prisma.pipeline.update({
         where: { id },
         data: {
           name: data.name,
           nodes: {
-            create: data.nodes,
-          },
+            create: data.nodes
+          }
         },
         include: {
-          nodes: true,
-        },
+          nodes: true
+        }
       });
 
-      // Clear relevant caches
-      await redisService.clearCache('pipelines:*');
+      // Invalidate cache
+      await redisService.delete(this.getCacheKey());
+      await redisService.delete(this.getCacheKey(id));
 
       return pipeline;
     } catch (error) {
@@ -128,19 +128,20 @@ export class PipelineService {
     }
   }
 
-  async deletePipeline(id: string) {
+  async deletePipeline(id: string): Promise<boolean> {
     try {
       await prisma.pipeline.delete({
-        where: { id },
+        where: { id }
       });
 
-      // Clear relevant caches
-      await redisService.clearCache('pipelines:*');
+      // Invalidate cache
+      await redisService.delete(this.getCacheKey());
+      await redisService.delete(this.getCacheKey(id));
 
       return true;
     } catch (error) {
       logger.error(`Error deleting pipeline with id ${id}:`, error);
-      throw error;
+      return false;
     }
   }
 }

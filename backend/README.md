@@ -1,67 +1,84 @@
-# Email Automation Pipeline Backend
+# Pipeline Backend Service
 
-This is the backend service for the Email Automation Pipeline application. It provides API endpoints for managing email automation pipelines with Redis caching and Prisma ORM.
+A TypeScript-based Express backend service for the Pipeline application with Prisma ORM and PostgreSQL.
 
 ## Features
 
 - RESTful API for pipeline management
-- Redis caching for improved performance
-- Prisma ORM for database operations
 - TypeScript support
-- Environment-based configuration
-- Error handling and logging
+- Express.js framework
+- Prisma ORM with PostgreSQL
+- Winston logging
+- CORS enabled for local development
+- Redis caching support
 
 ## Prerequisites
 
 - Node.js (v16 or higher)
-- PostgreSQL
-- Redis
+- PostgreSQL database
+- Redis (optional, for caching)
 - npm or yarn
 
-## Environment Variables
-
-Create a `.env` file in the backend directory with the following variables:
-
-```env
-# Server Configuration
-PORT=3000
-NODE_ENV=development
-
-# Database Configuration
-DATABASE_URL="postgresql://user:password@localhost:5432/email_pipeline?schema=public"
-
-# Redis Configuration
-REDIS_URL="redis://localhost:6379"
-REDIS_PASSWORD=your_redis_password
-
-# JWT Configuration (if needed)
-JWT_SECRET=your_jwt_secret
-```
-
-## Installation
+## Setup
 
 1. Install dependencies:
 ```bash
 npm install
-# or
-yarn install
 ```
 
-2. Generate Prisma client:
+2. Create a `.env` file in the root directory with the following variables:
+```env
+# Server Configuration
+PORT=3001
+NODE_ENV=development
+
+# Database Configuration
+DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
+
+# Redis Configuration
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+REDIS_PASSWORD=""
+
+# Logging Configuration
+LOG_LEVEL="info"
+
+# JWT Configuration (if needed)
+JWT_SECRET="your-secret-key"
+JWT_EXPIRES_IN="24h"
+```
+
+3. Initialize Prisma:
 ```bash
-npx prisma generate
+# Generate Prisma client
+npm run prisma:generate
+
+# Run database migrations
+npm run prisma:migrate
 ```
 
-3. Run database migrations:
-```bash
-npx prisma migrate dev
-```
+## Development
 
-4. Start the development server:
+Start the development server:
 ```bash
 npm run dev
-# or
-yarn dev
+```
+
+The server will start on `http://localhost:3001`
+
+## Database Management
+
+- View database schema: `prisma/schema.prisma`
+- Run migrations: `npm run prisma:migrate`
+- Open Prisma Studio: `npm run prisma:studio`
+- Generate Prisma client: `npm run prisma:generate`
+
+## Production
+
+Build and start the production server:
+```bash
+npm run build
+npm start
 ```
 
 ## API Endpoints
@@ -69,36 +86,54 @@ yarn dev
 ### Pipelines
 
 - `GET /api/pipelines` - Get all pipelines
-- `GET /api/pipelines/:id` - Get a specific pipeline
-- `POST /api/pipelines` - Create a new pipeline
-- `PUT /api/pipelines/:id` - Update a pipeline
-- `DELETE /api/pipelines/:id` - Delete a pipeline
+- `GET /api/pipelines/:id` - Get pipeline by ID
+- `POST /api/pipelines` - Create new pipeline
+- `PUT /api/pipelines/:id` - Update pipeline
+- `DELETE /api/pipelines/:id` - Delete pipeline
+
+## Testing
+
+Run tests:
+```bash
+npm test
+```
 
 ## Project Structure
 
 ```
 backend/
 ├── src/
-│   ├── config/         # Configuration files
-│   ├── controllers/    # Route controllers
-│   ├── middleware/     # Custom middleware
-│   ├── models/         # Data models
 │   ├── routes/         # API routes
 │   ├── services/       # Business logic
 │   ├── utils/          # Utility functions
-│   └── app.ts          # Express application
-├── prisma/             # Prisma schema and migrations
-├── .env                # Environment variables
-├── package.json        # Project dependencies
-└── tsconfig.json       # TypeScript configuration
+│   └── index.ts        # Application entry point
+├── prisma/
+│   ├── migrations/     # Database migrations
+│   └── schema.prisma   # Database schema
+├── dist/              # Compiled JavaScript
+├── package.json
+└── README.md
 ```
 
-## Development
+## Database Schema
 
-- Run tests: `npm run test`
-- Build for production: `npm run build`
-- Start production server: `npm start`
+The application uses Prisma with the following main models:
 
-## License
+```prisma
+model Pipeline {
+  id        String   @id @default(uuid())
+  name      String
+  nodes     Node[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
-MIT 
+model Node {
+  id        String   @id @default(uuid())
+  action    String?
+  pipeline  Pipeline @relation(fields: [pipelineId], references: [id])
+  pipelineId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+``` 

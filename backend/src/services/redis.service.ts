@@ -1,26 +1,27 @@
 import Redis from 'ioredis';
 import { logger } from '../utils/logger';
 
-class RedisService {
-  private client: Redis;
+export class RedisService {
   private static instance: RedisService;
-  private readonly CACHE_TTL = 3600; // 1 hour in seconds
+  private client: Redis;
 
   private constructor() {
-    this.client = new Redis(process.env.REDIS_URL, {
-      password: process.env.REDIS_PASSWORD,
-      retryStrategy: (times) => {
+    this.client = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD || undefined,
+      retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000);
         return delay;
-      },
+      }
     });
 
-    this.client.on('error', (err) => {
-      logger.error('Redis Client Error:', err);
+    this.client.on('error', (err: Error) => {
+      logger.error('Redis error:', err);
     });
 
     this.client.on('connect', () => {
-      logger.info('Redis Client Connected');
+      logger.info('Connected to Redis');
     });
   }
 
@@ -31,19 +32,22 @@ class RedisService {
     return RedisService.instance;
   }
 
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: string, expiry?: number): Promise<void> {
     try {
-      await this.client.set(key, JSON.stringify(value), 'EX', this.CACHE_TTL);
+      if (expiry) {
+        await this.client.setex(key, expiry, value);
+      } else {
+        await this.client.set(key, value);
+      }
     } catch (error) {
       logger.error('Redis set error:', error);
       throw error;
     }
   }
 
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<string | null> {
     try {
-      const value = await this.client.get(key);
-      return value ? JSON.parse(value) : null;
+      return await this.client.get(key);
     } catch (error) {
       logger.error('Redis get error:', error);
       throw error;
@@ -59,14 +63,12 @@ class RedisService {
     }
   }
 
-  async clearCache(pattern: string): Promise<void> {
+  async exists(key: string): Promise<boolean> {
     try {
-      const keys = await this.client.keys(pattern);
-      if (keys.length > 0) {
-        await this.client.del(...keys);
-      }
+      const result = await this.client.exists(key);
+      return result === 1;
     } catch (error) {
-      logger.error('Redis clear cache error:', error);
+      logger.error('Redis exists error:', error);
       throw error;
     }
   }

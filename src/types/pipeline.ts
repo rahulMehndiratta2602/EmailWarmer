@@ -1,15 +1,14 @@
+import { EmailAction } from '../components/ActionPipeline';
+
+export interface ActionNode {
+  id: string;
+  action: EmailAction | null;
+}
+
 export interface Pipeline {
   id: string;
   name: string;
-  nodes: PipelineNode[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface PipelineNode {
-  id: string;
-  action: string;
-  pipelineId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  nodes: ActionNode[];
+  createdAt?: string;
+  updatedAt?: string;
 } 

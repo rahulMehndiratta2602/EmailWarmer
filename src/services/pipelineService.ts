@@ -1,21 +1,11 @@
 import { EmailAction } from '../components/ActionPipeline';
-import { Pipeline } from '../types/pipeline';
+import { Pipeline, ActionNode } from '../types/pipeline';
 
-export interface ActionNode {
-  id: string;
-  action: EmailAction | null;
-}
-
-export interface Pipeline {
-  id: string;
-  name: string;
-  nodes: ActionNode[];
-}
-
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:3001/api';
 
 export class PipelineService {
   private static instance: PipelineService;
+  private pipelines: Pipeline[] = [];
 
   private constructor() {}
 
@@ -26,15 +16,23 @@ export class PipelineService {
     return PipelineService.instance;
   }
 
-  async getAllPipelines(): Promise<Pipeline[]> {
+  async getPipelines(): Promise<Pipeline[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/pipelines`);
       if (!response.ok) {
         throw new Error('Failed to fetch pipelines');
       }
-      return await response.json();
+      const data = await response.json();
+      this.pipelines = data.map((pipeline: any) => ({
+        ...pipeline,
+        nodes: pipeline.nodes.map((node: any) => ({
+          id: node.id,
+          action: node.action as EmailAction | null
+        }))
+      }));
+      return this.pipelines;
     } catch (error) {
-      console.error('Error getting all pipelines:', error);
+      console.error('Error fetching pipelines:', error);
       throw error;
     }
   }
@@ -48,62 +46,86 @@ export class PipelineService {
         }
         throw new Error('Failed to fetch pipeline');
       }
-      return await response.json();
+      const data = await response.json();
+      return {
+        ...data,
+        nodes: data.nodes.map((node: any) => ({
+          id: node.id,
+          action: node.action as EmailAction | null
+        }))
+      };
     } catch (error) {
-      console.error(`Error getting pipeline with id ${id}:`, error);
+      console.error('Error fetching pipeline:', error);
       throw error;
     }
   }
 
-  async createPipeline(data: { name: string; nodes: { action: string }[] }): Promise<Pipeline> {
+  async savePipeline(pipeline: Omit<Pipeline, 'id'> & { id?: string }): Promise<Pipeline> {
     try {
-      const response = await fetch(`${API_BASE_URL}/pipelines`, {
-        method: 'POST',
+      const method = pipeline.id ? 'PUT' : 'POST';
+      const url = pipeline.id 
+        ? `${API_BASE_URL}/pipelines/${pipeline.id}`
+        : `${API_BASE_URL}/pipelines`;
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(pipeline),
       });
+
       if (!response.ok) {
-        throw new Error('Failed to create pipeline');
+        throw new Error(`Failed to ${method === 'POST' ? 'create' : 'update'} pipeline`);
       }
-      return await response.json();
+
+      const data = await response.json();
+      const savedPipeline = {
+        ...data,
+        nodes: data.nodes.map((node: any) => ({
+          id: node.id,
+          action: node.action as EmailAction | null
+        }))
+      };
+      
+      // Update local cache
+      if (method === 'POST') {
+        this.pipelines.push(savedPipeline);
+      } else {
+        const index = this.pipelines.findIndex(p => p.id === pipeline.id);
+        if (index !== -1) {
+          this.pipelines[index] = savedPipeline;
+        }
+      }
+
+      return savedPipeline;
     } catch (error) {
-      console.error('Error creating pipeline:', error);
+      console.error('Error saving pipeline:', error);
       throw error;
     }
   }
 
-  async updatePipeline(id: string, data: { name: string; nodes: { action: string }[] }): Promise<Pipeline> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/pipelines/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update pipeline');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error(`Error updating pipeline with id ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async deletePipeline(id: string): Promise<void> {
+  async deletePipeline(id: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/pipelines/${id}`, {
         method: 'DELETE',
       });
+
       if (!response.ok) {
+        if (response.status === 404) {
+          return false;
+        }
         throw new Error('Failed to delete pipeline');
       }
+
+      // Update local cache
+      this.pipelines = this.pipelines.filter(p => p.id !== id);
+      return true;
     } catch (error) {
-      console.error(`Error deleting pipeline with id ${id}:`, error);
+      console.error('Error deleting pipeline:', error);
       throw error;
     }
   }
-} 
+}
+
+export const pipelineService = PipelineService.getInstance(); 

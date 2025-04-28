@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { pipelineService, Pipeline } from '../services/pipelineService';
+import { pipelineService } from '../services/pipelineService';
+import { Pipeline } from '../types/pipeline';
 
 export enum EmailAction {
   TRANSFER_FROM_SPAM = 'Transfer from Spam to Inbox',
@@ -113,6 +114,7 @@ const ActionPipeline: React.FC = () => {
       setError(null);
       
       const pipelineToSave = {
+        id: selectedPipeline,
         name: pipelineName,
         nodes: nodes
       };
