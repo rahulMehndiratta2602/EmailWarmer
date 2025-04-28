@@ -10,14 +10,38 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
+// CORS configuration with all origins allowed
+const corsOptions = {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.originalUrl}`);
+  next();
+});
 
 // Routes
 app.use('/api/pipelines', pipelineRoutes);
 
+// Root route for testing
+app.get('/', (req, res) => {
+  res.send('Backend server is running!');
+});
+
+// API test route
+app.get('/api', (req, res) => {
+  res.json({ message: 'API is working!' });
+});
+
 // Start server
 app.listen(port, () => {
   logger.info(`Server is running on port ${port}`);
+  logger.info(`API is available at http://localhost:${port}/api`);
 }); 
