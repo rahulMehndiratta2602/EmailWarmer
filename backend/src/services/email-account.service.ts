@@ -10,22 +10,6 @@ interface EmailAccount {
   password: string;
 }
 
-// Add proper Prisma type support
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getPrismaEmailAccount = (): any => {
-  try {
-    // @ts-ignore - This is a runtime check to see if emailAccount exists
-    if (prisma['emailAccount']) {
-      // @ts-ignore - Access the model if it exists
-      return prisma['emailAccount'];
-    }
-    return null;
-  } catch (error) {
-    logger.error('Error accessing emailAccount model:', error);
-    return null;
-  }
-};
-
 export class EmailAccountService {
   private static instance: EmailAccountService;
 
@@ -40,23 +24,9 @@ export class EmailAccountService {
 
   async getAllEmailAccounts() {
     try {
-      const emailAccountModel = getPrismaEmailAccount();
-      
-      if (!emailAccountModel) {
-        logger.error('emailAccount model is not available in the Prisma client');
-        // Return mock data if the model doesn't exist
-        return [
-          { 
-            id: '1', 
-            email: 'example1@test.com', 
-            password: 'password123',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
-        ];
-      }
-      
-      return await emailAccountModel.findMany({
+      // Use bracket notation to access the model - this bypasses TypeScript errors
+      // @ts-ignore
+      return await prisma['emailAccount'].findMany({
         orderBy: {
           createdAt: 'desc',
         },
@@ -78,12 +48,8 @@ export class EmailAccountService {
 
   async getEmailAccountById(id: string) {
     try {
-      const emailAccountModel = getPrismaEmailAccount();
-      if (!emailAccountModel) {
-        return null;
-      }
-      
-      return await emailAccountModel.findUnique({
+      // @ts-ignore
+      return await prisma['emailAccount'].findUnique({
         where: { id },
       });
     } catch (error) {
@@ -94,17 +60,8 @@ export class EmailAccountService {
 
   async createEmailAccount(data: { email: string; password: string }) {
     try {
-      const emailAccountModel = getPrismaEmailAccount();
-      if (!emailAccountModel) {
-        return { 
-          id: 'mock-id', 
-          ...data, 
-          createdAt: new Date(), 
-          updatedAt: new Date() 
-        };
-      }
-      
-      return await emailAccountModel.create({
+      // @ts-ignore
+      return await prisma['emailAccount'].create({
         data,
       });
     } catch (error) {
@@ -120,12 +77,8 @@ export class EmailAccountService {
 
   async updateEmailAccount(id: string, data: { password: string }) {
     try {
-      const emailAccountModel = getPrismaEmailAccount();
-      if (!emailAccountModel) {
-        return null;
-      }
-      
-      return await emailAccountModel.update({
+      // @ts-ignore
+      return await prisma['emailAccount'].update({
         where: { id },
         data,
       });
@@ -137,12 +90,8 @@ export class EmailAccountService {
 
   async deleteEmailAccount(id: string): Promise<boolean> {
     try {
-      const emailAccountModel = getPrismaEmailAccount();
-      if (!emailAccountModel) {
-        return false;
-      }
-      
-      await emailAccountModel.delete({
+      // @ts-ignore
+      await prisma['emailAccount'].delete({
         where: { id },
       });
       return true;
@@ -155,12 +104,6 @@ export class EmailAccountService {
   async batchUpsertEmailAccounts(accounts: EmailAccount[]) {
     try {
       let count = 0;
-      const emailAccountModel = getPrismaEmailAccount();
-      
-      if (!emailAccountModel) {
-        logger.warn('Email account model not available, returning success without saving');
-        return { count: accounts.length };
-      }
       
       // Use a transaction for better performance and atomicity
       await prisma.$transaction(async (tx) => {
@@ -168,7 +111,7 @@ export class EmailAccountService {
           if (account.id) {
             // Update existing account if ID is provided
             try {
-              // @ts-ignore - Access the model if it exists
+              // @ts-ignore
               await tx['emailAccount'].update({
                 where: { id: account.id },
                 data: { password: account.password }
@@ -179,21 +122,21 @@ export class EmailAccountService {
           } else {
             // Try to find by email first
             try {
-              // @ts-ignore - Access the model if it exists
+              // @ts-ignore
               const existing = await tx['emailAccount'].findFirst({
                 where: { email: account.email }
               });
               
               if (existing) {
                 // Update if email already exists
-                // @ts-ignore - Access the model if it exists
+                // @ts-ignore
                 await tx['emailAccount'].update({
                   where: { id: existing.id },
                   data: { password: account.password }
                 });
               } else {
                 // Create new account if email doesn't exist
-                // @ts-ignore - Access the model if it exists
+                // @ts-ignore
                 await tx['emailAccount'].create({
                   data: {
                     email: account.email,
@@ -219,12 +162,8 @@ export class EmailAccountService {
 
   async batchDeleteEmailAccounts(ids: string[]) {
     try {
-      const emailAccountModel = getPrismaEmailAccount();
-      if (!emailAccountModel) {
-        return { count: 0 };
-      }
-      
-      const result = await emailAccountModel.deleteMany({
+      // @ts-ignore
+      const result = await prisma['emailAccount'].deleteMany({
         where: {
           id: {
             in: ids,

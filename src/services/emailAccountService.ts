@@ -63,16 +63,22 @@ export class EmailAccountService {
   
   async batchUpsertEmailAccounts(accounts: EmailAccount[]): Promise<any> {
     try {
-      return await window.api.batchUpsertEmailAccounts(accounts);
+      console.log('emailAccountService.batchUpsertEmailAccounts called with:', accounts.length, 'accounts');
+      const result = await window.api.batchUpsertEmailAccounts(accounts);
+      console.log('Result from batchUpsertEmailAccounts:', result);
+      return result;
     } catch (error) {
-      console.error('Error batch upserting email accounts:', error);
+      console.error('Error in emailAccountService.batchUpsertEmailAccounts:', error);
       throw error;
     }
   }
   
   async batchDeleteEmailAccounts(ids: string[]): Promise<any> {
     try {
-      return await window.api.batchDeleteEmailAccounts(ids);
+      console.log('emailAccountService.batchDeleteEmailAccounts called with:', ids);
+      const result = await window.api.batchDeleteEmailAccounts(ids);
+      console.log('Result from batchDeleteEmailAccounts:', result);
+      return result;
     } catch (error) {
       console.error('Error batch deleting email accounts:', error);
       throw error;

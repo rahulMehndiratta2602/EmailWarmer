@@ -26,7 +26,7 @@ export interface ElectronAPI {
   createEmailAccount: (account: EmailAccount) => Promise<EmailAccount>;
   updateEmailAccount: (id: string, data: { password: string }) => Promise<EmailAccount | null>;
   deleteEmailAccount: (id: string) => Promise<boolean>;
-  batchUpsertEmailAccounts: (accounts: EmailAccount[]) => Promise<{ saved: number }>;
+  batchUpsertEmailAccounts: (accounts: EmailAccount[]) => Promise<{ count: number }>;
   batchDeleteEmailAccounts: (ids: string[]) => Promise<{ count: number }>;
   
   // Environment

@@ -90,7 +90,7 @@ router.post('/batch', async (req, res) => {
     }
     
     const result = await emailAccountService.batchUpsertEmailAccounts(accounts);
-    res.status(200).json({ saved: result.count });
+    res.status(200).json({ count: result.count });
   } catch (error) {
     logger.error('Error in POST /email-accounts/batch:', error);
     res.status(500).json({ error: 'Failed to process batch operation' });
@@ -106,7 +106,7 @@ router.delete('/batch', async (req, res) => {
     }
     
     const result = await emailAccountService.batchDeleteEmailAccounts(ids);
-    res.status(200).json({ deleted: result.count });
+    res.status(200).json({ count: result.count });
   } catch (error) {
     logger.error('Error in DELETE /email-accounts/batch:', error);
     res.status(500).json({ error: 'Failed to process batch delete operation' });
