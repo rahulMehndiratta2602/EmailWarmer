@@ -33,7 +33,7 @@ PORT=3001
 NODE_ENV=development
 
 # Database Configuration
-DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
+DATABASE_URL="postgresql://user:password@host:port/database?schema=emailWarmer"
 
 # Redis Configuration
 REDIS_HOST="localhost"

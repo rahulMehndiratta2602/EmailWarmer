@@ -1,6 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { pipelineService } from '../services/pipelineService';
 import { Pipeline } from '../types/pipeline';
+import ConfirmationModal from './ui/ConfirmationModal';
+import { RefreshCw } from 'lucide-react';
 
 export enum EmailAction {
   TRANSFER_FROM_SPAM = 'Transfer from Spam to Inbox',
@@ -16,22 +18,78 @@ interface ActionNode {
   action: EmailAction | null;
 }
 
-const ActionPipeline: React.FC = () => {
+interface ActionPipelineProps {
+  initialPipeline?: Pipeline | null;
+  onSaveSuccess?: () => void;
+}
+
+const ActionPipeline: React.FC<ActionPipelineProps> = ({ initialPipeline, onSaveSuccess }) => {
   const [nodes, setNodes] = useState<ActionNode[]>([
     { id: '1', action: null }
   ]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedPipeline, setSelectedPipeline] = useState<string>('');
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+  const [availableActions, setAvailableActions] = useState<string[]>(Object.values(EmailAction));
   const [pipelineName, setPipelineName] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [refreshingActions, setRefreshingActions] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [pipelineToDelete, setPipelineToDelete] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const dropdownRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
   const nodeCounter = useRef(1);
+
+  // Function to clear messages after a timeout
+  const clearMessages = useCallback(() => {
+    setTimeout(() => {
+      setError(null);
+      setSuccessMessage(null);
+    }, 5000);
+  }, []);
 
   useEffect(() => {
     loadPipelines();
+    loadActions();
+    
+    // Check for dark mode preference
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDark);
+    
+    // Listen for dark mode changes
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeHandler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    darkModeMediaQuery.addEventListener('change', darkModeHandler);
+    
+    return () => darkModeMediaQuery.removeEventListener('change', darkModeHandler);
   }, []);
+
+  // Handle initial pipeline prop if provided
+  useEffect(() => {
+    if (initialPipeline) {
+      setSelectedPipeline(initialPipeline.id);
+      setNodes(initialPipeline.nodes);
+      setPipelineName(initialPipeline.name);
+      nodeCounter.current = initialPipeline.nodes.length;
+    }
+  }, [initialPipeline]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (activeDropdown && 
+          dropdownRefs.current[activeDropdown] && 
+          !dropdownRefs.current[activeDropdown]?.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeDropdown]);
 
   const loadPipelines = async () => {
     try {
@@ -43,6 +101,22 @@ const ActionPipeline: React.FC = () => {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to load actions from the database (mocked for now)
+  const loadActions = async () => {
+    try {
+      setRefreshingActions(true);
+      // Get actions from the database via service
+      const actions = await pipelineService.getAvailableActions();
+      setAvailableActions(actions);
+    } catch (err) {
+      console.error('Failed to load actions:', err);
+      // Fallback to enum values
+      setAvailableActions(Object.values(EmailAction));
+    } finally {
+      setRefreshingActions(false);
     }
   };
 
@@ -114,45 +188,199 @@ const ActionPipeline: React.FC = () => {
       setError(null);
       
       const pipelineToSave = {
-        id: selectedPipeline,
+        id: selectedPipeline || undefined, // Send undefined instead of empty string for new pipelines
         name: pipelineName,
         nodes: nodes
       };
 
       await pipelineService.savePipeline(pipelineToSave);
       await loadPipelines();
-      setError(null);
+      setSuccessMessage(selectedPipeline ? 'Pipeline updated successfully' : 'Pipeline created successfully');
+      clearMessages();
+      
+      // Call onSaveSuccess callback if provided
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
     } catch (err) {
       setError('Failed to save pipeline');
       console.error(err);
+      clearMessages();
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDeletePipeline = () => {
+    if (selectedPipeline) {
+      setPipelineToDelete(selectedPipeline);
+      setShowDeleteModal(true);
+    }
+  };
+
+  const confirmDeletePipeline = async () => {
+    if (!pipelineToDelete) return;
+
+    try {
+      setIsLoading(true);
+      const success = await pipelineService.deletePipeline(pipelineToDelete);
+      
+      if (success) {
+        setSuccessMessage('Pipeline deleted successfully');
+        resetPipeline();
+        await loadPipelines();
+        
+        // Call onSaveSuccess callback if provided (also used after delete)
+        if (onSaveSuccess) {
+          onSaveSuccess();
+        }
+      } else {
+        setError('Failed to delete pipeline');
+      }
+      clearMessages();
+    } catch (err) {
+      setError('Error deleting pipeline');
+      console.error(err);
+      clearMessages();
+    } finally {
+      setIsLoading(false);
+      setShowDeleteModal(false);
+      setPipelineToDelete(null);
+    }
+  };
+
+  const cancelDeletePipeline = () => {
+    setShowDeleteModal(false);
+    setPipelineToDelete(null);
   };
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id);
   };
 
+  const saveNewPipeline = async () => {
+    if (!pipelineName.trim()) {
+      setError('Pipeline name is required');
+      return;
+    }
+
+    // Validate nodes have actions
+    if (!nodes.every(node => node.action !== null)) {
+      setError('All nodes must have an action selected');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Format nodes to match the backend API expectations - just send actions as strings
+      const formattedNodes = nodes.map(node => ({
+        action: String(node.action)  // Convert EmailAction enum to string
+      }));
+      
+      const newPipeline = {
+        name: pipelineName,
+        nodes: formattedNodes
+      };
+
+      console.log('Saving new pipeline with data:', newPipeline);
+      const savedPipeline = await pipelineService.savePipeline(newPipeline);
+      console.log('Response from savePipeline:', savedPipeline);
+      
+      await loadPipelines();
+      setSuccessMessage('Pipeline created successfully');
+      clearMessages();
+      
+      // Call onSaveSuccess callback if provided
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+    } catch (err) {
+      console.error('Error saving pipeline:', err);
+      setError('Failed to save pipeline');
+      clearMessages();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePipeline = async () => {
+    if (!selectedPipeline) return;
+    
+    if (!pipelineName.trim()) {
+      setError('Pipeline name is required');
+      return;
+    }
+
+    // Validate nodes have actions
+    if (!nodes.every(node => node.action !== null)) {
+      setError('All nodes must have an action selected');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Format nodes to match the backend API expectations - just send actions as strings
+      const formattedNodes = nodes.map(node => ({
+        action: String(node.action)  // Convert EmailAction enum to string
+      }));
+      
+      const updatedPipeline = {
+        id: selectedPipeline,
+        name: pipelineName,
+        nodes: formattedNodes
+      };
+
+      console.log('Updating pipeline with data:', updatedPipeline);
+      const savedPipeline = await pipelineService.savePipeline(updatedPipeline);
+      console.log('Response from savePipeline:', savedPipeline);
+      
+      await loadPipelines();
+      setSuccessMessage('Pipeline updated successfully');
+      clearMessages();
+      
+      // Call onSaveSuccess callback if provided
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+    } catch (err) {
+      console.error('Error updating pipeline:', err);
+      setError('Failed to save pipeline');
+      clearMessages();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="p-8 min-h-[800px] flex flex-col">
+    <div className="flex flex-col h-full w-full p-6 dark:bg-gray-800 overflow-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <h2 className="text-2xl font-bold dark:text-white">Email Action Pipeline</h2>
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={resetPipeline}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
           >
             Reset Pipeline
           </button>
           <button 
-            onClick={handleSavePipeline}
+            onClick={selectedPipeline ? updatePipeline : saveNewPipeline}
             disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {isLoading ? 'Saving...' : 'Save Pipeline'}
           </button>
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          {selectedPipeline && (
+            <button 
+              onClick={handleDeletePipeline}
+              disabled={isLoading || !selectedPipeline}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              Delete Pipeline
+            </button>
+          )}
+          <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
             Execute Pipeline
           </button>
         </div>
@@ -173,9 +401,19 @@ const ActionPipeline: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Select Existing Pipeline
-          </label>
+          <div className="flex justify-start gap-[200px] items-center mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Select Existing Pipeline
+            </label>
+            <button 
+              onClick={loadPipelines} 
+              disabled={isLoading}
+              className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="text-xs">Refresh</span>
+            </button>
+          </div>
           <select
             value={selectedPipeline}
             onChange={handlePipelineSelect}
@@ -195,17 +433,23 @@ const ActionPipeline: React.FC = () => {
             {error}
           </div>
         )}
+        
+        {successMessage && (
+          <div className="text-green-500 text-sm mt-2">
+            {successMessage}
+          </div>
+        )}
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-visible">
-        <div className="flex items-center space-x-4 pb-4 min-w-max">
+      <div className="w-full flex-1 pb-6 relative">
+        <div className="flex flex-wrap gap-6 min-h-[200px]">
           {nodes.map((node, index) => (
-            <React.Fragment key={node.id}>
-              <div className="flex flex-col items-center">
-                <div className="relative group">
-                  <div className={`w-64 p-4 border-2 ${node.action ? 'border-green-500' : 'border-dashed border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-800`}>
+            <div key={node.id} className="flex items-center mb-16">
+              <div className="flex flex-col">
+                <div className="relative z-0">
+                  <div className={`w-64 p-4 border-2 rounded-lg bg-white dark:bg-gray-800 ${node.action ? 'border-green-500' : 'border-dashed border-gray-300 dark:border-gray-600'}`}>
                     <div className="flex justify-between items-center">
-                      <div className="relative w-full" ref={dropdownRef}>
+                      <div className="relative w-full" ref={el => dropdownRefs.current[node.id] = el}>
                         <button
                           onClick={() => toggleDropdown(node.id)}
                           className={`w-full text-left px-3 py-2 ${node.action ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-100 dark:bg-gray-700'} rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600`}
@@ -213,13 +457,20 @@ const ActionPipeline: React.FC = () => {
                           {node.action || 'Select Action'}
                         </button>
                         {activeDropdown === node.id && (
-                          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 max-h-[300px] overflow-y-auto">
-                            {Object.values(EmailAction).map((action) => (
+                          <div 
+                            className="fixed z-[100] w-64 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 max-h-[300px] overflow-y-auto" 
+                            style={{
+                              top: dropdownRefs.current[node.id]?.getBoundingClientRect().bottom + 'px',
+                              left: dropdownRefs.current[node.id]?.getBoundingClientRect().left + 'px'
+                            }}
+                          >
+                            {availableActions.map((action) => (
                               <button
                                 key={action}
                                 className="w-full text-left px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                                onClick={() => {
-                                  updateNode(node.id, { action });
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateNode(node.id, { action: action as EmailAction });
                                   setActiveDropdown(null);
                                 }}
                               >
@@ -242,23 +493,41 @@ const ActionPipeline: React.FC = () => {
                 </div>
               </div>
               {index < nodes.length - 1 && (
-                <div className="w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+                <div className="mx-2 w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full hidden sm:block" />
               )}
-            </React.Fragment>
+            </div>
           ))}
-          <button
-            onClick={addNode}
-            disabled={!canAddNode()}
-            className={`w-12 h-12 flex items-center justify-center border-2 border-dashed rounded-lg ${
-              canAddNode() 
-                ? 'border-gray-300 dark:border-gray-600 text-gray-400 hover:border-gray-400 dark:hover:border-gray-500' 
-                : 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            +
-          </button>
+          <div className="flex items-center mb-16">
+            <div className="flex flex-col">
+              <div className="relative z-0">
+                <button
+                  onClick={addNode}
+                  disabled={!canAddNode()}
+                  className={`w-12 h-12 flex items-center justify-center border-2 border-dashed rounded-lg ${
+                    canAddNode() 
+                      ? 'border-gray-300 dark:border-gray-600 text-gray-400 hover:border-gray-400 dark:hover:border-gray-500' 
+                      : 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Delete Pipeline"
+        message={`Are you sure you want to delete this pipeline? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeletePipeline}
+        onCancel={cancelDeletePipeline}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 };

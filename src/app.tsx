@@ -64,7 +64,7 @@ const App = () => {
           }
         `}
       </style>
-      <div className="flex h-full">
+      <div className="flex h-full w-full">
         <div className="fixed h-full">
           <Sidebar 
             activePage={activePage} 

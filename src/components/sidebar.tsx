@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, GitBranch } from 'lucide-react';
 
 interface SidebarProps {
   activePage: string;
@@ -48,11 +48,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange, isCollapsed
         </button>
 
         <button
-          onClick={() => onPageChange('settings')}
+          onClick={() => onPageChange('pipeline')}
           className={`w-full flex items-center p-2 rounded-md transition-colors ${
             isCollapsed ? 'justify-center' : 'space-x-2'
           } ${
-            activePage === 'settings'
+            activePage === 'pipeline'
               ? isDarkMode
                 ? 'bg-gray-700 text-white'
                 : 'bg-blue-50 text-blue-700'
@@ -61,8 +61,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange, isCollapsed
                 : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          <Settings className="w-5 h-5" />
-          {!isCollapsed && <span>Settings</span>}
+          <GitBranch className="w-5 h-5" />
+          {!isCollapsed && <span>Pipelines</span>}
         </button>
       </div>
     </div>

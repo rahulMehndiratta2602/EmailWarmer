@@ -44,10 +44,30 @@ contextBridge.exposeInMainWorld('electron', {
 // Expose API methods through contextBridge
 contextBridge.exposeInMainWorld('api', {
   // API operations
-  getPipelines: () => ipcRenderer.invoke('api:getPipelines'),
-  getPipelineById: (id: string) => ipcRenderer.invoke('api:getPipelineById', id),
-  savePipeline: (pipeline: Pipeline) => ipcRenderer.invoke('api:savePipeline', pipeline),
-  deletePipeline: (id: string) => ipcRenderer.invoke('api:deletePipeline', id),
+  getPipelines: () => {
+    console.log('preload: getPipelines called');
+    return ipcRenderer.invoke('api:getPipelines');
+  },
+  
+  getPipelineById: (id: string) => {
+    console.log('preload: getPipelineById called with:', id);
+    return ipcRenderer.invoke('api:getPipelineById', id);
+  },
+  
+  savePipeline: (pipeline: Pipeline) => {
+    console.log('preload: savePipeline called with:', pipeline);
+    return ipcRenderer.invoke('api:savePipeline', pipeline);
+  },
+  
+  deletePipeline: (id: string) => {
+    console.log('preload: deletePipeline called with:', id);
+    return ipcRenderer.invoke('api:deletePipeline', id);
+  },
+  
+  getAvailableActions: () => {
+    console.log('preload: getAvailableActions called');
+    return ipcRenderer.invoke('api:getAvailableActions');
+  },
   
   // Environment information
   getEnvironment: () => ipcRenderer.invoke('getEnvironment')

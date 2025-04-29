@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pipelineRoutes from './routes/pipeline.routes';
+import actionRoutes from './routes/action.routes';
 import { logger } from './utils/logger';
 
 // Load environment variables
@@ -20,15 +21,17 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Request logging middleware
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.originalUrl}`);
+  logger.info(`${req.method} ${req.url}`);
   next();
 });
 
 // Routes
 app.use('/api/pipelines', pipelineRoutes);
+app.use('/api/actions', actionRoutes);
 
 // Root route for testing
 app.get('/', (req, res) => {

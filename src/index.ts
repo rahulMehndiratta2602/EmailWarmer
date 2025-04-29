@@ -215,6 +215,56 @@ const registerIpcHandlers = (): void => {
       apiBaseUrl: getApiBaseUrl()
     };
   });
+  
+  // Get available actions
+  ipcMain.handle('api:getAvailableActions', async () => {
+    return new Promise((resolve, reject) => {
+      console.log('Fetching available actions from:', getFullApiUrl('/actions'));
+      const request = net.request(getFullApiUrl('/actions'));
+      
+      let responseData = '';
+      
+      request.on('response', (response) => {
+        response.on('data', (chunk) => {
+          responseData += chunk.toString();
+        });
+        
+        response.on('end', () => {
+          try {
+            const data = JSON.parse(responseData);
+            console.log('Received available actions:', data);
+            resolve(data);
+          } catch (error) {
+            console.error('Failed to parse actions data:', error);
+            // Fallback to predefined actions if API fails
+            resolve([
+              'Transfer from Spam to Inbox',
+              'Click Link in Email',
+              'Mark as Important',
+              'Reply to Email',
+              'Forward Email',
+              'Delete Email'
+            ]);
+          }
+        });
+      });
+      
+      request.on('error', (error) => {
+        console.error('Network error when fetching actions:', error);
+        // Fallback to predefined actions if API fails
+        resolve([
+          'Transfer from Spam to Inbox',
+          'Click Link in Email',
+          'Mark as Important',
+          'Reply to Email',
+          'Forward Email',
+          'Delete Email'
+        ]);
+      });
+      
+      request.end();
+    });
+  });
 };
 
 // This method will be called when Electron has finished

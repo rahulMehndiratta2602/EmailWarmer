@@ -1,7 +1,7 @@
 import React from 'react';
-import * as Switch from '@radix-ui/react-switch';
 import EmailPasswordList from './EmailPasswordList';
-import ActionPipeline from './ActionPipeline';
+import PipelineContainer from './PipelineContainer';
+import DarkModeToggle from './ui/DarkModeToggle';
 
 interface ContentProps {
   activePage: string;
@@ -11,42 +11,44 @@ interface ContentProps {
 }
 
 const Content: React.FC<ContentProps> = ({ activePage, onFileSubmit, isDarkMode, onToggleTheme }) => {
+  // Common header with dark mode toggle
+  const renderHeader = () => (
+    <div className="flex justify-end py-2 px-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <DarkModeToggle isDarkMode={isDarkMode} onToggle={onToggleTheme} />
+    </div>
+  );
+
   switch (activePage) {
     case 'home':
       return (
-        <div className="p-8 space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold mb-4 dark:text-white">Email Accounts</h2>
-            <EmailPasswordList isDarkMode={isDarkMode} />
-          </div>
-          <div>
-            <ActionPipeline />
-          </div>
-        </div>
-      );
-    case 'settings':
-      return (
-        <div className="p-8">
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">Settings</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-              <label htmlFor="theme-toggle" className="text-gray-700 dark:text-gray-300">
-                Dark Mode
-              </label>
-              <Switch.Root
-                id="theme-toggle"
-                checked={isDarkMode}
-                onCheckedChange={onToggleTheme}
-                className="w-[42px] h-[25px] bg-gray-200 dark:bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-600 outline-none cursor-default"
-              >
-                <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
-              </Switch.Root>
+        <div className="flex flex-col h-full">
+          {renderHeader()}
+          <div className="p-8 space-y-8 overflow-auto flex-1">
+            <div>
+              <h2 className="text-2xl font-bold mb-4 dark:text-white">Email Accounts</h2>
+              <EmailPasswordList isDarkMode={isDarkMode} />
             </div>
           </div>
         </div>
       );
+    case 'pipeline':
+      return (
+        <div className="flex flex-col h-full">
+          {renderHeader()}
+          <div className="flex-1 overflow-hidden">
+            <PipelineContainer />
+          </div>
+        </div>
+      );
     default:
-      return null;
+      return (
+        <div className="flex flex-col h-full">
+          {renderHeader()}
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+            Page not found
+          </div>
+        </div>
+      );
   }
 };
 
