@@ -13,6 +13,12 @@ interface Pipeline {
   }>;
 }
 
+interface EmailAccount {
+  id?: string;
+  email: string;
+  password: string;
+}
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electron', {
@@ -43,7 +49,7 @@ contextBridge.exposeInMainWorld('electron', {
 
 // Expose API methods through contextBridge
 contextBridge.exposeInMainWorld('api', {
-  // API operations
+  // Pipeline operations
   getPipelines: () => {
     console.log('preload: getPipelines called');
     return ipcRenderer.invoke('api:getPipelines');
@@ -67,6 +73,42 @@ contextBridge.exposeInMainWorld('api', {
   getAvailableActions: () => {
     console.log('preload: getAvailableActions called');
     return ipcRenderer.invoke('api:getAvailableActions');
+  },
+  
+  // Email account operations
+  getEmailAccounts: () => {
+    console.log('preload: getEmailAccounts called');
+    return ipcRenderer.invoke('api:getEmailAccounts');
+  },
+  
+  getEmailAccountById: (id: string) => {
+    console.log('preload: getEmailAccountById called with:', id);
+    return ipcRenderer.invoke('api:getEmailAccountById', id);
+  },
+  
+  createEmailAccount: (account: EmailAccount) => {
+    console.log('preload: createEmailAccount called with:', account);
+    return ipcRenderer.invoke('api:createEmailAccount', account);
+  },
+  
+  updateEmailAccount: (id: string, data: { password: string }) => {
+    console.log('preload: updateEmailAccount called with:', id, data);
+    return ipcRenderer.invoke('api:updateEmailAccount', id, data);
+  },
+  
+  deleteEmailAccount: (id: string) => {
+    console.log('preload: deleteEmailAccount called with:', id);
+    return ipcRenderer.invoke('api:deleteEmailAccount', id);
+  },
+  
+  batchUpsertEmailAccounts: (accounts: EmailAccount[]) => {
+    console.log('preload: batchUpsertEmailAccounts called');
+    return ipcRenderer.invoke('api:batchUpsertEmailAccounts', accounts);
+  },
+  
+  batchDeleteEmailAccounts: (ids: string[]) => {
+    console.log('preload: batchDeleteEmailAccounts called');
+    return ipcRenderer.invoke('api:batchDeleteEmailAccounts', ids);
   },
   
   // Environment information

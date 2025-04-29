@@ -1,33 +1,64 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, Download, ChevronLeft, ChevronRight, Edit, Save, RefreshCw } from 'lucide-react';
 import Pagination from './Pagination';
-
-interface EmailPassword {
-  id: string;
-  email: string;
-  password: string;
-  selected?: boolean;
-}
+import { emailAccountService } from '../services/emailAccountService';
+import { EmailAccount } from '../types/emailAccount';
 
 interface EmailPasswordListProps {
   isDarkMode: boolean;
 }
 
 const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => {
-  const [emailPasswords, setEmailPasswords] = useState<EmailPassword[]>([]);
-  const [useProxy, setUseProxy] = useState(false);
+  const [emailPasswords, setEmailPasswords] = useState<EmailAccount[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [editPassword, setEditPassword] = useState('');
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Calculate pagination values
   const totalPages = Math.ceil(emailPasswords.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentItems = emailPasswords.slice(startIndex, endIndex);
+
+  // Fetch email accounts from the database
+  const fetchEmailAccounts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const accounts = await emailAccountService.getEmailAccounts();
+      
+      if (accounts && Array.isArray(accounts)) {
+        setEmailPasswords(accounts.map((account: EmailAccount) => ({
+          ...account,
+          selected: false,
+          isEditing: false
+        })));
+      } else {
+        console.warn('Received non-array accounts data:', accounts);
+        setEmailPasswords([]);
+        setError('No accounts available. The server may not be running.');
+      }
+    } catch (err) {
+      console.error('Error fetching email accounts:', err);
+      setError('Failed to load email accounts from database');
+      setEmailPasswords([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Load accounts when component mounts
+  useEffect(() => {
+    fetchEmailAccounts();
+  }, [fetchEmailAccounts]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -43,12 +74,14 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
               return {
                 id: Math.random().toString(36).substr(2, 9),
                 email,
-                password
+                password,
+                selected: false,
+                isEditing: false
               };
             }
             return null;
           })
-          .filter(Boolean) as EmailPassword[];
+          .filter(Boolean) as EmailAccount[];
         
         if (newEntries.length > 0) {
           setEmailPasswords(prev => [...prev, ...newEntries]);
@@ -65,21 +98,117 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
     }
   };
 
-  const handleAddEntry = () => {
-    if (newEmail && newPassword) {
-      setEmailPasswords(prev => [...prev, {
-        id: Math.random().toString(36).substr(2, 9),
-        email: newEmail,
-        password: newPassword
-      }]);
-      setNewEmail('');
-      setNewPassword('');
-      setShowAddForm(false);
+  const saveAccountsToDB = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+      
+      const result = await emailAccountService.batchUpsertEmailAccounts(emailPasswords);
+      
+      // Check if we got a valid result
+      if (result && typeof result.saved === 'number') {
+        alert(`Successfully saved ${result.saved} accounts to database`);
+      } else {
+        console.warn('Received unexpected result from batchUpsertEmailAccounts:', result);
+        alert('Accounts processed successfully');
+      }
+      
+      // Refresh accounts from DB
+      await fetchEmailAccounts();
+    } catch (err) {
+      console.error('Error saving accounts to database:', err);
+      setError('Failed to save accounts to database');
+      // Show an alert to make the error more visible
+      alert('Failed to save accounts to database. Check console for details.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDeleteEntry = (id: string) => {
-    setEmailPasswords(prev => prev.filter(entry => entry.id !== id));
+  const handleAddEntry = async () => {
+    if (newEmail && newPassword) {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const newAccount = await emailAccountService.createEmailAccount({
+          email: newEmail,
+          password: newPassword
+        });
+        
+        setEmailPasswords(prev => [...prev, {
+          ...newAccount,
+          selected: false,
+          isEditing: false
+        }]);
+        
+        setNewEmail('');
+        setNewPassword('');
+        setShowAddForm(false);
+      } catch (err) {
+        console.error('Error adding email account:', err);
+        setError('Failed to add email account to database');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleDeleteEntry = async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const success = await emailAccountService.deleteEmailAccount(id);
+      
+      if (success) {
+        setEmailPasswords(prev => prev.filter(entry => entry.id !== id));
+      } else {
+        setError('Failed to delete email account');
+      }
+    } catch (err) {
+      console.error('Error deleting email account:', err);
+      setError('Failed to delete email account from database');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditPassword = (id: string) => {
+    setEmailPasswords(prev => prev.map(entry => 
+      entry.id === id ? { ...entry, isEditing: true } : entry
+    ));
+    
+    const account = emailPasswords.find(entry => entry.id === id);
+    if (account) {
+      setEditPassword(account.password);
+    }
+  };
+
+  const handleSavePassword = async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const updatedAccount = await emailAccountService.updateEmailAccount(id, {
+        password: editPassword
+      });
+      
+      if (updatedAccount) {
+        setEmailPasswords(prev => prev.map(entry => 
+          entry.id === id ? { ...updatedAccount, isEditing: false } : entry
+        ));
+      } else {
+        setError('Failed to update password');
+      }
+      
+      setEditPassword('');
+    } catch (err) {
+      console.error('Error updating password:', err);
+      setError('Failed to update password in database');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDownloadTemplate = () => {
@@ -130,9 +259,29 @@ example3@email.com,password789`;
     });
   };
 
-  const handleDeleteSelected = () => {
-    setEmailPasswords(prev => prev.filter(item => !item.selected));
-    setSelectAll(false);
+  const handleDeleteSelected = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const selectedIds = emailPasswords.filter(item => item.selected).map(item => item.id);
+      
+      if (selectedIds.length === 0) return;
+      
+      const result = await emailAccountService.batchDeleteEmailAccounts(selectedIds);
+      
+      if (result) {
+        setEmailPasswords(prev => prev.filter(item => !item.selected));
+        setSelectAll(false);
+      } else {
+        setError('Failed to delete selected accounts');
+      }
+    } catch (err) {
+      console.error('Error deleting selected accounts:', err);
+      setError('Failed to delete selected accounts from database');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -145,7 +294,7 @@ example3@email.com,password789`;
             <label className="block text-sm font-medium mb-2 dark:text-gray-300">
               Upload CSV/TXT File
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => document.getElementById('file-upload')?.click()}
                 className={`px-4 py-2 rounded text-sm font-medium ${
@@ -167,6 +316,18 @@ example3@email.com,password789`;
                 <Download className="w-4 h-4" />
                 Download Template
               </button>
+              <button
+                onClick={saveAccountsToDB}
+                disabled={isSaving || emailPasswords.length === 0}
+                className={`px-4 py-2 rounded text-sm font-medium flex items-center gap-2 ${
+                  isDarkMode 
+                    ? 'bg-green-700 text-white hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500' 
+                    : 'bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400'
+                }`}
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? 'Saving...' : 'Save to DB'}
+              </button>
               <input
                 type="file"
                 accept=".txt,.csv"
@@ -175,19 +336,6 @@ example3@email.com,password789`;
                 id="file-upload"
               />
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="useProxy"
-              checked={useProxy}
-              onChange={(e) => setUseProxy(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="useProxy" className="text-sm font-medium dark:text-gray-300">
-              Use Proxy
-            </label>
           </div>
         </div>
       </div>
@@ -198,13 +346,26 @@ example3@email.com,password789`;
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold dark:text-white">Email/Password List</h3>
             <div className="flex items-center gap-2">
+              <button
+                onClick={fetchEmailAccounts}
+                disabled={isLoading}
+                className={`p-2 rounded flex items-center justify-center ${
+                  isDarkMode 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500' 
+                    : 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-200 disabled:text-gray-400'
+                }`}
+                title="Sync with Database"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
               {emailPasswords.some(item => item.selected) && (
                 <button
                   onClick={handleDeleteSelected}
+                  disabled={isLoading}
                   className={`p-2 rounded flex items-center justify-center ${
                     isDarkMode 
-                      ? 'bg-red-600 text-white hover:bg-red-700' 
-                      : 'bg-red-500 text-white hover:bg-red-600'
+                      ? 'bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500' 
+                      : 'bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-200 disabled:text-gray-400'
                   }`}
                   title="Delete Selected"
                 >
@@ -213,16 +374,24 @@ example3@email.com,password789`;
               )}
               <button
                 onClick={() => setShowAddForm(true)}
+                disabled={isLoading}
                 className={`p-2 rounded flex items-center justify-center ${
                   isDarkMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gray-700 text-white hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400'
                 }`}
+                title="Add New Email Account"
               >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>
+
+          {error && (
+            <div className={`mb-4 p-3 rounded text-sm ${isDarkMode ? 'bg-red-900/50 text-red-200' : 'bg-red-100 text-red-700'}`}>
+              {error}
+            </div>
+          )}
 
           {/* Table Container */}
           <div className="flex-1 max-h-[60vh] overflow-y-auto">
@@ -243,53 +412,105 @@ example3@email.com,password789`;
                               ? 'bg-gray-700 border-gray-600 text-blue-500' 
                               : 'border-gray-300 text-blue-600'
                           }`}
+                          disabled={isLoading}
                         />
                       )}
                     </th>
                     <th className="w-12 p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">#</th>
                     <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
                     <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Password</th>
-                    <th className="w-10 p-2 sm:p-3"></th>
+                    <th className="w-16 p-2 sm:p-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${
                   isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
                 }`}>
-                  {currentItems.map((entry, index) => (
-                    <tr key={entry.id} className={`hover:${
-                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-                    }`}>
-                      <td className="p-2 sm:p-3">
-                        <input
-                          type="checkbox"
-                          checked={entry.selected || false}
-                          onChange={(e) => handleSelectItem(entry.id, e.target.checked)}
-                          className={`h-4 w-4 rounded ${
-                            isDarkMode 
-                              ? 'bg-gray-700 border-gray-600 text-blue-500' 
-                              : 'border-gray-300 text-blue-600'
-                          }`}
-                        />
-                      </td>
-                      <td className="p-2 sm:p-3 text-sm dark:text-gray-300">{startIndex + index + 1}</td>
-                      <td className="p-2 sm:p-3 text-sm dark:text-gray-300 truncate">{entry.email}</td>
-                      <td className="p-2 sm:p-3 text-sm dark:text-gray-300">••••••••</td>
-                      <td className="p-2 sm:p-3 text-right">
-                        <button
-                          onClick={() => handleDeleteEntry(entry.id)}
-                          className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {emailPasswords.length === 0 && (
+                  {isLoading && emailPasswords.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                        No entries yet
+                        Loading...
                       </td>
                     </tr>
+                  ) : currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        No email accounts found
+                      </td>
+                    </tr>
+                  ) : (
+                    currentItems.map((entry, index) => (
+                      <tr key={entry.id} className={`hover:${
+                        isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                      }`}>
+                        <td className="p-2 sm:p-3">
+                          <input
+                            type="checkbox"
+                            checked={entry.selected || false}
+                            onChange={(e) => handleSelectItem(entry.id, e.target.checked)}
+                            className={`h-4 w-4 rounded ${
+                              isDarkMode 
+                                ? 'bg-gray-700 border-gray-600 text-blue-500' 
+                                : 'border-gray-300 text-blue-600'
+                            }`}
+                            disabled={isLoading}
+                          />
+                        </td>
+                        <td className="p-2 sm:p-3 text-sm dark:text-gray-300">{startIndex + index + 1}</td>
+                        <td className="p-2 sm:p-3 text-sm dark:text-gray-300 truncate">{entry.email}</td>
+                        <td className="p-2 sm:p-3 text-sm dark:text-gray-300">
+                          {entry.isEditing ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="password"
+                                value={editPassword}
+                                onChange={(e) => setEditPassword(e.target.value)}
+                                className={`w-full px-2 py-1 text-sm rounded ${
+                                  isDarkMode 
+                                    ? 'bg-gray-700 border-gray-600 text-white' 
+                                    : 'bg-white border-gray-300'
+                                }`}
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleSavePassword(entry.id)}
+                                disabled={isLoading || !editPassword}
+                                className={`p-1 rounded ${
+                                  isDarkMode
+                                    ? 'bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-700 disabled:text-gray-500'
+                                    : 'bg-green-500 hover:bg-green-600 text-white disabled:bg-gray-200 disabled:text-gray-400'
+                                }`}
+                              >
+                                <Save className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            '••••••••'
+                          )}
+                        </td>
+                        <td className="p-2 sm:p-3 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            {!entry.isEditing && (
+                              <button
+                                onClick={() => handleEditPassword(entry.id)}
+                                disabled={isLoading}
+                                className="text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 disabled:text-gray-400 dark:disabled:text-gray-600"
+                                title="Edit Password"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteEntry(entry.id)}
+                              disabled={isLoading}
+                              className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 disabled:text-gray-400 dark:disabled:text-gray-600"
+                              title="Delete Account"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
@@ -317,7 +538,7 @@ example3@email.com,password789`;
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className={`p-6 rounded-lg w-full max-w-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <h3 className="text-lg font-semibold mb-4 dark:text-white">Add New Entry</h3>
+            <h3 className="text-lg font-semibold mb-4 dark:text-white">Add New Email Account</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">Email</label>
@@ -354,9 +575,14 @@ example3@email.com,password789`;
                 </button>
                 <button
                   onClick={handleAddEntry}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                  disabled={isLoading || !newEmail || !newPassword}
+                  className={`px-4 py-2 text-sm font-medium text-white rounded ${
+                    isLoading || !newEmail || !newPassword
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
-                  Add
+                  {isLoading ? 'Adding...' : 'Add'}
                 </button>
               </div>
             </div>

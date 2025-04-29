@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import pipelineRoutes from './routes/pipeline.routes';
 import actionRoutes from './routes/action.routes';
+import emailAccountRoutes from './routes/email-accounts.routes';
 import { logger } from './utils/logger';
 
 // Load environment variables
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/pipelines', pipelineRoutes);
 app.use('/api/actions', actionRoutes);
+app.use('/api/email-accounts', emailAccountRoutes);
 
 // Root route for testing
 app.get('/', (req, res) => {
@@ -41,6 +43,11 @@ app.get('/', (req, res) => {
 // API test route
 app.get('/api', (req, res) => {
   res.json({ message: 'API is working!' });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date() });
 });
 
 // Start server

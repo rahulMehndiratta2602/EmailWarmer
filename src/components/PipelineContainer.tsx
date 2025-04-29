@@ -14,7 +14,7 @@ const PipelineContainer: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full w-full">
       {/* Tabs */}
       <div className="flex space-x-2 px-4 pt-4 border-b border-gray-200 dark:border-gray-700">
         <button
@@ -40,7 +40,7 @@ const PipelineContainer: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         {selectedTab === 'editor' ? (
           <ActionPipeline 
             initialPipeline={selectedPipeline}
