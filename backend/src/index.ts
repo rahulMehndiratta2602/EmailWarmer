@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import pipelineRoutes from './routes/pipeline.routes';
 import actionRoutes from './routes/action.routes';
 import emailAccountRoutes from './routes/email-accounts.routes';
+import proxyRoutes from './routes/proxy.routes';
 import { logger } from './utils/logger';
 
 // Load environment variables
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 app.use('/api/pipelines', pipelineRoutes);
 app.use('/api/actions', actionRoutes);
 app.use('/api/email-accounts', emailAccountRoutes);
+app.use('/api/proxies', proxyRoutes);
 
 // Root route for testing
 app.get('/', (req, res) => {

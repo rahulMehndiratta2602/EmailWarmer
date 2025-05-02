@@ -1,0 +1,403 @@
+{
+  "info": {
+    "name": "ABCProxy API Collection",
+    "description": "API endpoints for ABCProxy integration with email account mapping and browser automation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Check if the API server is running"
+      },
+      "response": []
+    },
+    {
+      "name": "Email Accounts",
+      "item": [
+        {
+          "name": "Get All Email Accounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/email-accounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "email-accounts"]
+            },
+            "description": "Retrieve all email accounts"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Email Account by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/email-accounts/{{email_account_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "email-accounts", "{{email_account_id}}"]
+            },
+            "description": "Retrieve a specific email account by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Email Account",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/email-accounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "email-accounts"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a new email account"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Email Account",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/api/email-accounts/{{email_account_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "email-accounts", "{{email_account_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"newpassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update an existing email account (password only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Email Account",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/email-accounts/{{email_account_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "email-accounts", "{{email_account_id}}"]
+            },
+            "description": "Delete an email account"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Upsert Email Accounts",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/email-accounts/batch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "email-accounts", "batch"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accounts\": [\n    {\n      \"email\": \"user1@example.com\",\n      \"password\": \"password123\"\n    },\n    {\n      \"email\": \"user2@example.com\",\n      \"password\": \"password456\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create or update multiple email accounts"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Delete Email Accounts",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/email-accounts/batch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "email-accounts", "batch"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"uuid1\", \"uuid2\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Delete multiple email accounts"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Proxies",
+      "item": [
+        {
+          "name": "Get Proxies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/proxies?limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Retrieve all active proxies with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Proxy by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/{{proxy_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "{{proxy_id}}"]
+            },
+            "description": "Retrieve a specific proxy by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch Proxies from ABCProxy",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/fetch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "fetch"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"US\",\n  \"state\": \"California\",\n  \"city\": \"San Francisco\",\n  \"limit\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Fetch proxies from ABCProxy and save them to the database"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Session Proxy",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/session",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "session"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minutes\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a session proxy with specified retention time"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Proxy",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/{{proxy_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "{{proxy_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false,\n  \"password\": \"newpassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update a proxy"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Proxies",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/proxies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"uuid1\", \"uuid2\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Delete multiple proxies"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Proxy Mappings",
+      "item": [
+        {
+          "name": "Create Proxy Mapping",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/mapping",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "mapping"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailIds\": [\"uuid1\", \"uuid2\"],\n  \"maxProxies\": 5,\n  \"maxEmailsPerProxy\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a mapping between email accounts and proxies"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Proxy Mappings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/mapping",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "mapping"]
+            },
+            "description": "Retrieve all proxy mappings"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Proxy Mapping",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/mapping/{{email_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "mapping", "{{email_id}}"]
+            },
+            "description": "Delete a proxy mapping for a specific email account"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Browser Automation",
+      "item": [
+        {
+          "name": "Open Browser Windows",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/browser/open",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "browser", "open"]
+            },
+            "description": "Open browser windows for each email account with its assigned proxy"
+          },
+          "response": []
+        },
+        {
+          "name": "Close All Browser Windows",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/browser/close",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "browser", "close"]
+            },
+            "description": "Close all active browser windows"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Browser Session Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/proxies/browser/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "proxies", "browser", "stats"]
+            },
+            "description": "Get statistics about active browser sessions"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "email_account_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "proxy_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "email_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+} 
