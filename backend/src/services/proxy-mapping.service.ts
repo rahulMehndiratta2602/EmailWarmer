@@ -86,7 +86,6 @@ export class ProxyMappingService {
           
           try {
             // Get the email account
-            // @ts-ignore
             const emailAccount = await tx.emailAccount.findUnique({
               where: { id: emailId }
             });
@@ -97,14 +96,12 @@ export class ProxyMappingService {
             }
             
             // Create or update proxy mapping
-            // @ts-ignore
             let proxyMapping = await tx.proxyMapping.findFirst({
               where: { proxyId: selectedProxy.id }
             });
             
             if (!proxyMapping) {
               // Create new mapping
-              // @ts-ignore
               proxyMapping = await tx.proxyMapping.create({
                 data: {
                   proxyId: selectedProxy.id!,
@@ -115,11 +112,10 @@ export class ProxyMappingService {
               });
             } else {
               // Update existing mapping
-              // @ts-ignore
               await tx.emailAccount.update({
                 where: { id: emailId },
                 data: {
-                  proxyId: proxyMapping.id
+                  proxyMappingId: proxyMapping.id
                 }
               });
             }
@@ -159,7 +155,6 @@ export class ProxyMappingService {
    */
   private async clearExistingMappings(emailIds: string[]): Promise<void> {
     try {
-      // @ts-ignore
       await prisma.emailAccount.updateMany({
         where: {
           id: {
@@ -167,7 +162,7 @@ export class ProxyMappingService {
           }
         },
         data: {
-          proxyId: null
+          proxyMappingId: null
         }
       });
     } catch (error) {
@@ -182,10 +177,9 @@ export class ProxyMappingService {
    */
   async getProxyMappings(): Promise<ProxyMappingResult[]> {
     try {
-      // @ts-ignore
       const emailAccounts = await prisma.emailAccount.findMany({
         where: {
-          proxyId: {
+          proxyMappingId: {
             not: null
           }
         },
@@ -198,15 +192,23 @@ export class ProxyMappingService {
         }
       });
       
-      return emailAccounts.map(account => ({
-        emailId: account.id,
-        email: account.email,
-        proxyId: account.proxyMapping.proxy.id,
-        proxyHost: account.proxyMapping.proxy.host,
-        proxyPort: account.proxyMapping.proxy.port,
-        proxyUsername: account.proxyMapping.proxy.username,
-        proxyPassword: account.proxyMapping.proxy.password
-      }));
+      const results: ProxyMappingResult[] = [];
+      
+      for (const account of emailAccounts) {
+        if (account.proxyMapping && account.proxyMapping.proxy) {
+          results.push({
+            emailId: account.id,
+            email: account.email,
+            proxyId: account.proxyMapping.proxy.id,
+            proxyHost: account.proxyMapping.proxy.host,
+            proxyPort: account.proxyMapping.proxy.port,
+            proxyUsername: account.proxyMapping.proxy.username,
+            proxyPassword: account.proxyMapping.proxy.password
+          });
+        }
+      }
+      
+      return results;
     } catch (error) {
       logger.error('Error retrieving proxy mappings:', error);
       throw new Error('Failed to retrieve proxy mappings');
@@ -220,11 +222,10 @@ export class ProxyMappingService {
    */
   async deleteProxyMapping(emailId: string): Promise<boolean> {
     try {
-      // @ts-ignore
       await prisma.emailAccount.update({
         where: { id: emailId },
         data: {
-          proxyId: null
+          proxyMappingId: null
         }
       });
       

@@ -10,7 +10,7 @@ jest.mock('../utils/abc-proxy-client', () => ({
 }));
 
 jest.mock('@prisma/client', () => {
-  const mockPrismaClient = {
+  const mockPrismaClient: Record<string, any> = {
     $transaction: jest.fn((callback) => callback(mockPrismaClient)),
     proxy: {
       findFirst: jest.fn(),
@@ -80,8 +80,8 @@ describe('Proxy Service', () => {
     it('should fetch proxies from ABCProxy and save them to the database', async () => {
       // Setup mocks
       (abcProxyClient.getProxies as jest.Mock).mockResolvedValue(sampleProxies);
-      (prisma.proxy.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.proxy.create as jest.Mock).mockImplementation((args) => ({
+      (prisma.proxy as any).findFirst.mockResolvedValue(null);
+      (prisma.proxy as any).create.mockImplementation((args: Record<string, any>) => ({
         id: 'proxy-id',
         ...args.data,
         createdAt: new Date(),
@@ -93,7 +93,7 @@ describe('Proxy Service', () => {
       
       // Assertions
       expect(abcProxyClient.getProxies).toHaveBeenCalledWith('US', undefined, undefined, 100);
-      expect(prisma.proxy.create).toHaveBeenCalledTimes(2);
+      expect((prisma.proxy as any).create).toHaveBeenCalledTimes(2);
       expect(result.length).toBe(2);
       expect(result[0].host).toBe('proxy.abcproxy.com');
     });
@@ -102,7 +102,7 @@ describe('Proxy Service', () => {
   describe('getProxies', () => {
     it('should retrieve active proxies from the database', async () => {
       // Setup mocks
-      (prisma.proxy.findMany as jest.Mock).mockResolvedValue(
+      (prisma.proxy as any).findMany.mockResolvedValue(
         sampleProxies.map((proxy, index) => ({
           id: `proxy-id-${index}`,
           ...proxy,
@@ -116,7 +116,7 @@ describe('Proxy Service', () => {
       const result = await proxyService.getProxies();
       
       // Assertions
-      expect(prisma.proxy.findMany).toHaveBeenCalledWith({
+      expect((prisma.proxy as any).findMany).toHaveBeenCalledWith({
         where: { isActive: true },
         orderBy: { createdAt: 'desc' },
         skip: 0,
@@ -137,7 +137,7 @@ describe('Proxy Mapping Service', () => {
   describe('createProxyMapping', () => {
     it('should map emails to proxies with load balancing', async () => {
       // Setup mocks
-      (prisma.proxy.findMany as jest.Mock).mockResolvedValue(
+      (prisma.proxy as any).findMany.mockResolvedValue(
         sampleProxies.map((proxy, index) => ({
           id: `proxy-id-${index}`,
           ...proxy,
@@ -147,17 +147,17 @@ describe('Proxy Mapping Service', () => {
         }))
       );
       
-      (prisma.emailAccount.updateMany as jest.Mock).mockResolvedValue({ count: 2 });
+      (prisma.emailAccount as any).updateMany.mockResolvedValue({ count: 2 });
       
-      (prisma.emailAccount.findUnique as jest.Mock).mockImplementation((args) => {
+      (prisma.emailAccount as any).findUnique.mockImplementation((args: Record<string, any>) => {
         const emailId = args.where.id;
         const emailIndex = parseInt(emailId.split('-').pop()) - 1;
         return sampleEmails[emailIndex];
       });
       
-      (prisma.proxyMapping.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.proxyMapping as any).findFirst.mockResolvedValue(null);
       
-      (prisma.proxyMapping.create as jest.Mock).mockImplementation((args) => ({
+      (prisma.proxyMapping as any).create.mockImplementation((args: Record<string, any>) => ({
         id: 'mapping-id',
         ...args.data,
         createdAt: new Date(),
@@ -172,8 +172,8 @@ describe('Proxy Mapping Service', () => {
       );
       
       // Assertions
-      expect(prisma.emailAccount.updateMany).toHaveBeenCalled();
-      expect(prisma.proxyMapping.create).toHaveBeenCalledTimes(2);
+      expect((prisma.emailAccount as any).updateMany).toHaveBeenCalled();
+      expect((prisma.proxyMapping as any).create).toHaveBeenCalledTimes(2);
       expect(result.length).toBe(2);
       expect(result[0].email).toBe('test1@example.com');
       expect(result[0].proxyHost).toBe('proxy.abcproxy.com');

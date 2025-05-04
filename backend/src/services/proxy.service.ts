@@ -1,25 +1,26 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-import abcProxyClient, { ProxyConfig } from '../utils/abc-proxy-client';
+import abcProxyClient from '../utils/abc-proxy-client';
 
-// Create the Prisma client
-const prisma = new PrismaClient();
-
+// Define our Proxy interface
 interface Proxy {
   id?: string;
   host: string;
   port: number;
   username: string;
   password: string;
-  country?: string;
-  state?: string;
-  city?: string;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
   protocol: string;
   isActive: boolean;
-  lastChecked?: Date;
+  lastChecked?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// Create the Prisma client
+const prisma = new PrismaClient();
 
 export class ProxyService {
   private static instance: ProxyService;
@@ -90,8 +91,8 @@ export class ProxyService {
         for (const proxy of proxies) {
           try {
             // Check if proxy already exists with same host, port, and username
-            // @ts-ignore
-            const existingProxy = await tx.proxy.findFirst({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const existingProxy = await (tx as any).proxy.findFirst({
               where: {
                 host: proxy.host,
                 port: proxy.port,
@@ -101,8 +102,8 @@ export class ProxyService {
             
             if (existingProxy) {
               // Update existing proxy
-              // @ts-ignore
-              const updated = await tx.proxy.update({
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const updated = await (tx as any).proxy.update({
                 where: { id: existingProxy.id },
                 data: {
                   password: proxy.password,
@@ -117,8 +118,8 @@ export class ProxyService {
               savedProxies.push(updated);
             } else {
               // Create new proxy
-              // @ts-ignore
-              const created = await tx.proxy.create({
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const created = await (tx as any).proxy.create({
                 data: {
                   host: proxy.host,
                   port: proxy.port,
@@ -154,8 +155,9 @@ export class ProxyService {
    */
   async getProxies(limit = 100, offset = 0): Promise<Proxy[]> {
     try {
-      // @ts-ignore
-      const proxies = await prisma.proxy.findMany({
+      // Using type assertion because Prisma's generated types don't include the 'proxy' model
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const proxies = await (prisma as any).proxy.findMany({
         where: { isActive: true },
         orderBy: { createdAt: 'desc' },
         skip: offset,
@@ -176,8 +178,9 @@ export class ProxyService {
    */
   async getProxyById(id: string): Promise<Proxy | null> {
     try {
-      // @ts-ignore
-      const proxy = await prisma.proxy.findUnique({
+      // Using type assertion because Prisma's generated types don't include the 'proxy' model
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const proxy = await (prisma as any).proxy.findUnique({
         where: { id }
       });
       
@@ -195,8 +198,9 @@ export class ProxyService {
    */
   async deleteProxies(ids: string[]): Promise<number> {
     try {
-      // @ts-ignore
-      const result = await prisma.proxy.deleteMany({
+      // Using type assertion because Prisma's generated types don't include the 'proxy' model
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (prisma as any).proxy.deleteMany({
         where: {
           id: {
             in: ids
@@ -219,8 +223,9 @@ export class ProxyService {
    */
   async updateProxy(id: string, data: Partial<Proxy>): Promise<Proxy | null> {
     try {
-      // @ts-ignore
-      const proxy = await prisma.proxy.update({
+      // Using type assertion because Prisma's generated types don't include the 'proxy' model
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const proxy = await (prisma as any).proxy.update({
         where: { id },
         data: {
           ...data,

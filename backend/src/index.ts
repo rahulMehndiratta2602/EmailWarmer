@@ -52,6 +52,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
 });
 
+// Test route for generating log error
+app.get('/api/test-log', (req, res) => {
+  logger.error('This is a test error log');
+  logger.warn('This is a test warning log');
+  logger.info('This is a test info log');
+  res.json({ message: 'Test logs generated. Check console and log file.' });
+});
+
 // Start server
 app.listen(port, () => {
   logger.info(`Server is running on port ${port}`);
