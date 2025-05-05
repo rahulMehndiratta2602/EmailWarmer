@@ -47,12 +47,7 @@ interface NetworkDebug {
   fetchViaProxy: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
-// Declare the global window interface with our custom properties
-declare global {
-  interface Window {
-    networkDebug: NetworkDebug;
-  }
-}
+// Window interface is already declared in types/window.d.ts
 
 // Network debugging helper for development
 if (process.env.NODE_ENV === 'development') {

@@ -52,7 +52,7 @@ const registerIpcHandlers = (): void => {
   
   // Get all pipelines
   ipcMain.handle('api:getPipelines', async () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       console.log('Fetching pipelines from:', getFullApiUrl('/pipelines'));
       
       try {
@@ -283,7 +283,7 @@ const registerIpcHandlers = (): void => {
   
   // Get available actions
   ipcMain.handle('api:getAvailableActions', async () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       console.log('Fetching available actions from:', getFullApiUrl('/actions'));
       const request = net.request(getFullApiUrl('/actions'));
       
@@ -333,7 +333,7 @@ const registerIpcHandlers = (): void => {
 
   // Get all email accounts
   ipcMain.handle('api:getEmailAccounts', async () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       console.log('Fetching email accounts from:', getFullApiUrl('/email-accounts'));
       const request = net.request(getFullApiUrl('/email-accounts'));
       
@@ -606,7 +606,7 @@ const registerIpcHandlers = (): void => {
 
   // Batch upsert email accounts
   ipcMain.handle('api:batchUpsertEmailAccounts', async (event, accounts) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       console.log('Batch upserting email accounts:', accounts.length);
       
       // Make sure accounts is valid
@@ -682,6 +682,7 @@ const registerIpcHandlers = (): void => {
       try {
         const requestBody = { accounts };
         const bodyData = JSON.stringify(requestBody);
+        console.log("bodyData",bodyData)
         console.log('Sending batch upsert request with body length:', bodyData.length);
         console.log('Request body format:', JSON.stringify({...requestBody, accounts: accounts.length + ' items'}));
         request.write(bodyData);
@@ -698,7 +699,7 @@ const registerIpcHandlers = (): void => {
 
   // Batch delete email accounts
   ipcMain.handle('api:batchDeleteEmailAccounts', async (event, ids) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       console.log('Batch deleting email accounts:', ids);
       
       // Handle empty array or null/undefined ids

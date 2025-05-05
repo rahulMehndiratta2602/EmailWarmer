@@ -25,7 +25,6 @@ export class EmailAccountService {
   async getAllEmailAccounts() {
     try {
       // Use bracket notation to access the model - this bypasses TypeScript errors
-      // @ts-ignore
       return await prisma['emailAccount'].findMany({
         orderBy: {
           createdAt: 'desc',
@@ -48,7 +47,6 @@ export class EmailAccountService {
 
   async getEmailAccountById(id: string) {
     try {
-      // @ts-ignore
       return await prisma['emailAccount'].findUnique({
         where: { id },
       });
@@ -60,7 +58,6 @@ export class EmailAccountService {
 
   async createEmailAccount(data: { email: string; password: string }) {
     try {
-      // @ts-ignore
       return await prisma['emailAccount'].create({
         data,
       });
@@ -77,7 +74,6 @@ export class EmailAccountService {
 
   async updateEmailAccount(id: string, data: { password: string }) {
     try {
-      // @ts-ignore
       return await prisma['emailAccount'].update({
         where: { id },
         data,
@@ -90,7 +86,6 @@ export class EmailAccountService {
 
   async deleteEmailAccount(id: string): Promise<boolean> {
     try {
-      // @ts-ignore
       await prisma['emailAccount'].delete({
         where: { id },
       });
@@ -109,34 +104,46 @@ export class EmailAccountService {
       await prisma.$transaction(async (tx) => {
         for (const account of accounts) {
           if (account.id) {
-            // Update existing account if ID is provided
+            // Check if account exists before trying to update
             try {
-              // @ts-ignore
-              await tx['emailAccount'].update({
-                where: { id: account.id },
-                data: { password: account.password }
+              const exists = await tx['emailAccount'].findUnique({
+                where: { id: account.id }
               });
+              
+              if (exists) {
+                // Update if ID exists
+                await tx['emailAccount'].update({
+                  where: { id: account.id },
+                  data: { password: account.password }
+                });
+              } else {
+                // Create new if ID doesn't exist in database
+                await tx['emailAccount'].create({
+                  data: {
+                    email: account.email,
+                    password: account.password
+                  }
+                });
+              }
             } catch (e) {
-              logger.error(`Error updating account ${account.id}:`, e);
+              logger.error(`Error processing account ${account.id}:`, e);
+              // Continue with next account instead of failing the whole batch
             }
           } else {
             // Try to find by email first
             try {
-              // @ts-ignore
               const existing = await tx['emailAccount'].findFirst({
                 where: { email: account.email }
               });
               
               if (existing) {
                 // Update if email already exists
-                // @ts-ignore
                 await tx['emailAccount'].update({
                   where: { id: existing.id },
                   data: { password: account.password }
                 });
               } else {
                 // Create new account if email doesn't exist
-                // @ts-ignore
                 await tx['emailAccount'].create({
                   data: {
                     email: account.email,
@@ -162,7 +169,6 @@ export class EmailAccountService {
 
   async batchDeleteEmailAccounts(ids: string[]) {
     try {
-      // @ts-ignore
       const result = await prisma['emailAccount'].deleteMany({
         where: {
           id: {

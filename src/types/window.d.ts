@@ -1,14 +1,25 @@
 import { Pipeline } from './pipeline';
 import { EmailAccount } from './emailAccount';
 
+// Define IPC renderer interface
+interface IpcRenderer {
+  send: (channel: string, ...args: unknown[]) => void;
+  on: (channel: string, listener: (event: unknown, ...args: unknown[]) => void) => void;
+  invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
+}
+
 // Global window interface declarations
 declare global {
   interface Window {
     electron: {
-      ipcRenderer: any;
+      ipcRenderer: IpcRenderer;
       api: ElectronAPI;
     };
     api: ElectronAPI;
+    networkDebug?: {
+      getProxyUrl: () => string;
+      fetchViaProxy: (url: string, options?: RequestInit) => Promise<Response>;
+    };
   }
 }
 
@@ -16,7 +27,7 @@ export interface ElectronAPI {
   // Pipeline operations
   getPipelines: () => Promise<Pipeline[]>;
   getPipelineById: (id: string) => Promise<Pipeline | null>;
-  savePipeline: (pipeline: any) => Promise<Pipeline>;
+  savePipeline: (pipeline: Pipeline) => Promise<Pipeline>;
   deletePipeline: (id: string) => Promise<boolean>;
   getAvailableActions: () => Promise<string[]>;
   

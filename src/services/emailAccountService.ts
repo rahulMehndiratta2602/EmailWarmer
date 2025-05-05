@@ -61,7 +61,7 @@ export class EmailAccountService {
     }
   }
   
-  async batchUpsertEmailAccounts(accounts: EmailAccount[]): Promise<any> {
+  async batchUpsertEmailAccounts(accounts: EmailAccount[]): Promise<{ count: number }> {
     try {
       console.log('emailAccountService.batchUpsertEmailAccounts called with:', accounts.length, 'accounts');
       const result = await window.api.batchUpsertEmailAccounts(accounts);
@@ -73,7 +73,7 @@ export class EmailAccountService {
     }
   }
   
-  async batchDeleteEmailAccounts(ids: string[]): Promise<any> {
+  async batchDeleteEmailAccounts(ids: string[]): Promise<{ count: number }> {
     try {
       console.log('emailAccountService.batchDeleteEmailAccounts called with:', ids);
       const result = await window.api.batchDeleteEmailAccounts(ids);

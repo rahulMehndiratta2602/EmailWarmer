@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Download, ChevronLeft, ChevronRight, Edit, Save, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Download, Edit, Save, RefreshCw, AlertTriangle } from 'lucide-react';
 import Pagination from './Pagination';
 import { emailAccountService } from '../services/emailAccountService';
 import { EmailAccount } from '../types/emailAccount';
@@ -126,7 +126,6 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
     try {
       setIsSaving(true);
       setError(null);
-      
       // Create a copy of the accounts without UI state properties
       const cleanAccounts = emailPasswords.map(account => ({
         id: account.id,
@@ -134,7 +133,7 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
         password: account.password
       }));
       
-      console.log('Saving accounts to DB:', cleanAccounts.length);
+      console.log('Saving accounts to DB:', cleanAccounts.length,cleanAccounts);
       const result = await emailAccountService.batchUpsertEmailAccounts(cleanAccounts);
       
       // Check if we got a valid result
@@ -288,7 +287,7 @@ example3@email.com,password789`;
       item.id === id ? { ...item, selected: checked } : item
     ));
     // Update selectAll state based on whether all items are selected
-    setSelectAll(prev => {
+    setSelectAll(() => {
       const allSelected = emailPasswords.every(item => 
         item.id === id ? checked : item.selected
       );

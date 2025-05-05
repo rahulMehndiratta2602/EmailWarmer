@@ -29,16 +29,6 @@
 import './index.css';
 import './app';
 
-// Declare the global window interface with our custom properties
-declare global {
-  interface Window {
-    networkDebug: {
-      getProxyUrl: () => string;
-      fetchViaProxy: (url: string, options?: RequestInit) => Promise<Response>;
-    };
-  }
-}
-
 console.log('👋 This message is being logged by "renderer.js", included via webpack');
 
 // Set up the network debugging proxy integration
