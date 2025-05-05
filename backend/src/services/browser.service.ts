@@ -46,9 +46,7 @@ export class BrowserService {
             mapping.email,
             {
               host: mapping.proxyHost,
-              port: mapping.proxyPort,
-              username: mapping.proxyUsername,
-              password: mapping.proxyPassword
+              port: mapping.proxyPort
             }
           );
           successCount++;
@@ -74,7 +72,7 @@ export class BrowserService {
   private async openBrowserWindow(
     emailId: string, 
     email: string, 
-    proxy: { host: string; port: number; username: string; password: string }
+    proxy: { host: string; port: number }
   ): Promise<void> {
     try {
       // Format proxy URL
@@ -95,12 +93,6 @@ export class BrowserService {
       
       // Open a new page
       const page = await browser.newPage();
-      
-      // Set up proxy authentication if needed
-      await page.authenticate({
-        username: proxy.username,
-        password: proxy.password
-      });
       
       // Navigate to Google sign-in page
       await page.goto('https://accounts.google.com/signin');

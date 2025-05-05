@@ -200,14 +200,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"US\",\n  \"state\": \"California\",\n  \"city\": \"San Francisco\",\n  \"limit\": 10\n}",
+              "raw": "{\n  \"country\": \"us\",\n  \"protocol\": \"socks5\",\n  \"limit\": 100\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Fetch proxies from ABCProxy and save them to the database"
+            "description": "Fetch proxies from ABCProxy's extractProxyIp endpoint with the specified parameters and save them to the database. Note that for actual ABCProxy service, 'country' should be a region code like 'us' or 'in', and 'protocol' should be 'http' or 'socks5'. Your server's IP must be whitelisted with ABCProxy."
           },
           "response": []
         },
@@ -251,7 +251,7 @@
                 }
               }
             },
-            "description": "Update a proxy"
+            "description": "Update a proxy (e.g., change password or active status)"
           },
           "response": []
         },

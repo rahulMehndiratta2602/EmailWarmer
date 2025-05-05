@@ -19,33 +19,82 @@ interface EmailAccount {
   password: string;
 }
 
+// Define types for IPC channels
+type ValidSendChannel = 'toMain' | 'network-debug-proxy-ready';
+type ValidReceiveChannel = 'fromMain' | 'network-debug-proxy-ready';
+type ValidInvokeChannel = 'getEnvironment';
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
-    send: (channel: string, data: any) => {
-      // whitelist channels
-      const validChannels = ['toMain'];
-      if (validChannels.includes(channel)) {
-        ipcRenderer.send(channel, data);
-      }
+    send: (channel: ValidSendChannel, data: unknown) => {
+      ipcRenderer.send(channel, data);
     },
-    receive: (channel: string, func: (...args: any[]) => void) => {
-      const validChannels = ['fromMain'];
-      if (validChannels.includes(channel)) {
-        // Deliberately strip event as it includes `sender` 
-        ipcRenderer.on(channel, (event, ...args) => func(...args));
-      }
+    receive: (channel: ValidReceiveChannel, func: (...args: unknown[]) => void) => {
+      // Deliberately strip event as it includes `sender` 
+      ipcRenderer.on(channel, (event, ...args) => func(...args));
     },
-    invoke: (channel: string, ...args: any[]) => {
-      const validChannels = ['getEnvironment'];
-      if (validChannels.includes(channel)) {
-        return ipcRenderer.invoke(channel, ...args);
-      }
-      return Promise.reject(new Error(`Invalid channel: ${channel}`));
+    invoke: (channel: ValidInvokeChannel, ...args: unknown[]) => {
+      return ipcRenderer.invoke(channel, ...args);
     }
   }
 });
+
+// Define NetworkDebug interface for TypeScript
+interface NetworkDebug {
+  getProxyUrl: () => string;
+  fetchViaProxy: (url: string, options?: RequestInit) => Promise<Response>;
+}
+
+// Declare the global window interface with our custom properties
+declare global {
+  interface Window {
+    networkDebug: NetworkDebug;
+  }
+}
+
+// Network debugging helper for development
+if (process.env.NODE_ENV === 'development') {
+  // Create a global for the main process proxy URL
+  let mainProcessProxyUrl = '';
+  
+  // Listen for the proxy ready event from main process
+  ipcRenderer.on('network-debug-proxy-ready', (event, { proxyUrl }) => {
+    console.log('Network debug proxy ready:', proxyUrl);
+    mainProcessProxyUrl = proxyUrl;
+  });
+  
+  // Expose the proxy information to renderer
+  contextBridge.exposeInMainWorld('networkDebug', {
+    getProxyUrl: () => mainProcessProxyUrl,
+    // Function to intercept a fetch and route it through our proxy
+    fetchViaProxy: async (url: string, options?: RequestInit) => {
+      if (!url.startsWith('http://localhost:3001')) {
+        // Only proxy backend requests
+        return fetch(url, options);
+      }
+      
+      // Wait for proxy to be ready
+      if (!mainProcessProxyUrl) {
+        console.log('Waiting for network debug proxy to be ready...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      if (!mainProcessProxyUrl) {
+        console.warn('Network debug proxy not available, using direct fetch');
+        return fetch(url, options);
+      }
+      
+      // Transform the URL to go through our proxy
+      const proxyUrl = url.replace('http://localhost:3001', mainProcessProxyUrl);
+      console.log(`Proxying request to ${url} via ${proxyUrl}`);
+      
+      // Make the fetch request through our proxy
+      return fetch(proxyUrl, options);
+    }
+  } as NetworkDebug);
+}
 
 // Expose API methods through contextBridge
 contextBridge.exposeInMainWorld('api', {

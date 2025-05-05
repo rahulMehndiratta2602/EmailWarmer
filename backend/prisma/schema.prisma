@@ -41,17 +41,15 @@ model Proxy {
   id          String         @id @default(uuid())
   host        String
   port        Int
-  username    String
-  password    String
   country     String?
-  state       String?
-  city        String?
   protocol    String         @default("https")
   isActive    Boolean        @default(true)
   lastChecked DateTime?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   mappings    ProxyMapping[]
+
+  @@unique([host, port])
 }
 
 model ProxyMapping {

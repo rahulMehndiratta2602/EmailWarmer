@@ -1,22 +1,8 @@
-import { app, BrowserWindow, session, net, protocol } from 'electron';
-import * as path from 'path';
+import { app, BrowserWindow } from 'electron';
 import * as http from 'http';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
-
-// Get API base URL based on environment
-const getApiBaseUrl = (): string => {
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3001/api';
-  } else {
-    // In production, API should be on the same host
-    // Will be defined at runtime by checking server availability
-    return '';
-  }
-};
-
-const API_BASE_URL = getApiBaseUrl();
 
 // Disable security for development
 if (process.env.NODE_ENV === 'development') {
@@ -32,44 +18,81 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-// Function to get full API URL, handling both development and production
-const getFullApiUrl = (endpoint: string): string => {
-  // For development, use the localhost URL
-  if (process.env.NODE_ENV === 'development') {
-    return `http://localhost:3001/api${endpoint}`;
-  }
+// Set up a simple HTTP proxy server for development to make main process network requests visible
+let debugProxyServer: http.Server | null = null;
+const setupNetworkDebuggingProxy = () => {
+  if (process.env.NODE_ENV !== 'development') return;
   
-  // For production, try to use the same host as the app
-  return `${getServerUrl()}/api${endpoint}`;
+  // Simple HTTP proxy server
+  const PORT = 9876;
+  debugProxyServer = http.createServer((req, res) => {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+    
+    // Parse URL and prepare to forward
+    const url = new URL(req.url || '', 'http://localhost:9876');
+    const targetPath = url.pathname.replace('/api-proxy', '');
+    const targetUrl = `http://localhost:3001${targetPath}${url.search}`;
+    
+    console.log(`[Debug Proxy] ${req.method} ${req.url} → ${targetUrl}`);
+    
+    // Forward the request to the actual backend
+    const proxyReq = http.request(
+      targetUrl,
+      {
+        method: req.method,
+        headers: req.headers as http.OutgoingHttpHeaders
+      },
+      (proxyRes) => {
+        // Copy response headers
+        res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+        
+        // Pipe the response data
+        proxyRes.pipe(res);
+        
+        // Log response
+        console.log(`[Debug Proxy] Response: ${proxyRes.statusCode} for ${targetUrl}`);
+      }
+    );
+    
+    // Forward request body if any
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      req.pipe(proxyReq);
+    } else {
+      proxyReq.end();
+    }
+    
+    // Handle errors
+    proxyReq.on('error', (error) => {
+      console.error(`[Debug Proxy] Error: ${error.message}`);
+      res.writeHead(500);
+      res.end(`Proxy error: ${error.message}`);
+    });
+  });
+  
+  debugProxyServer.listen(PORT, () => {
+    console.log(`Network debug proxy running at http://localhost:${PORT}`);
+  });
 };
 
-// Helper to determine server URL at runtime
-let serverUrl: string | null = null;
-const getServerUrl = (): string => {
-  if (serverUrl) return serverUrl;
-  
-  // Default to localhost if no server URL has been determined yet
-  return 'http://localhost:3001';
-};
-
-// Check server availability
-const checkServerAvailability = async (): Promise<void> => {
-  // In development, we always use localhost:3001
-  if (process.env.NODE_ENV === 'development') {
-    serverUrl = 'http://localhost:3001';
-    return;
-  }
-
-  // In production, try to detect the correct server URL
-  try {
-    // First try localhost (in case backend is running locally)
-    serverUrl = 'http://localhost:3001';
-    // You could implement additional logic here to check if this server is available
-    console.log('Using API server at:', serverUrl);
-  } catch (error) {
-    console.error('Failed to detect API server:', error);
-    serverUrl = 'http://localhost:3001'; // Fallback to default
-  }
+// Function to set up IPC for network debugging
+const setupNetworkDebuggingIPC = (mainWindow: BrowserWindow) => {
+  // Send info to renderer when the proxy is ready
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (process.env.NODE_ENV === 'development') {
+      mainWindow.webContents.send('network-debug-proxy-ready', {
+        proxyUrl: 'http://localhost:9876/api-proxy'
+      });
+    }
+  });
 };
 
 const createWindow = (): void => {
@@ -86,19 +109,33 @@ const createWindow = (): void => {
     },
   });
 
-  // and load the index.html of the app.
+  // Load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Open the DevTools in development.
+  // Set up network debugging
   if (process.env.NODE_ENV === 'development') {
+    setupNetworkDebuggingIPC(mainWindow);
     mainWindow.webContents.openDevTools();
   }
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  // Set up the network debugging proxy
+  if (process.env.NODE_ENV === 'development') {
+    setupNetworkDebuggingProxy();
+  }
+  
+  createWindow();
+});
+
+// Clean up the proxy server when the app closes
+app.on('will-quit', () => {
+  if (debugProxyServer) {
+    debugProxyServer.close();
+  }
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

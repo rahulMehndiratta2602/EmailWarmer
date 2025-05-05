@@ -7,11 +7,7 @@ interface Proxy {
   id?: string;
   host: string;
   port: number;
-  username: string;
-  password: string;
   country?: string | null;
-  state?: string | null;
-  city?: string | null;
   protocol: string;
   isActive: boolean;
   lastChecked?: Date | null;
@@ -36,38 +32,31 @@ export class ProxyService {
 
   /**
    * Fetch proxies from ABCProxy and save them to the database
-   * @param country Optional country filter
-   * @param state Optional state filter
-   * @param city Optional city filter
+   * @param country Country code (e.g., 'us', 'in')
    * @param limit Maximum number of proxies to fetch
    * @returns Array of saved proxies
    */
   async fetchAndSaveProxies(
     country?: string,
-    state?: string,
-    city?: string,
     limit = 100
   ): Promise<Proxy[]> {
     try {
-      logger.info(`Fetching proxies from ABCProxy: country=${country}, state=${state}, city=${city}, limit=${limit}`);
+      logger.info(`Fetching proxies from ABCProxy: country=${country}, limit=${limit}`);
       
       // Fetch proxies from ABCProxy
-      const proxyConfigs = await abcProxyClient.getProxies(country, state, city, limit);
+      const proxyConfigs = await abcProxyClient.getProxies(country, limit);
       
-      // Save proxies to the database
-      const savedProxies = await this.saveProxies(
-        proxyConfigs.map(config => ({
-          host: config.host,
-          port: config.port,
-          username: config.username,
-          password: config.password,
-          country: config.country,
-          state: config.state,
-          city: config.city,
-          protocol: config.protocol,
-          isActive: true
-        }))
-      );
+      // Map to our internal format
+      const proxies = proxyConfigs.map(config => ({
+        host: config.host,
+        port: config.port,
+        country: config.country,
+        protocol: config.protocol,
+        isActive: true
+      }));
+      
+      // Save proxies to the database in smaller batches to avoid transaction timeouts
+      const savedProxies = await this.saveProxies(proxies);
       
       logger.info(`Successfully fetched and saved ${savedProxies.length} proxies`);
       return savedProxies;
@@ -86,59 +75,59 @@ export class ProxyService {
     try {
       const savedProxies: Proxy[] = [];
       
-      // Use a transaction for better performance and atomicity
-      await prisma.$transaction(async (tx) => {
-        for (const proxy of proxies) {
-          try {
-            // Check if proxy already exists with same host, port, and username
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const existingProxy = await (tx as any).proxy.findFirst({
-              where: {
-                host: proxy.host,
-                port: proxy.port,
-                username: proxy.username
-              }
-            });
-            
-            if (existingProxy) {
-              // Update existing proxy
+      // Process proxies in smaller batches (25 at a time) to avoid transaction timeouts
+      const batchSize = 25;
+      for (let i = 0; i < proxies.length; i += batchSize) {
+        const batch = proxies.slice(i, i + batchSize);
+        
+        try {
+          // Use individual calls instead of a transaction for better reliability
+          for (const proxy of batch) {
+            try {
+              // Check if proxy already exists with same host and port
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const updated = await (tx as any).proxy.update({
-                where: { id: existingProxy.id },
-                data: {
-                  password: proxy.password,
-                  country: proxy.country,
-                  state: proxy.state,
-                  city: proxy.city,
-                  protocol: proxy.protocol,
-                  isActive: proxy.isActive,
-                  lastChecked: new Date()
-                }
-              });
-              savedProxies.push(updated);
-            } else {
-              // Create new proxy
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const created = await (tx as any).proxy.create({
-                data: {
+              const existingProxy = await (prisma as any).proxy.findFirst({
+                where: {
                   host: proxy.host,
-                  port: proxy.port,
-                  username: proxy.username,
-                  password: proxy.password,
-                  country: proxy.country || null,
-                  state: proxy.state || null,
-                  city: proxy.city || null,
-                  protocol: proxy.protocol,
-                  isActive: proxy.isActive
+                  port: proxy.port
                 }
               });
-              savedProxies.push(created);
+              
+              if (existingProxy) {
+                // Update existing proxy
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const updated = await (prisma as any).proxy.update({
+                  where: { id: existingProxy.id },
+                  data: {
+                    country: proxy.country,
+                    protocol: proxy.protocol,
+                    isActive: proxy.isActive,
+                    lastChecked: new Date()
+                  }
+                });
+                savedProxies.push(updated);
+              } else {
+                // Create new proxy
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const created = await (prisma as any).proxy.create({
+                  data: {
+                    host: proxy.host,
+                    port: proxy.port,
+                    country: proxy.country || null,
+                    protocol: proxy.protocol,
+                    isActive: proxy.isActive
+                  }
+                });
+                savedProxies.push(created);
+              }
+            } catch (error) {
+              logger.error(`Error saving proxy ${proxy.host}:${proxy.port}:`, error);
             }
-          } catch (error) {
-            logger.error(`Error saving proxy ${proxy.host}:${proxy.port}:`, error);
           }
+        } catch (error) {
+          logger.error(`Error processing batch of proxies:`, error);
         }
-      });
+      }
       
       return savedProxies;
     } catch (error) {
@@ -252,8 +241,7 @@ export class ProxyService {
       const savedProxies = await this.saveProxies([{
         host: proxyConfig.host,
         port: proxyConfig.port,
-        username: proxyConfig.username,
-        password: proxyConfig.password,
+        country: proxyConfig.country,
         protocol: proxyConfig.protocol,
         isActive: true
       }]);
@@ -266,5 +254,6 @@ export class ProxyService {
   }
 }
 
+// Create and export a singleton instance
 export const proxyService = ProxyService.getInstance();
 export default ProxyService.getInstance(); 

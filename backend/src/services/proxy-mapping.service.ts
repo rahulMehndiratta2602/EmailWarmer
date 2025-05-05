@@ -1,7 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { proxyService } from './proxy.service';
-import { emailAccountService } from './email-account.service';
 
 // Create the Prisma client
 const prisma = new PrismaClient();
@@ -12,8 +11,6 @@ interface ProxyMappingResult {
   proxyId: string;
   proxyHost: string;
   proxyPort: number;
-  proxyUsername: string;
-  proxyPassword: string;
 }
 
 export class ProxyMappingService {
@@ -130,9 +127,7 @@ export class ProxyMappingService {
               email: emailAccount.email,
               proxyId: selectedProxy.id!,
               proxyHost: selectedProxy.host,
-              proxyPort: selectedProxy.port,
-              proxyUsername: selectedProxy.username,
-              proxyPassword: selectedProxy.password
+              proxyPort: selectedProxy.port
             });
             
           } catch (error) {
@@ -201,9 +196,7 @@ export class ProxyMappingService {
             email: account.email,
             proxyId: account.proxyMapping.proxy.id,
             proxyHost: account.proxyMapping.proxy.host,
-            proxyPort: account.proxyMapping.proxy.port,
-            proxyUsername: account.proxyMapping.proxy.username,
-            proxyPassword: account.proxyMapping.proxy.password
+            proxyPort: account.proxyMapping.proxy.port
           });
         }
       }

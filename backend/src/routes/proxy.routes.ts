@@ -38,13 +38,18 @@ router.get('/:id', async (req, res) => {
 // Fetch proxies from ABCProxy and save them
 router.post('/fetch', async (req, res) => {
   try {
-    const { country, state, city, limit } = req.body;
+    // Extract parameters for the new API
+    const { country = 'us', protocol = 'socks5', limit = 100 } = req.body;
+    
+    // Log the request parameters
+    logger.info(`Fetching proxies from ABCProxy: country=${country}, protocol=${protocol}, limit=${limit}`);
+    
+    // Call the service method with the parameters
     const proxies = await proxyService.fetchAndSaveProxies(
       country,
-      state,
-      city,
-      limit ? parseInt(limit as string) : undefined
+      limit ? parseInt(limit.toString()) : undefined
     );
+    
     res.status(201).json({
       message: `Successfully fetched and saved ${proxies.length} proxies`,
       proxies
