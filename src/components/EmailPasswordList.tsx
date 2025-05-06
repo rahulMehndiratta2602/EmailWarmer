@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Trash2, Download, Edit, Save, RefreshCw, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import Pagination from './Pagination';
 import { emailAccountService } from '../services/emailAccountService';
@@ -28,12 +28,43 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState<{[key: string]: boolean}>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Calculate pagination values
   const totalPages = Math.ceil(emailPasswords.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = emailPasswords.slice(startIndex, endIndex);
+  
+  // Apply sorting to the email accounts list
+  const sortedAccounts = useMemo(() => {
+    if (!sortField) return emailPasswords;
+    
+    return [...emailPasswords].sort((a, b) => {
+      if (sortField === 'updatedAt') {
+        const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
+  }, [emailPasswords, sortField, sortDirection]);
+
+  // Get current items for display after sorting
+  const currentItems = sortedAccounts.slice(startIndex, endIndex);
+
+  // Function to handle column sort
+  const handleSort = (field: string) => {
+    // If clicking the same field, toggle direction
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to descending
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
 
   // Format date to human-readable format
   const formatDate = (dateString?: string) => {
@@ -293,6 +324,14 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
     }
   };
 
+  const handleCancelEdit = (id: string) => {
+    setEmailPasswords(prev => prev.map(entry => 
+      entry.id === id ? { ...entry, isEditing: false } : entry
+    ));
+    setEditEmail('');
+    setEditPassword('');
+  };
+
   const handleSaveAccount = async (id: string) => {
     try {
       setIsLoading(true);
@@ -315,6 +354,10 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
         setEmailPasswords(prev => prev.map(entry => 
           entry.id === id ? { ...updatedAccount, isEditing: false } : entry
         ));
+        
+        // Show success message and clear it after 3 seconds
+        setSuccessMessage('Account updated successfully');
+        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         setError('Failed to update account');
       }
@@ -375,13 +418,13 @@ example3@email.com,password789`;
     setEmailPasswords(prev => prev.map(item => 
       item.id === id ? { ...item, selected: checked } : item
     ));
-    // Update selectAll state based on whether all items are selected
-    setSelectAll(() => {
-      const allSelected = emailPasswords.every(item => 
-        item.id === id ? checked : item.selected
-      );
-      return allSelected;
-    });
+    
+    // Update selectAll based on whether all current page items are selected
+    const currentPageItems = emailPasswords.slice(startIndex, endIndex);
+    const allCurrentPageSelected = currentPageItems.every(item => 
+      item.id === id ? checked : item.selected
+    );
+    setSelectAll(allCurrentPageSelected);
   };
 
   const handleDeleteSelected = async () => {
@@ -651,7 +694,17 @@ example3@email.com,password789`;
                     <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
                     <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Password</th>
                     <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mapped Proxy</th>
-                    <th className="w-48 p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Last Updated</th>
+                    <th 
+                      className="w-48 p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-blue-500 dark:hover:text-blue-400 select-none"
+                      onClick={() => handleSort('updatedAt')}
+                    >
+                      Last Updated 
+                      {sortField === 'updatedAt' && (
+                        <span className="ml-1">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </th>
                     <th className="w-16 p-2 sm:p-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                   </tr>
                 </thead>
@@ -748,7 +801,9 @@ example3@email.com,password789`;
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span className="flex-1">{'••••••••'}</span>
+                                <span className="flex-1">
+                                  {passwordVisibility[entry.id] ? entry.password : '••••••••'}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => togglePasswordVisibility(entry.id)}
@@ -777,7 +832,18 @@ example3@email.com,password789`;
                           </td>
                           <td className="p-2 sm:p-3 text-center">
                             <div className="flex items-center justify-center gap-2">
-                              {!entry.isEditing && (
+                              {entry.isEditing ? (
+                                <button
+                                  onClick={() => handleCancelEdit(entry.id)}
+                                  className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+                                  title="Cancel Edit"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x">
+                                    <path d="M18 6 6 18"></path>
+                                    <path d="m6 6 12 12"></path>
+                                  </svg>
+                                </button>
+                              ) : (
                                 <button
                                   onClick={() => handleEditAccount(entry.id)}
                                   disabled={isLoading}
@@ -941,6 +1007,23 @@ example3@email.com,password789`;
                 Delete All Email Accounts
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Notification */}
+      {successMessage && (
+        <div className={`fixed bottom-4 right-4 p-4 rounded shadow-lg ${
+          isDarkMode ? 'bg-green-800 text-white' : 'bg-green-100 text-green-800'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span>{successMessage}</span>
+            <button 
+              onClick={() => setSuccessMessage(null)}
+              className="ml-2 text-sm"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}

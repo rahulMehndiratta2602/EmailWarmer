@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Trash2, RefreshCw, Globe, AlertTriangle } from 'lucide-react';
 import Pagination from './Pagination';
 import { proxyService } from '../services/proxyService';
@@ -24,12 +24,42 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Calculate pagination values
   const totalPages = Math.ceil(proxies.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = proxies.slice(startIndex, endIndex);
+
+  // Apply sorting to the proxy list
+  const sortedProxies = useMemo(() => {
+    if (!sortField) return proxies;
+    
+    return [...proxies].sort((a, b) => {
+      if (sortField === 'lastChecked') {
+        const dateA = a.lastChecked ? new Date(a.lastChecked).getTime() : 0;
+        const dateB = b.lastChecked ? new Date(b.lastChecked).getTime() : 0;
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
+  }, [proxies, sortField, sortDirection]);
+
+  // Get current items for display after sorting
+  const currentItems = sortedProxies.slice(startIndex, endIndex);
+
+  // Function to handle column sort
+  const handleSort = (field: string) => {
+    // If clicking the same field, toggle direction
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to descending
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
 
   // Format date to human-readable format
   const formatDate = (dateString?: string) => {
@@ -256,6 +286,7 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    setSelectAll(false); // Reset select all when changing pages
   };
 
   const handleItemsPerPageChange = (value: number) => {
@@ -266,10 +297,18 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
 
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
-    setProxies(prev => prev.map(proxy => ({
-      ...proxy,
-      selected: checked
-    })));
+    
+    // Only select/deselect items on the current page
+    setProxies(prev => prev.map((proxy, index) => {
+      // Check if this item is on the current page
+      const isOnCurrentPage = index >= startIndex && index < endIndex;
+      
+      return {
+        ...proxy,
+        // Only change selection if item is on current page
+        selected: isOnCurrentPage ? checked : proxy.selected
+      };
+    }));
   };
 
   const handleSelectItem = (id: string, checked: boolean) => {
@@ -279,9 +318,12 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
         : proxy
     ));
     
-    // Update selectAll based on whether all items are selected
-    const allSelected = proxies.every(proxy => proxy.id === id ? checked : proxy.selected);
-    setSelectAll(allSelected);
+    // Update selectAll based on whether all current page items are selected
+    const currentPageItems = proxies.slice(startIndex, endIndex);
+    const allCurrentPageSelected = currentPageItems.every(proxy => 
+      proxy.id === id ? checked : proxy.selected
+    );
+    setSelectAll(allCurrentPageSelected);
   };
 
   // Get mapped email accounts for a proxy
@@ -384,8 +426,17 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
                   <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Country</th>
                   <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Protocol</th>
                   <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mapped Emails</th>
-                  <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                  <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Last Checked</th>
+                  <th 
+                    className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-blue-500 dark:hover:text-blue-400 select-none"
+                    onClick={() => handleSort('lastChecked')}
+                  >
+                    Last Checked 
+                    {sortField === 'lastChecked' && (
+                      <span className="ml-1">
+                        {sortDirection === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </th>
                   <th className="w-16 p-2 sm:p-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                 </tr>
               </thead>
@@ -441,15 +492,6 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
                           ) : (
                             <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>None</span>
                           )}
-                        </td>
-                        <td className="p-2 sm:p-3 text-sm">
-                          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                            proxy.isActive 
-                              ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
-                              : isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {proxy.isActive ? 'Active' : 'Inactive'}
-                          </span>
                         </td>
                         <td className="p-2 sm:p-3 text-sm dark:text-gray-300">
                           {proxy.lastChecked ? formatDate(proxy.lastChecked) : 'Never'}
@@ -526,9 +568,7 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
                     : 'border-gray-300 focus:border-blue-500'
                   } focus:outline-none focus:ring-1 focus:ring-blue-500`}
               >
-                <option value="http">HTTP</option>
-                <option value="https">HTTPS</option>
-                <option value="socks4">SOCKS4</option>
+                <option value="http">HTTP/HTTPS</option>
                 <option value="socks5">SOCKS5</option>
               </select>
             </div>

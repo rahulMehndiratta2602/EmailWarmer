@@ -1097,33 +1097,53 @@ const registerIpcHandlers = (): void => {
 
   // Delete proxy
   ipcMain.handle('api:deleteProxy', async (event, id) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       console.log('Deleting proxy:', id);
+      const url = getFullApiUrl(`/proxies/${id}`);
+      console.log('Delete proxy request URL:', url);
       
       const request = net.request({
         method: 'DELETE',
-        url: getFullApiUrl(`/proxies/${id}`)
+        url: url
       });
       
+      request.setHeader('Content-Type', 'application/json');
+      
+      let responseData = '';
+      
       request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Proxy not found for deletion:', id);
+        console.log(`Delete proxy response status: ${response.statusCode}`);
+        
+        response.on('data', (chunk) => {
+          responseData += chunk.toString();
+          console.log('Delete proxy response data:', chunk.toString());
+        });
+        
+        response.on('end', () => {
+          console.log('Delete proxy response complete, data:', responseData);
+          
+          if (response.statusCode === 404) {
+            console.log('Proxy not found for deletion:', id);
+            resolve(false);
+            return;
+          }
+          
+          if (response.statusCode >= 200 && response.statusCode < 300) {
+            console.log('Proxy deleted successfully:', id);
+            resolve(true);
+            return;
+          }
+          
+          console.error(`Unexpected status code: ${response.statusCode}`);
+          // Even with unexpected status, return true to avoid breaking UI
           resolve(false);
-          return;
-        }
-        
-        if (response.statusCode === 204 || response.statusCode === 200) {
-          console.log('Proxy deleted successfully:', id);
-          resolve(true);
-          return;
-        }
-        
-        reject(new Error(`Unexpected status code: ${response.statusCode}`));
+        });
       });
       
       request.on('error', (error) => {
         console.error('Network error when deleting proxy:', error);
-        reject(error);
+        // Return false to indicate failure but avoid breaking UI
+        resolve(false);
       });
       
       request.end();
