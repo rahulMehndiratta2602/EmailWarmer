@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  itemsPerPage: number;
-  totalItems: number;
+  itemsPerPage?: number;
+  totalItems?: number;
   onPageChange: (page: number) => void;
-  onItemsPerPageChange: (value: number) => void;
+  onItemsPerPageChange?: (value: number) => void;
   isDarkMode: boolean;
 }
 
@@ -15,7 +15,7 @@ const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
   itemsPerPage,
-  totalItems,
+  // totalItems is used for interface compatibility but not in rendering
   onPageChange,
   onItemsPerPageChange,
   isDarkMode
@@ -24,7 +24,7 @@ const Pagination: React.FC<PaginationProps> = ({
     const pages = [];
     const maxVisiblePages = window.innerWidth < 768 ? 2 : 3;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -52,27 +52,29 @@ const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    <div className="mt-4 flex flex-col items-center gap-2">
-      <div className="flex items-center gap-2 whitespace-nowrap text-xs">
-        <label className="text-gray-500 dark:text-gray-400">
-          Items per page:
-        </label>
-        <select
-          value={itemsPerPage}
-          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className={`px-1.5 py-0.5 rounded text-xs ${
-            isDarkMode
-              ? 'bg-gray-700 text-white border-gray-600'
-              : 'bg-white text-gray-700 border-gray-300'
-          }`}
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
-      </div>
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      {itemsPerPage && onItemsPerPageChange && (
+        <div className="flex items-center gap-2 whitespace-nowrap text-xs">
+          <label className="text-gray-500 dark:text-gray-400">
+            Items per page:
+          </label>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className={`px-1.5 py-0.5 rounded text-xs ${
+              isDarkMode
+                ? 'bg-gray-700 text-white border-gray-600'
+                : 'bg-white text-gray-700 border-gray-300'
+            }`}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+      )}
 
       <div className="flex items-center gap-1">
         <button

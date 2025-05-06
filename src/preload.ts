@@ -19,6 +19,18 @@ interface EmailAccount {
   password: string;
 }
 
+interface Proxy {
+  id?: string;
+  host: string;
+  port: number;
+  country?: string | null;
+  protocol: string;
+  isActive: boolean;
+  lastChecked?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Define types for IPC channels
 type ValidSendChannel = 'toMain' | 'network-debug-proxy-ready';
 type ValidReceiveChannel = 'fromMain' | 'network-debug-proxy-ready';
@@ -150,9 +162,71 @@ contextBridge.exposeInMainWorld('api', {
     return ipcRenderer.invoke('api:batchUpsertEmailAccounts', accounts);
   },
   
+  bulkImportEmailAccounts: (accounts: EmailAccount[]) => {
+    console.log('preload: bulkImportEmailAccounts called with', accounts.length, 'accounts');
+    return ipcRenderer.invoke('api:bulkImportEmailAccounts', accounts);
+  },
+  
   batchDeleteEmailAccounts: (ids: string[]) => {
     console.log('preload: batchDeleteEmailAccounts called');
     return ipcRenderer.invoke('api:batchDeleteEmailAccounts', ids);
+  },
+  
+  // Proxy operations
+  getProxies: () => {
+    console.log('preload: getProxies called');
+    return ipcRenderer.invoke('api:getProxies');
+  },
+  
+  getProxyById: (id: string) => {
+    console.log('preload: getProxyById called with:', id);
+    return ipcRenderer.invoke('api:getProxyById', id);
+  },
+  
+  createProxy: (proxy: Proxy) => {
+    console.log('preload: createProxy called with:', proxy);
+    return ipcRenderer.invoke('api:createProxy', proxy);
+  },
+  
+  updateProxy: (id: string, data: Partial<Proxy>) => {
+    console.log('preload: updateProxy called with:', id, data);
+    return ipcRenderer.invoke('api:updateProxy', id, data);
+  },
+  
+  deleteProxy: (id: string) => {
+    console.log('preload: deleteProxy called with:', id);
+    return ipcRenderer.invoke('api:deleteProxy', id);
+  },
+  
+  fetchProxies: (params: { country: string, protocol: string, limit: number }) => {
+    console.log('preload: fetchProxies called with:', params);
+    return ipcRenderer.invoke('api:fetchProxies', params);
+  },
+  
+  batchDeleteProxies: (ids: string[]) => {
+    console.log('preload: batchDeleteProxies called with:', ids);
+    return ipcRenderer.invoke('api:batchDeleteProxies', ids);
+  },
+  
+  checkProxies: () => {
+    console.log('preload: checkProxies called');
+    return ipcRenderer.invoke('api:checkProxies');
+  },
+  
+  // Proxy mapping operations
+  getProxyMappings: () => {
+    console.log('preload: getProxyMappings called');
+    return ipcRenderer.invoke('api:getProxyMappings');
+  },
+  
+  createProxyMapping: (emailIds: string[], maxProxies: number, maxEmailsPerProxy: number) => {
+    console.log('preload: createProxyMapping called with:', emailIds, maxProxies, maxEmailsPerProxy);
+    return ipcRenderer.invoke('api:createProxyMapping', emailIds, maxProxies, maxEmailsPerProxy);
+  },
+  
+  deleteProxyMapping: (emailId: string) => {
+    console.log('preload: deleteProxyMapping called with:', emailId);
+    return ipcRenderer.invoke('api:deleteProxyMapping', emailId);
   },
   
   // Environment information

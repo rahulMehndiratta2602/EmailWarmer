@@ -35,6 +35,23 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Delete a single proxy by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    logger.info(`Deleting proxy with ID: ${req.params.id}`);
+    const result = await proxyService.deleteProxies([req.params.id]);
+    
+    if (result === 0) {
+      return res.status(404).json({ error: 'Proxy not found' });
+    }
+    
+    res.status(200).json({ message: 'Proxy deleted successfully', count: result });
+  } catch (error) {
+    logger.error(`Error in DELETE /proxies/${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to delete proxy' });
+  }
+});
+
 // Fetch proxies from ABCProxy and save them
 router.post('/fetch', async (req, res) => {
   try {

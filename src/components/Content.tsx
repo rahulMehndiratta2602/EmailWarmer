@@ -1,5 +1,6 @@
 import React from 'react';
 import EmailPasswordList from './EmailPasswordList';
+import ProxyList from './ProxyList';
 import PipelineContainer from './PipelineContainer';
 import DarkModeToggle from './ui/DarkModeToggle';
 
@@ -27,6 +28,9 @@ const Content: React.FC<ContentProps> = ({ activePage, onFileSubmit, isDarkMode,
             <div>
               <h2 className="text-2xl font-bold mb-4 dark:text-white">Email Accounts</h2>
               <EmailPasswordList isDarkMode={isDarkMode} />
+            </div>
+            <div>
+              <ProxyList isDarkMode={isDarkMode} />
             </div>
           </div>
         </div>

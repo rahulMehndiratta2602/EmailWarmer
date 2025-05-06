@@ -1,5 +1,6 @@
 import { Pipeline } from './pipeline';
 import { EmailAccount } from './emailAccount';
+import { Proxy, ProxyMappingResult } from './proxy';
 
 // Define IPC renderer interface
 interface IpcRenderer {
@@ -35,10 +36,26 @@ export interface ElectronAPI {
   getEmailAccounts: () => Promise<EmailAccount[]>;
   getEmailAccountById: (id: string) => Promise<EmailAccount | null>;
   createEmailAccount: (account: EmailAccount) => Promise<EmailAccount>;
-  updateEmailAccount: (id: string, data: { password: string }) => Promise<EmailAccount | null>;
+  updateEmailAccount: (id: string, data: { email?: string; password: string }) => Promise<EmailAccount | null>;
   deleteEmailAccount: (id: string) => Promise<boolean>;
   batchUpsertEmailAccounts: (accounts: EmailAccount[]) => Promise<{ count: number }>;
+  bulkImportEmailAccounts: (accounts: EmailAccount[]) => Promise<{ count: number }>;
   batchDeleteEmailAccounts: (ids: string[]) => Promise<{ count: number }>;
+  
+  // Proxy operations
+  getProxies: () => Promise<Proxy[]>;
+  getProxyById: (id: string) => Promise<Proxy | null>;
+  createProxy: (proxy: Partial<Proxy>) => Promise<Proxy>;
+  updateProxy: (id: string, data: Partial<Proxy>) => Promise<Proxy>;
+  deleteProxy: (id: string) => Promise<boolean>;
+  fetchProxies: (params: { country?: string, protocol?: string, limit?: number }) => Promise<Proxy[]>;
+  batchDeleteProxies: (ids: string[]) => Promise<{ count: number }>;
+  checkProxies: () => Promise<boolean>;
+  
+  // Proxy mapping operations
+  getProxyMappings: () => Promise<ProxyMappingResult[]>;
+  createProxyMapping: (emailIds: string[], maxProxies?: number, maxEmailsPerProxy?: number) => Promise<ProxyMappingResult[]>;
+  deleteProxyMapping: (emailId: string) => Promise<boolean>;
   
   // Environment
   getEnvironment: () => Promise<{
@@ -47,5 +64,6 @@ export interface ElectronAPI {
     appVersion: string;
     platform: string;
     apiBaseUrl: string;
+    isWindowsOS: boolean;
   }>;
 } 

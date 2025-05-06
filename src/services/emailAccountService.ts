@@ -43,7 +43,7 @@ export class EmailAccountService {
     }
   }
 
-  async updateEmailAccount(id: string, data: { password: string }): Promise<EmailAccount | null> {
+  async updateEmailAccount(id: string, data: { email?: string, password: string }): Promise<EmailAccount | null> {
     try {
       return await window.api.updateEmailAccount(id, data);
     } catch (error) {
@@ -69,6 +69,18 @@ export class EmailAccountService {
       return result;
     } catch (error) {
       console.error('Error in emailAccountService.batchUpsertEmailAccounts:', error);
+      throw error;
+    }
+  }
+  
+  async bulkImportEmailAccounts(accounts: EmailAccount[]): Promise<{ count: number }> {
+    try {
+      console.log('emailAccountService.bulkImportEmailAccounts called with:', accounts.length, 'accounts');
+      const result = await window.api.bulkImportEmailAccounts(accounts);
+      console.log('Result from bulkImportEmailAccounts:', result);
+      return result;
+    } catch (error) {
+      console.error('Error in emailAccountService.bulkImportEmailAccounts:', error);
       throw error;
     }
   }
