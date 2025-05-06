@@ -1,0 +1,3968 @@
+{
+	"info": {
+		"_postman_id": "ce4fa75b-dff4-4af7-9259-2d5cb8043705",
+		"name": "Dolphin{anty} Remote API Docs",
+		"description": "## Request limit is 500 requests per minute\n\nAbout authorization\n\n1. You should generate an API access token. Go to [https://anty.dolphin.ru.com/panel/#/api](https://anty.dolphin.ru.com/panel/#/api)\n2. Fill name, select expiration days, and click the button to create a token. It's an opening popup you can copy the token. Make sure you save your token, as you won't be able to see it again.\n3. You should provide this access token in each request in the Authorization -> Bearer Token",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17118172"
+	},
+	"item": [
+		{
+			"name": "Browser profiles",
+			"item": [
+				{
+					"name": "List browser profiles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles?limit&query&tags[]&statuses[]&mainWebsites[]&users[]&page",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "",
+									"description": "How many browser profiles to return per page. Max - 50. Default - 50."
+								},
+								{
+									"key": "query",
+									"value": "",
+									"description": "Text search pattern by browser profile name."
+								},
+								{
+									"key": "tags[]",
+									"value": "",
+									"description": "Array of tags in raw text, not tags' IDs. If you specify more than one tag this filter will work in AND mode. For example if you specify tags `facebook` and `italy` API will return only browser profiles which have BOTH tags."
+								},
+								{
+									"key": "statuses[]",
+									"value": "",
+									"description": "Array of statuses IDs to filter with."
+								},
+								{
+									"key": "mainWebsites[]",
+									"value": "",
+									"description": "Array of main website labels browser profiles were create with. Available values: `['facebook', 'google', 'crypto', 'tiktok']`."
+								},
+								{
+									"key": "users[]",
+									"value": "",
+									"description": "Array of users IDs to filter with. If not specifed only current user's browser profiles will be returned."
+								},
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get one browser profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/browser_profile_id",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"browser_profile_id"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get one browser profile",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://dolphin-anty-api.com/browser_profiles/76854661",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"browser_profiles",
+										"76854661"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"id\": 76854661,\n        \"teamId\": 1052093,\n        \"userId\": 1097509,\n        \"name\": \"test 11\",\n        \"tags\": [],\n        \"platform\": \"windows\",\n        \"browserType\": \"anty\",\n        \"mainWebsite\": \"\",\n        \"useragent\": {\n            \"mode\": \"manual\",\n            \"value\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36\"\n        },\n        \"webrtc\": {\n            \"mode\": \"altered\",\n            \"ipAddress\": null\n        },\n        \"canvas\": {\n            \"mode\": \"real\"\n        },\n        \"webgl\": {\n            \"mode\": \"real\"\n        },\n        \"webglInfo\": {\n            \"mode\": \"manual\",\n            \"vendor\": \"Google Inc. (Intel)\",\n            \"renderer\": \"ANGLE (Intel, Intel(R) HD Graphics 520 Direct3D11 vs_5_0 ps_5_0, D3D11)\"\n        },\n        \"clientRect\": {\n            \"mode\": \"real\"\n        },\n        \"notes\": {\n            \"content\": null,\n            \"color\": \"blue\",\n            \"style\": \"text\",\n            \"icon\": null\n        },\n        \"timezone\": {\n            \"mode\": \"auto\",\n            \"value\": null\n        },\n        \"locale\": {\n            \"mode\": \"auto\",\n            \"value\": null\n        },\n        \"tabs\": [\n            \"chrome://newtab/\"\n        ],\n        \"ports\": {\n            \"mode\": \"protect\",\n            \"blacklist\": \"3389,5900,5800,7070,6568,5938\"\n        },\n        \"proxyId\": 58203158,\n        \"proxy\": {\n            \"id\": 582031581,\n            \"name\": \"test\",\n            \"type\": \"http\",\n            \"host\": \"81.217.5.11\",\n            \"savedByUser\": 1,\n            \"cryptoKeyId\": 40,\n            \"login\": \"WNeejQD\",\n            \"password\": \"VabDhjgfsMCJ5\",\n            \"changeIpUrl\": null,\n            \"port\": \"11111\"\n        },\n        \"access\": {\n            \"view\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1,\n            \"usage\": 1\n        },\n        \"status\": null,\n        \"geolocation\": {\n            \"mode\": \"auto\",\n            \"latitude\": null,\n            \"longitude\": null,\n            \"accuracy\": null\n        },\n        \"cpu\": {\n            \"mode\": \"manual\",\n            \"value\": 4\n        },\n        \"memory\": {\n            \"mode\": \"manual\",\n            \"value\": 8\n        },\n        \"platformName\": \"Win32\",\n        \"cpuArchitecture\": \"amd64\",\n        \"osVersion\": \"10\",\n        \"screen\": {\n            \"width\": null,\n            \"height\": null,\n            \"mode\": \"real\",\n            \"resolution\": null\n        },\n        \"connection\": {\n            \"downlink\": 5.3,\n            \"effectiveType\": \"4g\",\n            \"rtt\": 100,\n            \"saveData\": false\n        },\n        \"vendorSub\": \"\",\n        \"productSub\": \"20030107\",\n        \"vendor\": \"Google Inc.\",\n        \"product\": \"Gecko\",\n        \"doNotTrack\": false,\n        \"args\": [],\n        \"appCodeName\": \"Mozilla\",\n        \"userFields\": null,\n        \"updated_at\": \"2023-04-25T15:14:33.000000Z\",\n        \"mediaDevices\": {\n            \"mode\": \"real\",\n            \"audioInputs\": null,\n            \"videoInputs\": null,\n            \"audioOutputs\": null\n        },\n        \"storagePath\": \"520...\",\n        \"lastRunningTime\": null,\n        \"lastRunnedByUserId\": null,\n        \"lastRunUuid\": null,\n        \"running\": 0,\n        \"platformVersion\": \"10.0.0\",\n        \"uaFullVersion\": \"111.0.5563.58\",\n        \"extensionsNewNaming\": true,\n        \"login\": \"\",\n        \"password\": \"\",\n        \"bookmarks\": [],\n        \"extensions\": [\n            {\n                \"url\": \"....\",\n                \"type\": \"file\",\n                \"hash\": \"0ac74....\"\n            }\n        ],\n        \"homepages\": []\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Create browser profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": "If data is in JSON",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "",
+									"description": "Browser profile name",
+									"type": "text"
+								},
+								{
+									"key": "tags[]",
+									"value": "",
+									"description": "Array of tags",
+									"type": "text"
+								},
+								{
+									"key": "tabs",
+									"value": "",
+									"description": "Array of URLs to open for the first launch",
+									"type": "text"
+								},
+								{
+									"key": "platform",
+									"value": "",
+									"description": "OS to emulate. Available values: `['windows', 'linux', 'macos']`",
+									"type": "text"
+								},
+								{
+									"key": "platformVersion",
+									"value": "",
+									"description": "OS numeric version to emulate. Etc `10.0.0` for Windows 10, `15.0.0` for Windows 11, or `10.15.7` for macOS.",
+									"type": "text"
+								},
+								{
+									"key": "mainWebsite",
+									"value": "",
+									"description": "Main website. Avaliable values: `['google', 'facebook', 'crypto', 'tiktok']`. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "useragent[mode]",
+									"value": "",
+									"description": "manual",
+									"type": "text"
+								},
+								{
+									"key": "useragent[value]",
+									"value": "",
+									"description": "Manual useragent",
+									"type": "text"
+								},
+								{
+									"key": "webrtc[mode]",
+									"value": "",
+									"description": "Avaliable values: `['off', 'real', 'altered', 'manual']`. `altered` is most popular.",
+									"type": "text"
+								},
+								{
+									"key": "webrtc[ipAddress]",
+									"value": "",
+									"description": "Required if WebRTC mode is `manual`. IP address to show through WebRTC leak.",
+									"type": "text"
+								},
+								{
+									"key": "canvas[mode]",
+									"value": "",
+									"description": "Avalibale values: `['off', 'real', 'noise']`.",
+									"type": "text"
+								},
+								{
+									"key": "webgl[mode]",
+									"value": "",
+									"description": "Avalibale values: `['off', 'real', 'noise']`.",
+									"type": "text"
+								},
+								{
+									"key": "webglInfo[mode]",
+									"value": "",
+									"description": "Avalibale of WebGL mode is not `off`.  Available values: `['real', 'software', 'manual']`",
+									"type": "text"
+								},
+								{
+									"key": "webglInfo[vendor]",
+									"value": "",
+									"description": "Required if WebGL Info mode is `manual`.",
+									"type": "text"
+								},
+								{
+									"key": "webglInfo[renderer]",
+									"value": "",
+									"description": "Required if WebGL Info mode is `manual`.",
+									"type": "text"
+								},
+								{
+									"key": "webglInfo[webgl2Maximum]",
+									"value": "{\\\"MAX_SAMPLES\\\": 8, \\\"MAX_DRAW_BUFFERS\\\": 8, \\\"MAX_TEXTURE_SIZE\\\": 16384, \\\"MAX_ELEMENT_INDEX\\\": 4294967294, \\\"MAX_VIEWPORT_DIMS\\\": [16384, 16384], \\\"MAX_VERTEX_ATTRIBS\\\": 16, \\\"MAX_3D_TEXTURE_SIZE\\\": 2048, \\\"MAX_VARYING_VECTORS\\\": 30, \\\"MAX_ELEMENTS_INDICES\\\": 2147483647, \\\"MAX_TEXTURE_LOD_BIAS\\\": 15, \\\"MAX_COLOR_ATTACHMENTS\\\": 8, \\\"MAX_ELEMENTS_VERTICES\\\": 2147483647, \\\"MAX_RENDERBUFFER_SIZE\\\": 16384, \\\"MAX_UNIFORM_BLOCK_SIZE\\\": 65536, \\\"MAX_VARYING_COMPONENTS\\\": 120, \\\"MAX_TEXTURE_IMAGE_UNITS\\\": 32, \\\"MAX_ARRAY_TEXTURE_LAYERS\\\": 2048, \\\"MAX_PROGRAM_TEXEL_OFFSET\\\": 7, \\\"MIN_PROGRAM_TEXEL_OFFSET\\\": -8, \\\"MAX_CUBE_MAP_TEXTURE_SIZE\\\": 16384, \\\"MAX_VERTEX_UNIFORM_BLOCKS\\\": 13, \\\"MAX_VERTEX_UNIFORM_VECTORS\\\": 4096, \\\"MAX_COMBINED_UNIFORM_BLOCKS\\\": 60, \\\"MAX_FRAGMENT_UNIFORM_BLOCKS\\\": 13, \\\"MAX_UNIFORM_BUFFER_BINDINGS\\\": 72, \\\"MAX_FRAGMENT_UNIFORM_VECTORS\\\": 4096, \\\"MAX_VERTEX_OUTPUT_COMPONENTS\\\": 124, \\\"MAX_FRAGMENT_INPUT_COMPONENTS\\\": 124, \\\"MAX_VERTEX_UNIFORM_COMPONENTS\\\": 16384, \\\"MAX_VERTEX_TEXTURE_IMAGE_UNITS\\\": 32, \\\"MAX_FRAGMENT_UNIFORM_COMPONENTS\\\": 16384, \\\"UNIFORM_BUFFER_OFFSET_ALIGNMENT\\\": 256, \\\"MAX_COMBINED_TEXTURE_IMAGE_UNITS\\\": 64, \\\"MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS\\\": 229376, \\\"MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS\\\": 4, \\\"MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS\\\": 229376, \\\"MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS\\\": 4, \\\"MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS\\\": 128}\"\nwebrtc: {mode: \"altered\", ipAddress: null}",
+									"description": "Important change webgl2Maximum to yours. it's just an example\n",
+									"type": "text"
+								},
+								{
+									"key": "notes[icon]",
+									"value": "",
+									"description": "Avaliable values: `['info', 'warning', 'danger', 'success']`. May be null for no-icon.",
+									"type": "text"
+								},
+								{
+									"key": "notes[color]",
+									"value": "",
+									"description": "Available values: `['red', 'green', 'blue', 'purple', 'orange']`",
+									"type": "text"
+								},
+								{
+									"key": "notes[style]",
+									"value": "",
+									"description": "Available values: `['text', 'outline', 'outline-text']`",
+									"type": "text"
+								},
+								{
+									"key": "notes[content]",
+									"value": "",
+									"description": "Note content. May be both plaintext and basic HTML.",
+									"type": "text"
+								},
+								{
+									"key": "timezone[mode]",
+									"value": "",
+									"description": "Available values: `['auto', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "timezone[value]",
+									"value": "",
+									"description": "Required if timezone mode is `manual`.  [Timezones list](http://joda-time.sourceforge.net/timezones.html). For example - `Europe/Moscow`",
+									"type": "text"
+								},
+								{
+									"key": "locale[mode]",
+									"value": "",
+									"description": "Avaliable values: `['auto', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "locale[value]",
+									"value": "",
+									"description": "Required if locale mode is `manual`. For example - `en_GB`.",
+									"type": "text"
+								},
+								{
+									"key": "statusId",
+									"value": "",
+									"description": "ID of status. Optional",
+									"type": "text"
+								},
+								{
+									"key": "geolocation[mode]",
+									"value": "",
+									"description": "Geolocation emulation mode. Avaliable values: `['auto', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "geolocation[latitude]",
+									"value": "",
+									"description": "Required if geolocation mode is `manual`. Latitude.",
+									"type": "text"
+								},
+								{
+									"key": "geolocation[longitude]",
+									"value": "",
+									"description": "Required if geolocation mode is `manual`. Longitude.",
+									"type": "text"
+								},
+								{
+									"key": "cpu[mode]",
+									"value": "",
+									"description": "CPU emulation mode. Avaliable values: `['real', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "cpu[value]",
+									"value": "",
+									"description": "Required if CPU mode is `manual`. Number of CPU cores. Avaliable values: `[2, 4, 8, 16]`",
+									"type": "text"
+								},
+								{
+									"key": "memory[mode]",
+									"value": "",
+									"description": "RAM emulation mode. Avaliable values: `['real', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "memory[value]",
+									"value": "",
+									"description": "Required if memory mode is `manual`. RAM size in GB units. Avaliable values: `[2, 4, 8]`",
+									"type": "text"
+								},
+								{
+									"key": "doNotTrack",
+									"value": "",
+									"description": "Dot not track flag, `0` or `1`",
+									"type": "text"
+								},
+								{
+									"key": "browserType",
+									"value": "",
+									"description": "Browser type. Available values: `['anty']`.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[id]",
+									"value": "",
+									"description": "Proxy ID. if you want to assign existing proxy",
+									"type": "text"
+								},
+								{
+									"key": "proxy[type]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Avaliable values: `['http', 'socks5', 'socks5']`",
+									"type": "text"
+								},
+								{
+									"key": "proxy[host]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. ",
+									"type": "text"
+								},
+								{
+									"key": "proxy[port]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. ",
+									"type": "text"
+								},
+								{
+									"key": "proxy[login]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[password]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[name]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[changeIpUrl]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "args[all-renderers]",
+									"value": "",
+									"description": "If you want to assign args to launch browser. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "macAddress[mode]",
+									"value": "`manual` or `off`",
+									"description": "If you want to set mac address. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "macAddress[value]",
+									"value": "11:84:F2:7E:30:07",
+									"description": "If you want to set mac address. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "screen[mode]",
+									"value": "`manual` or `real`",
+									"description": "If you want to set screen size. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "screen[resolution]",
+									"value": "1920x1080",
+									"description": "If you want to set screen size. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "homepages[0][id]",
+									"value": "",
+									"description": "Homepage id",
+									"type": "text"
+								},
+								{
+									"key": "homepages[0][order]",
+									"value": "0",
+									"description": "Order",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][name]",
+									"value": "Fb",
+									"description": "Homepage name",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][url]",
+									"value": "https://www.facebook.com/",
+									"description": "Homepage url",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][mainWebsite]",
+									"value": "none",
+									"description": "Main website",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][order]",
+									"value": "1",
+									"description": "Order",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles"
+							]
+						},
+						"description": "**Important** change webgl2Maximum to yours. it's just an example"
+					},
+					"response": [
+						{
+							"name": "Create browser profile Copy",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"description": "If data is in JSON",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "name",
+											"value": "",
+											"description": "Browser profile name",
+											"type": "text"
+										},
+										{
+											"key": "tags[]",
+											"value": "",
+											"description": "Array of tags",
+											"type": "text"
+										},
+										{
+											"key": "tabs",
+											"value": "",
+											"description": "Array of URLs to open for the first launch",
+											"type": "text"
+										},
+										{
+											"key": "platform",
+											"value": "",
+											"description": "OS to emulate. Available values: `['windows', 'linux', 'macos']`",
+											"type": "text"
+										},
+										{
+											"key": "mainWebsite",
+											"value": "",
+											"description": "Main website. Avaliable values: `['google', 'facebook', 'vk', 'tiktok']`. Optional.",
+											"type": "text"
+										},
+										{
+											"key": "useragent[mode]",
+											"value": "",
+											"description": "manual",
+											"type": "text"
+										},
+										{
+											"key": "useragent[value]",
+											"value": "",
+											"description": "Manual useragent",
+											"type": "text"
+										},
+										{
+											"key": "webrtc[mode]",
+											"value": "",
+											"description": "Avaliable values: `['off', 'real', 'altered', 'manual']`. `altered` is most popular.",
+											"type": "text"
+										},
+										{
+											"key": "webrtc[ipAddress]",
+											"value": "",
+											"description": "Required if WebRTC mode is `manual`. IP address to show through WebRTC leak.",
+											"type": "text"
+										},
+										{
+											"key": "canvas[mode]",
+											"value": "",
+											"description": "Avalibale values: `['off', 'real', 'noise']`.",
+											"type": "text"
+										},
+										{
+											"key": "webgl[mode]",
+											"value": "",
+											"description": "Avalibale values: `['off', 'real', 'noise']`.",
+											"type": "text"
+										},
+										{
+											"key": "webglInfo[mode]",
+											"value": "",
+											"description": "Avalibale of WebGL mode is not `off`.  Available values: `['real', 'software', 'manual']`",
+											"type": "text"
+										},
+										{
+											"key": "webglInfo[vendor]",
+											"value": "",
+											"description": "Required if WebGL Info mode is `manual`.",
+											"type": "text"
+										},
+										{
+											"key": "webglInfo[renderer]",
+											"value": "",
+											"description": "Required if WebGL Info mode is `manual`.",
+											"type": "text"
+										},
+										{
+											"key": "webglInfo[webgl2Maximum]",
+											"value": "{\\\"MAX_SAMPLES\\\": 8, \\\"MAX_DRAW_BUFFERS\\\": 8, \\\"MAX_TEXTURE_SIZE\\\": 16384, \\\"MAX_ELEMENT_INDEX\\\": 4294967294, \\\"MAX_VIEWPORT_DIMS\\\": [16384, 16384], \\\"MAX_VERTEX_ATTRIBS\\\": 16, \\\"MAX_3D_TEXTURE_SIZE\\\": 2048, \\\"MAX_VARYING_VECTORS\\\": 30, \\\"MAX_ELEMENTS_INDICES\\\": 2147483647, \\\"MAX_TEXTURE_LOD_BIAS\\\": 15, \\\"MAX_COLOR_ATTACHMENTS\\\": 8, \\\"MAX_ELEMENTS_VERTICES\\\": 2147483647, \\\"MAX_RENDERBUFFER_SIZE\\\": 16384, \\\"MAX_UNIFORM_BLOCK_SIZE\\\": 65536, \\\"MAX_VARYING_COMPONENTS\\\": 120, \\\"MAX_TEXTURE_IMAGE_UNITS\\\": 32, \\\"MAX_ARRAY_TEXTURE_LAYERS\\\": 2048, \\\"MAX_PROGRAM_TEXEL_OFFSET\\\": 7, \\\"MIN_PROGRAM_TEXEL_OFFSET\\\": -8, \\\"MAX_CUBE_MAP_TEXTURE_SIZE\\\": 16384, \\\"MAX_VERTEX_UNIFORM_BLOCKS\\\": 13, \\\"MAX_VERTEX_UNIFORM_VECTORS\\\": 4096, \\\"MAX_COMBINED_UNIFORM_BLOCKS\\\": 60, \\\"MAX_FRAGMENT_UNIFORM_BLOCKS\\\": 13, \\\"MAX_UNIFORM_BUFFER_BINDINGS\\\": 72, \\\"MAX_FRAGMENT_UNIFORM_VECTORS\\\": 4096, \\\"MAX_VERTEX_OUTPUT_COMPONENTS\\\": 124, \\\"MAX_FRAGMENT_INPUT_COMPONENTS\\\": 124, \\\"MAX_VERTEX_UNIFORM_COMPONENTS\\\": 16384, \\\"MAX_VERTEX_TEXTURE_IMAGE_UNITS\\\": 32, \\\"MAX_FRAGMENT_UNIFORM_COMPONENTS\\\": 16384, \\\"UNIFORM_BUFFER_OFFSET_ALIGNMENT\\\": 256, \\\"MAX_COMBINED_TEXTURE_IMAGE_UNITS\\\": 64, \\\"MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS\\\": 229376, \\\"MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS\\\": 4, \\\"MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS\\\": 229376, \\\"MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS\\\": 4, \\\"MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS\\\": 128}\"\nwebrtc: {mode: \"altered\", ipAddress: null}",
+											"description": "Required",
+											"type": "text"
+										},
+										{
+											"key": "notes[icon]",
+											"value": "",
+											"description": "Avaliable values: `['info', 'warning', 'danger', 'success']`. May be null for no-icon.",
+											"type": "text"
+										},
+										{
+											"key": "notes[color]",
+											"value": "",
+											"description": "Available values: `['red', 'green', 'blue', 'purple', 'orange']`",
+											"type": "text"
+										},
+										{
+											"key": "notes[style]",
+											"value": "",
+											"description": "Available values: `['text', 'outline', 'outline-text']`",
+											"type": "text"
+										},
+										{
+											"key": "notes[content]",
+											"value": "",
+											"description": "Note content. May be both plaintext and basic HTML.",
+											"type": "text"
+										},
+										{
+											"key": "timezone[mode]",
+											"value": "",
+											"description": "Available values: `['auto', 'manual']`.",
+											"type": "text"
+										},
+										{
+											"key": "timezone[value]",
+											"value": "",
+											"description": "Required if timezone mode is `manual`.  [Timezones list](http://joda-time.sourceforge.net/timezones.html). For example - `Europe/Moscow`",
+											"type": "text"
+										},
+										{
+											"key": "locale[mode]",
+											"value": "",
+											"description": "Avaliable values: `['auto', 'manual']`.",
+											"type": "text"
+										},
+										{
+											"key": "locale[value]",
+											"value": "",
+											"description": "Required if locale mode is `manual`. For example - `en_GB`.",
+											"type": "text"
+										},
+										{
+											"key": "statusId",
+											"value": "",
+											"description": "ID of status. Optional",
+											"type": "text"
+										},
+										{
+											"key": "geolocation[mode]",
+											"value": "",
+											"description": "Geolocation emulation mode. Avaliable values: `['real', 'manual']`.",
+											"type": "text"
+										},
+										{
+											"key": "geolocation[latitude]",
+											"value": "",
+											"description": "Required if geolocation mode is `manual`. Latitude.",
+											"type": "text"
+										},
+										{
+											"key": "geolocation[longitude]",
+											"value": "",
+											"description": "Required if geolocation mode is `manual`. Longitude.",
+											"type": "text"
+										},
+										{
+											"key": "cpu[mode]",
+											"value": "",
+											"description": "CPU emulation mode. Avaliable values: `['real', 'manual']`.",
+											"type": "text"
+										},
+										{
+											"key": "cpu[value]",
+											"value": "",
+											"description": "Required if CPU mode is `manual`. Number of CPU cores. Avaliable values: `[2, 4, 8, 16]`",
+											"type": "text"
+										},
+										{
+											"key": "memory[mode]",
+											"value": "",
+											"description": "RAM emulation mode. Avaliable values: `['real', 'manual']`.",
+											"type": "text"
+										},
+										{
+											"key": "memory[value]",
+											"value": "",
+											"description": "Required if memory mode is `manual`. RAM size in GB units. Avaliable values: `[2, 4, 8]`",
+											"type": "text"
+										},
+										{
+											"key": "doNotTrack",
+											"value": "",
+											"description": "Dot not track flag, `0` or `1`",
+											"type": "text"
+										},
+										{
+											"key": "browserType",
+											"value": "",
+											"description": "Browser type. Available values: `['anty']`.",
+											"type": "text"
+										},
+										{
+											"key": "proxy[id]",
+											"value": "",
+											"description": "Proxy ID. if you want to assign existing proxy",
+											"type": "text"
+										},
+										{
+											"key": "proxy[type]",
+											"value": "",
+											"description": "If you want to assign non-existing proxy. Avaliable values: `['http', 'socks5', 'socks5']`",
+											"type": "text"
+										},
+										{
+											"key": "proxy[host]",
+											"value": "",
+											"description": "If you want to assign non-existing proxy. ",
+											"type": "text"
+										},
+										{
+											"key": "proxy[port]",
+											"value": "",
+											"description": "If you want to assign non-existing proxy. ",
+											"type": "text"
+										},
+										{
+											"key": "proxy[login]",
+											"value": "",
+											"description": "If you want to assign non-existing proxy. Optional.",
+											"type": "text"
+										},
+										{
+											"key": "proxy[password]",
+											"value": "",
+											"description": "If you want to assign non-existing proxy. Optional.",
+											"type": "text"
+										},
+										{
+											"key": "proxy[name]",
+											"value": "",
+											"description": "If you want to assign non-existing proxy. Optional.",
+											"type": "text"
+										},
+										{
+											"key": "proxy[changeIpUrl]",
+											"value": "",
+											"description": "If you want to assign non-existing proxy. Optional.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/browser_profiles",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"browser_profiles"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\"success\":1,\"browserProfileId\":82222344,\"data\":{\"id\":82222344}}"
+						}
+					]
+				},
+				{
+					"name": "Multiple create browser profiles",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": "If data is in JSON",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"common\": {\n        \"platform\": \"macos\",\n        \"browserType\": \"anty\",\n        \"useragent\": {\n            \"mode\": \"manual\",\n            \"value\": \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36\"\n        },\n        \"webrtc\": {\n            \"mode\": \"altered\",\n            \"ipAddress\": null\n        },\n        \"canvas\": {\n            \"mode\": \"noise\"\n        },\n        \"webgl\": {\n            \"mode\": \"real\"\n        },\n        \"webglInfo\": {\n            \"mode\": \"random\"\n        },\n        \"geolocation\": {\n            \"mode\": \"real\",\n            \"latitude\": null,\n            \"longitude\": null\n        },\n        \"cpu\": {\n            \"mode\": \"real\",\n            \"value\": null\n        },\n        \"memory\": {\n            \"mode\": \"manual\",\n            \"value\": 8\n        },\n        \"timezone\": {\n            \"mode\": \"auto\",\n            \"value\": null\n        },\n        \"locale\": {\n            \"mode\": \"auto\",\n            \"value\": null\n        }\n    },\n    \"items\": [\n        {\n            \"name\": \"test\",\n            \"tags\": [\n                \"testtesttesttest\"\n            ],\n            \"mainWebsite\": \"\",\n            \"notes\": {\n                \"content\": null,\n                \"color\": \"blue\",\n                \"style\": \"text\",\n                \"icon\": null\n            },\n            \"proxy\": null,\n            \"statusId\": 0,\n            \"doNotTrack\": false\n        }, {\n            \"name\": \"test2\",\n            \"tags\": [\n                \"testtesttesttest\"\n            ],\n            \"mainWebsite\": \"\",\n            \"notes\": {\n                \"content\": \"AAAAAAA\",\n                \"color\": \"blue\",\n                \"style\": \"text\",\n                \"icon\": null\n            },\n            \"proxy\": null,\n            \"statusId\": 0,\n            \"doNotTrack\": false\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/mass",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"mass"
+							]
+						},
+						"description": "Two parameters:\narray common - common parameters that browser profiles share\narray items - array of browser profiles just like in Create browser profile endpoint"
+					},
+					"response": []
+				},
+				{
+					"name": "Update browser profile",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "",
+									"description": "Browser profile name",
+									"type": "text"
+								},
+								{
+									"key": "tags[]",
+									"value": "",
+									"description": "Array of tags",
+									"type": "text"
+								},
+								{
+									"key": "tabs",
+									"value": "",
+									"description": "Array of URLs to open for the first launch",
+									"type": "text"
+								},
+								{
+									"key": "mainWebsite",
+									"value": "",
+									"description": "Main website. Avaliable values: `['google', 'facebook', 'crypto', 'tiktok']`. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "useragent",
+									"value": "",
+									"description": "User agent",
+									"type": "text"
+								},
+								{
+									"key": "webrtc[mode]",
+									"value": "",
+									"description": "Avaliable values: `['off', 'real', 'altered', 'manual']`. `altered` is most popular.",
+									"type": "text"
+								},
+								{
+									"key": "webrtc[ipAddress]",
+									"value": "",
+									"description": "Required if WebRTC mode is `manual`. IP address to show through WebRTC leak.",
+									"type": "text"
+								},
+								{
+									"key": "canvas[mode]",
+									"value": "",
+									"description": "Avalibale values: `['off', 'real', 'noise']`.",
+									"type": "text"
+								},
+								{
+									"key": "webgl[mode]",
+									"value": "",
+									"description": "Avalibale values: `['off', 'real', 'noise']`.",
+									"type": "text"
+								},
+								{
+									"key": "webglInfo[mode]",
+									"value": "",
+									"description": "Avalibale of WebGL mode is not `off`.  Available values: `['real', 'software', 'manual']`",
+									"type": "text"
+								},
+								{
+									"key": "webglInfo[vendor]",
+									"value": "",
+									"description": "Required if WebGL Info mode is `manual`.",
+									"type": "text"
+								},
+								{
+									"key": "webglInfo[renderer]",
+									"value": "",
+									"description": "Required if WebGL Info mode is `manual`.",
+									"type": "text"
+								},
+								{
+									"key": "notes[icon]",
+									"value": "",
+									"description": "Avaliable values: `['info', 'warning', 'danger', 'success']`. May be null for no-icon.",
+									"type": "text"
+								},
+								{
+									"key": "notes[color]",
+									"value": "",
+									"description": "Available values: `['red', 'green', 'blue', 'purple', 'orange']`",
+									"type": "text"
+								},
+								{
+									"key": "notes[style]",
+									"value": "",
+									"description": "Available values: `['text', 'outline', 'outline-text']`",
+									"type": "text"
+								},
+								{
+									"key": "notes[content]",
+									"value": "",
+									"description": "Note content. May be both plaintext and basic HTML.",
+									"type": "text"
+								},
+								{
+									"key": "timezone[mode]",
+									"value": "",
+									"description": "Available values: `['auto', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "timezone[value]",
+									"value": "",
+									"description": "Required if timezone mode is `manual`.  [Timezones list](http://joda-time.sourceforge.net/timezones.html). For example - `Europe/Moscow`",
+									"type": "text"
+								},
+								{
+									"key": "locale[mode]",
+									"value": "",
+									"description": "Avaliable values: `['auto', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "locale[value]",
+									"value": "",
+									"description": "Required if locale mode is `manual`. For example - `en_GB`.",
+									"type": "text"
+								},
+								{
+									"key": "statusId",
+									"value": "",
+									"description": "ID of status. Optional",
+									"type": "text"
+								},
+								{
+									"key": "geolocation[mode]",
+									"value": "",
+									"description": "Geolocation emulation mode. Avaliable values: `['auto', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "geolocation[latitude]",
+									"value": "",
+									"description": "Required if geolocation mode is `manual`. Latitude.",
+									"type": "text"
+								},
+								{
+									"key": "geolocation[longitude]",
+									"value": "",
+									"description": "Required if geolocation mode is `manual`. Longitude.",
+									"type": "text"
+								},
+								{
+									"key": "cpu[mode]",
+									"value": "",
+									"description": "CPU emulation mode. Avaliable values: `['real', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "cpu[value]",
+									"value": "",
+									"description": "Required if CPU mode is `manual`. Number of CPU cores. Avaliable values: `[2, 4, 8, 16]`",
+									"type": "text"
+								},
+								{
+									"key": "memory[mode]",
+									"value": "",
+									"description": "RAM emulation mode. Avaliable values: `['real', 'manual']`.",
+									"type": "text"
+								},
+								{
+									"key": "memory[value]",
+									"value": "",
+									"description": "Required if memory mode is `manual`. RAM size in GB units. Avaliable values: `[2, 4, 8]`",
+									"type": "text"
+								},
+								{
+									"key": "doNotTrack",
+									"value": "",
+									"description": "Dot not track flag, `0` or `1`",
+									"type": "text"
+								},
+								{
+									"key": "browserType",
+									"value": "",
+									"description": "Browser type. Available values: `['anty']`.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[id]",
+									"value": "",
+									"description": "Proxy ID. if you want to assign existing proxy",
+									"type": "text"
+								},
+								{
+									"key": "proxy[type]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Avaliable values: `['http', 'socks5', 'socks5']`",
+									"type": "text"
+								},
+								{
+									"key": "proxy[host]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. ",
+									"type": "text"
+								},
+								{
+									"key": "proxy[port]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. ",
+									"type": "text"
+								},
+								{
+									"key": "proxy[login]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[password]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[name]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "proxy[changeIpUrl]",
+									"value": "",
+									"description": "If you want to assign non-existing proxy. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "args[all-renderers]",
+									"value": "",
+									"description": "If you want to assign args to launch browser. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "homepages[0][id]",
+									"value": "",
+									"description": "Homepage id",
+									"type": "text"
+								},
+								{
+									"key": "homepages[0][order]",
+									"value": "0",
+									"description": "order",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][name]",
+									"value": "Fb",
+									"description": "Homepage name",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][url]",
+									"value": "https://www.facebook.com/",
+									"description": "Homepage url",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][mainWebsite]",
+									"value": "none",
+									"description": "Main website",
+									"type": "text"
+								},
+								{
+									"key": "newHomepages[0][order]",
+									"value": "1",
+									"description": "Order",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/:browser_profile_id",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								":browser_profile_id"
+							],
+							"variable": [
+								{
+									"key": "browser_profile_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Some data in rare cases may not be saved due to urlencode, in this case, try Raw JSON Payload"
+					},
+					"response": []
+				},
+				{
+					"name": "Transfer browser profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/transfer?ids[]=534928&ids[]=5335555&username=nextemail@gmail.com&withProxy=true",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"transfer"
+							],
+							"query": [
+								{
+									"key": "ids[]",
+									"value": "534928"
+								},
+								{
+									"key": "ids[]",
+									"value": "5335555"
+								},
+								{
+									"key": "username",
+									"value": "nextemail@gmail.com"
+								},
+								{
+									"key": "withProxy",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Transfer browser profile",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "https://dolphin-anty-api.com/browser_profiles/transfer?ids[]=534928&ids[]=5335555&username=nextemail@gmail.com&withProxy=1",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"browser_profiles",
+										"transfer"
+									],
+									"query": [
+										{
+											"key": "ids[]",
+											"value": "534928"
+										},
+										{
+											"key": "ids[]",
+											"value": "5335555"
+										},
+										{
+											"key": "username",
+											"value": "nextemail@gmail.com"
+										},
+										{
+											"key": "withProxy",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"success\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete browser profile",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/:browser_profile_id?forceDelete=1",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								":browser_profile_id"
+							],
+							"query": [
+								{
+									"key": "forceDelete",
+									"value": "1",
+									"description": "If true, the profile will be deleted permanently, without using the trash bin. Required on the Free plan. Trash bin option is unavailable on the Free plan"
+								}
+							],
+							"variable": [
+								{
+									"key": "browser_profile_id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete browser profiles",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "ids[]",
+									"value": "",
+									"description": "IDs of browser profiles to delete",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles?forceDelete=1",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles"
+							],
+							"query": [
+								{
+									"key": "forceDelete",
+									"value": "1",
+									"description": "If true, the profiles will be deleted permanently, without using the trash bin. Required on the Free plan. Trash bin option is unavailable on the Free plan"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Share access to multiple profiles",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [\n        76854661\n    ],\n    \"users\": [\n        {\n            \"id\": 1097509,\n            \"view\": 1,\n            \"usage\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        },\n        {\n            \"id\": 2182463,\n            \"view\": 1,\n            \"usage\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        }\n    ],\n    \"action\": \"add\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/access",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"access"
+							]
+						},
+						"description": "ids: arrays of browser profile IDs  \nusers: array where you need to pass the user ID, and what access you want to give to him \"view\": 1,\"usage\": 1,\"update\": 1,\"delete\": 1,\"share\": 1. 1 give access 0 remove access  \naction: can be \"add\" or \"remove\""
+					},
+					"response": [
+						{
+							"name": "Share access to multiple profiles",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "\"\"",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": [\n        76854661\n    ],\n    \"users\": [\n        {\n            \"id\": 1097509,\n            \"view\": 1,\n            \"usage\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        },\n        {\n            \"id\": 2182463,\n            \"view\": 1,\n            \"usage\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        }\n    ],\n    \"action\": \"add\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/browser_profiles/access",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"browser_profiles",
+										"access"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Share access to one profile",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"users\": [\n        {\n            \"userId\": 1097509,\n            \"view\": 1,\n            \"usage\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        },\n        {\n            \"userId\": 2182463,\n            \"view\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/76854661/access",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"76854661",
+								"access"
+							]
+						},
+						"description": "The profile id needs to be changed in the url itself\n\n**body:**\n\n**users**: arrays of users and access with you want to share browser profile IDs  \nwhat access do you want to give to him \"view\": 1,\"usage\": 1,\"update\": 1,\"delete\": 1,\"share\": 1. 1 give access 0 remove access"
+					},
+					"response": [
+						{
+							"name": "Share access to one profile",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"users\": [\n        {\n            \"userId\": 1097509,\n            \"view\": 1,\n            \"usage\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        },\n        {\n            \"userId\": 2182463,\n            \"view\": 1,\n            \"update\": 1,\n            \"delete\": 1,\n            \"share\": 1\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/browser_profiles/76854661/access",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"browser_profiles",
+										"76854661",
+										"access"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Browser profiles statuses",
+			"item": [
+				{
+					"name": "List statuses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://anty-api.com/browser_profiles/statuses?limit=&page=&query=",
+							"protocol": "https",
+							"host": [
+								"anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"statuses"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "",
+									"description": "Items per page. Max - 50. Default - 50."
+								},
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page"
+								},
+								{
+									"key": "query",
+									"value": "",
+									"description": "String to search"
+								}
+							]
+						},
+						"description": "**Only Admin can do this!**"
+					},
+					"response": []
+				},
+				{
+					"name": "Create status",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "",
+									"description": "Status name",
+									"type": "text"
+								},
+								{
+									"key": "color",
+									"value": "",
+									"description": "Avalibale values: `['red', 'blue', 'green', 'purple', 'orange']`",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/statuses?Content-Type=application/json",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"statuses"
+							],
+							"query": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"description": "If data is in JSON"
+								}
+							]
+						},
+						"description": "# Attention!\n\nOnly admins can do this"
+					},
+					"response": []
+				},
+				{
+					"name": "Update status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "",
+									"description": "Status name",
+									"type": "text"
+								},
+								{
+									"key": "color",
+									"value": "",
+									"description": "Avalibale values: `['red', 'blue', 'green', 'purple', 'orange']`",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/statuses/:status_id",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"statuses",
+								":status_id"
+							],
+							"variable": [
+								{
+									"key": "status_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "# Attention!\n\nOnly admins can do this."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete status",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/browser_profiles/statuses/:status_id",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"browser_profiles",
+								"statuses",
+								":status_id"
+							],
+							"variable": [
+								{
+									"key": "status_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Only Admin can delete"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Browser profile homepage",
+			"item": [
+				{
+					"name": "Create HomePage",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, text/plain, */*",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "test",
+									"description": "Neme of homepages.",
+									"type": "text"
+								},
+								{
+									"key": "url",
+									"value": "https://www.google.com/",
+									"description": "link",
+									"type": "text"
+								},
+								{
+									"key": "mainWebsite[]",
+									"value": "all",
+									"description": "Main website. Avaliable values: ['google', 'facebook', 'crypto', 'tiktok']. required.",
+									"type": "text"
+								},
+								{
+									"key": "sharedToEntireTeam",
+									"value": "0",
+									"description": "true or false if you don't want to share to all team members, pass false",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/homepages",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"homepages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete HomePage",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "ids[]",
+									"value": "1234",
+									"description": "Id  homepage to delete",
+									"type": "text"
+								},
+								{
+									"key": "ids[]",
+									"value": "12345",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/homepages",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"homepages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List HomePage",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/homepages?limit=Items per page. Max - 50. Default - 50&page=Page&query=String to search",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"homepages"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "Items per page. Max - 50. Default - 50"
+								},
+								{
+									"key": "page",
+									"value": "Page"
+								},
+								{
+									"key": "query",
+									"value": "String to search"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update HomePage",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "test",
+									"description": "Name",
+									"type": "text"
+								},
+								{
+									"key": "url",
+									"value": "https://www.google.com/",
+									"description": "HomePage link",
+									"type": "text"
+								},
+								{
+									"key": "mainWebsite[]",
+									"value": "all",
+									"type": "text"
+								},
+								{
+									"key": "sharedToEntireTeam",
+									"value": "0",
+									"description": "true or false",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/homepages/:home_page_id",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"homepages",
+								":home_page_id"
+							],
+							"variable": [
+								{
+									"key": "home_page_id",
+									"value": "",
+									"description": "HomePage id "
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Proxy",
+			"item": [
+				{
+					"name": "List proxies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/proxy?limit=&page=&query=",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"proxy"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "",
+									"description": "Items per page. Max - 50. Default - 50."
+								},
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page"
+								},
+								{
+									"key": "query",
+									"value": "",
+									"description": "String to search"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create proxy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "type",
+									"value": "",
+									"description": "Available values: `['http', 'socks5', 'socks4']`",
+									"type": "text"
+								},
+								{
+									"key": "host",
+									"value": "",
+									"description": "Proxy host",
+									"type": "text"
+								},
+								{
+									"key": "port",
+									"value": "",
+									"description": "Proxy port",
+									"type": "text"
+								},
+								{
+									"key": "login",
+									"value": "",
+									"description": "Proxy auth login",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "",
+									"description": "Proxy auth password",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "",
+									"description": "Proxy name. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "changeIpUrl",
+									"value": "",
+									"description": "Proxy change IP URL. Optional.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/proxy?Content-Type=application/json",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"proxy"
+							],
+							"query": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"description": "If data is in JSON"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update proxy",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "type",
+									"value": "",
+									"description": "Available values: `['http', 'socks5', 'socks4']`",
+									"type": "text"
+								},
+								{
+									"key": "host",
+									"value": "",
+									"description": "Proxy host",
+									"type": "text"
+								},
+								{
+									"key": "port",
+									"value": "",
+									"description": "Proxy port",
+									"type": "text"
+								},
+								{
+									"key": "login",
+									"value": "",
+									"description": "Proxy auth login",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "",
+									"description": "Proxy auth password",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "",
+									"description": "Proxy name. Optional.",
+									"type": "text"
+								},
+								{
+									"key": "changeIpUrl",
+									"value": "",
+									"description": "Proxy change IP URL. Optional.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/proxy/:proxy_id",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"proxy",
+								":proxy_id"
+							],
+							"variable": [
+								{
+									"key": "proxy_id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete proxy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/proxy/:proxy_id",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"proxy",
+								":proxy_id"
+							],
+							"variable": [
+								{
+									"key": "proxy_id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cookies",
+			"item": [
+				{
+					"name": "Import cookies",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cookies\": [],\n    \"profileId\": 1,\n    \"transfer\": 0,\n    \"cloudSyncDisabled\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/v1.0/cookies/import",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"v1.0",
+								"cookies",
+								"import"
+							]
+						},
+						"description": "## **Does not work on completely free plans (if you have subscription, it will work)**"
+					},
+					"response": [
+						{
+							"name": "Import cookies",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"cookies\": [],\n    \"profileId\": 1,\n    \"transfer\": 0,\n    \"cloudSyncDisabled\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3001/v1.0/cookies/import",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3001",
+									"path": [
+										"v1.0",
+										"cookies",
+										"import"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "16"
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 01 Apr 2025 11:54:26 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "Cookie Robot",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "data[]",
+									"value": "http://www.youtube.com",
+									"type": "text"
+								},
+								{
+									"key": "data[]",
+									"value": "http://google.com",
+									"type": "text"
+								},
+								{
+									"key": "headless",
+									"value": "true",
+									"description": "Run hidden or not hidden",
+									"type": "text"
+								},
+								{
+									"key": "imageless",
+									"value": "false",
+									"description": "Don`t load images true or false",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:3001/v1.0/import/cookies/:browser_profile_id/robot",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"v1.0",
+								"import",
+								"cookies",
+								":browser_profile_id",
+								"robot"
+							],
+							"variable": [
+								{
+									"key": "browser_profile_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Export cookies",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"browserProfiles\": [\r\n        {\r\n            \"transfer\": 0,\r\n            \"id\": 76854684,\r\n            \"name\": \"test 19\"\r\n        },\r\n        {\r\n            \"transfer\": 0,\r\n            \"id\": 76854706,\r\n            \"name\": \"test 28\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/v1.0/export-cookies",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"v1.0",
+								"export-cookies"
+							]
+						},
+						"description": "## **Does not work on completely free plans (if you have subscription, it will work)**"
+					},
+					"response": []
+				},
+				{
+					"name": "Export cookies for single profile",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"success\": true,\r\n    \"data\": [\r\n        {\r\n            \"domain\": \".chat.com\",\r\n            \"expirationDate\": -11644473600,\r\n            \"httpOnly\": true,\r\n            \"name\": \"_cfuvid\",\r\n            \"path\": \"\\/\",\r\n            \"secure\": true,\r\n            \"session\": true,\r\n            \"value\": \"vX1257701-0-604800000\",\r\n            \"sameSite\": \"no_restriction\"\r\n        }   \r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sync.dolphin-anty-api.com/?actionType=getCookies&browserProfileId=browser_profile_id",
+							"protocol": "https",
+							"host": [
+								"sync",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "actionType",
+									"value": "getCookies"
+								},
+								{
+									"key": "browserProfileId",
+									"value": "browser_profile_id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Fingerprints",
+			"item": [
+				{
+					"name": "Get new useragent",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/fingerprints/useragent?browser_type=anty&browser_version=101&platform=windows",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"fingerprints",
+								"useragent"
+							],
+							"query": [
+								{
+									"key": "browser_type",
+									"value": "anty",
+									"description": "This parameter is a must."
+								},
+								{
+									"key": "browser_version",
+									"value": "101",
+									"description": "Chrome version. If not specified, then latest"
+								},
+								{
+									"key": "platform",
+									"value": "windows",
+									"description": "windows, linux, macos. Platform of your browser profile."
+								}
+							]
+						},
+						"description": "Get new fingerprint.\n\n**Note change 101 to current browser version!**"
+					},
+					"response": []
+				},
+				{
+					"name": "Get new fingerprints for webglinfo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/fingerprints/fingerprint?platform=linux&browser_type=anty&browser_version=112&type=fingerprint&screen=2560x1440",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"fingerprints",
+								"fingerprint"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "linux"
+								},
+								{
+									"key": "browser_type",
+									"value": "anty"
+								},
+								{
+									"key": "browser_version",
+									"value": "112"
+								},
+								{
+									"key": "type",
+									"value": "fingerprint"
+								},
+								{
+									"key": "screen",
+									"value": "2560x1440"
+								}
+							]
+						},
+						"description": "Get new fingerprint.\n\n**Note change 101 to current browser version!**"
+					},
+					"response": [
+						{
+							"name": "Get new fingerprints for webglinfo",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://dolphin-anty-api.com/fingerprints/fingerprint?platform=linux&browser_type=anty&browser_version=112&type=fingerprint&screen=2560x1440",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"fingerprints",
+										"fingerprint"
+									],
+									"query": [
+										{
+											"key": "platform",
+											"value": "linux"
+										},
+										{
+											"key": "browser_type",
+											"value": "anty"
+										},
+										{
+											"key": "browser_version",
+											"value": "112"
+										},
+										{
+											"key": "type",
+											"value": "fingerprint"
+										},
+										{
+											"key": "screen",
+											"value": "2560x1440"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n  \"screen\": {\n    \"availWidth\": 1920,\n    \"availHeight\": 1052,\n    \"width\": 1920,\n    \"height\": 1080,\n    \"colorDepth\": 24,\n    \"pixelDepth\": 24\n  },\n  \"connection\": {\n    \"downlink\": 0,\n    \"rtt\": 0,\n    \"effectiveType\": \"\",\n    \"saveData\": 0\n  },\n  \"deviceMemory\": 2,\n  \"hardwareConcurrency\": 2,\n  \"donottrack\": 0,\n  \"language\": \"\",\n  \"languages\": \"\",\n  \"productSub\": \"20030107\",\n  \"vendorSub\": \"\",\n  \"vendor\": \"Google Inc.\",\n  \"appCodeName\": \"Mozilla\",\n  \"appVersion\": \"5.0 (X11; Linux x86_64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/112.0.0.0 Safari\\/537.36\",\n  \"platform\": \"Linux x86_64\",\n  \"product\": \"Gecko\",\n  \"userAgent\": \"Mozilla\\/5.0 (X11; Linux x86_64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/112.0.0.0 Safari\\/537.36\",\n  \"cpu\": {\n    \"architecture\": \"amd64\"\n  },\n  \"os\": {\n    \"name\": \"Linux\",\n    \"version\": \"x86_64\"\n  },\n  \"browser\": {\n    \"name\": \"Chrome\",\n    \"version\": \"112.0.0.0\",\n    \"shortVersion\": 112\n  },\n  \"webgl\": {\n    \"unmaskedVendor\": \"Google Inc. (AMD)\",\n    \"unmaskedRenderer\": \"ANGLE (AMD, POLARIS10 (polaris10 LLVM 15.0.6 DRM 3.42 5.15.0-69-generic), OpenGL 4.6)\"\n  },\n  \"voices\": \"[]\",\n  \"fonts\": \"[\\\"Arial Black\\\", \\\"Arial\\\", \\\"Bauhaus 93\\\", \\\"Comic Sans MS\\\", \\\"Courier New\\\", \\\"Georgia\\\", \\\"Impact\\\", \\\"KacstOne\\\", \\\"Lohit Gujarati\\\", \\\"Loma\\\", \\\"Rachana\\\", \\\"Sawasdee\\\", \\\"Times New Roman\\\", \\\"Trebuchet MS\\\", \\\"Ubuntu\\\", \\\"Umpush\\\", \\\"Verdana\\\", \\\"Webdings\\\", \\\"\\\"]\",\n  \"browserType\": \"chrome\",\n  \"platformVersion\": \"5.15.0\",\n  \"uaFullVersion\": \"112.0.0.0\",\n  \"webgl2Maximum\": \"{\\\"UNIFORM_BUFFER_OFFSET_ALIGNMENT\\\":4,\\\"MAX_TEXTURE_SIZE\\\":16384,\\\"MAX_VIEWPORT_DIMS\\\":[16384,16384],\\\"MAX_VERTEX_ATTRIBS\\\":16,\\\"MAX_VERTEX_UNIFORM_VECTORS\\\":1024,\\\"MAX_VARYING_VECTORS\\\":32,\\\"MAX_COMBINED_TEXTURE_IMAGE_UNITS\\\":64,\\\"MAX_VERTEX_TEXTURE_IMAGE_UNITS\\\":32,\\\"MAX_TEXTURE_IMAGE_UNITS\\\":32,\\\"MAX_FRAGMENT_UNIFORM_VECTORS\\\":1024,\\\"MAX_CUBE_MAP_TEXTURE_SIZE\\\":16384,\\\"MAX_RENDERBUFFER_SIZE\\\":16384,\\\"MAX_3D_TEXTURE_SIZE\\\":2048,\\\"MAX_ELEMENTS_VERTICES\\\":3000,\\\"MAX_ELEMENTS_INDICES\\\":3000,\\\"MAX_TEXTURE_LOD_BIAS\\\":16,\\\"MAX_DRAW_BUFFERS\\\":8,\\\"MAX_FRAGMENT_UNIFORM_COMPONENTS\\\":4095,\\\"MAX_VERTEX_UNIFORM_COMPONENTS\\\":4095,\\\"MAX_ARRAY_TEXTURE_LAYERS\\\":2048,\\\"MIN_PROGRAM_TEXEL_OFFSET\\\":-32,\\\"MAX_PROGRAM_TEXEL_OFFSET\\\":31,\\\"MAX_VARYING_COMPONENTS\\\":127,\\\"MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS\\\":4,\\\"MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS\\\":127,\\\"MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS\\\":4,\\\"MAX_COLOR_ATTACHMENTS\\\":8,\\\"MAX_SAMPLES\\\":8,\\\"MAX_VERTEX_UNIFORM_BLOCKS\\\":15,\\\"MAX_FRAGMENT_UNIFORM_BLOCKS\\\":15,\\\"MAX_COMBINED_UNIFORM_BLOCKS\\\":44,\\\"MAX_UNIFORM_BUFFER_BINDINGS\\\":72,\\\"MAX_UNIFORM_BLOCK_SIZE\\\":2147483648,\\\"MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS\\\":8053080064,\\\"MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS\\\":8053080063,\\\"MAX_VERTEX_OUTPUT_COMPONENTS\\\":128,\\\"MAX_FRAGMENT_INPUT_COMPONENTS\\\":128,\\\"MAX_SERVER_WAIT_TIMEOUT\\\":9.223372034707292e+18,\\\"MAX_ELEMENT_INDEX\\\":4294967295}\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Bookmarks",
+			"item": [
+				{
+					"name": "List bookmarks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/bookmarks?page=1&limit=50",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"bookmarks"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "page number"
+								},
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "items per page"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "List bookmarks",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"name": "Content-Type",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://apiv2.dolphin-anty-api.com/api/v2/bookmarks?page=1&limit=50",
+									"protocol": "https",
+									"host": [
+										"apiv2",
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"api",
+										"v2",
+										"bookmarks"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1",
+											"description": "page number"
+										},
+										{
+											"key": "limit",
+											"value": "50",
+											"description": "items per page"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\r\n    \"data\": [\r\n        {\r\n            \"id\": 312760,\r\n            \"teamId\": 1052093,\r\n            \"userId\": 1097509,\r\n            \"name\": \"google\",\r\n            \"url\": \"https:\\/\\/www.google.com\\/\",\r\n            \"favicon\": null,\r\n            \"sharedToEntireTeam\": false,\r\n            \"mainWebsite\": [\r\n                \"all\"\r\n            ],\r\n            \"created_at\": \"2023-04-26T15:57:30.000000Z\",\r\n            \"updated_at\": \"2023-04-26T15:57:30.000000Z\"\r\n        },\r\n        {\r\n            \"id\": 313246,\r\n            \"teamId\": 1052093,\r\n            \"userId\": 1097509,\r\n            \"name\": \"Test\",\r\n            \"url\": \"https:\\/\\/dolphin.postman.co\\/\",\r\n            \"favicon\": null,\r\n            \"sharedToEntireTeam\": false,\r\n            \"mainWebsite\": [\r\n                \"all\"\r\n            ],\r\n            \"created_at\": \"2023-04-27T14:47:10.000000Z\",\r\n            \"updated_at\": \"2023-04-27T14:47:10.000000Z\"\r\n        }\r\n    ],\r\n    \"links\": {\r\n        \"first\": \"http:\\/\\/apiv2.dolphin-anty-api.com\\/api\\/v2\\/bookmarks?page=1\",\r\n        \"last\": \"http:\\/\\/apiv2.dolphin-anty-api.com\\/api\\/v2\\/bookmarks?page=1\",\r\n        \"prev\": null,\r\n        \"next\": null\r\n    },\r\n    \"meta\": {\r\n        \"current_page\": 1,\r\n        \"from\": 1,\r\n        \"last_page\": 1,\r\n        \"links\": [\r\n            {\r\n                \"url\": null,\r\n                \"label\": \"&laquo; Previous\",\r\n                \"active\": false\r\n            },\r\n            {\r\n                \"url\": \"http:\\/\\/apiv2.dolphin-anty-api.com\\/api\\/v2\\/bookmarks?page=1\",\r\n                \"label\": \"1\",\r\n                \"active\": true\r\n            },\r\n            {\r\n                \"url\": null,\r\n                \"label\": \"Next &raquo;\",\r\n                \"active\": false\r\n            }\r\n        ],\r\n        \"path\": \"http:\\/\\/apiv2.dolphin-anty-api.com\\/api\\/v2\\/bookmarks\",\r\n        \"per_page\": 50,\r\n        \"to\": 2,\r\n        \"total\": 2\r\n    }\r\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete bookmarks",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ids\": [\r\n        312760,\r\n        313246\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/bookmarks",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"bookmarks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create bookmark",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"GOOGLE\",\r\n    \"url\": \"https://www.google.com/\",\r\n    \"sharedToEntireTeam\": true,\r\n    \"mainWebsite\": [\r\n        \"all\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/bookmarks",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"bookmarks"
+							]
+						},
+						"description": "StartFragmentStartFragment\n\nMain website: Avaliable values: `['google', 'facebook', 'crypto', 'tiktok']`\n\nEndFragmentStartFragment\n\nsharedToEntireTeam. true - false\n\nStartFragment\n\nurl: site URL\n\nname: Bookmarks name\n\nEndFragment\n\n  \n  \n\nEndFragment"
+					},
+					"response": []
+				},
+				{
+					"name": "Update bookmark",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"youtube2\",\r\n    \"url\": \"https://www.youtube.com/\",\r\n    \"sharedToEntireTeam\": false,\r\n    \"mainWebsite\": [\r\n        \"all\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/bookmarks/312759",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"bookmarks",
+								"312759"
+							]
+						},
+						"description": "Change, 312759 to your bookmark ID  \n**Main website:** Available values: \\['google', 'facebook', 'crypto', 'tiktok'\\]  \n**sharedToEntireTeam**. true - false  \nurl: site URL  \n**name**: Bookmarks name"
+					},
+					"response": [
+						{
+							"name": "Update bookmark",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"youtube2\",\r\n    \"url\": \"https://www.youtube.com/\",\r\n    \"sharedToEntireTeam\": false,\r\n    \"mainWebsite\": [\r\n        \"all\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://apiv2.dolphin-anty-api.com/api/v2/bookmarks/312759",
+									"protocol": "https",
+									"host": [
+										"apiv2",
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"api",
+										"v2",
+										"bookmarks",
+										"312759"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get users list",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/team/users?page=1&limit=50",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"team",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "page number"
+								},
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "how much to display per page"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get users Example",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://apiv2.dolphin-anty-api.com/api/v2/team/users?page=1&limit=50",
+									"protocol": "https",
+									"host": [
+										"apiv2",
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"api",
+										"v2",
+										"team",
+										"users"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "50"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\r\n    \"data\": [\r\n        {\r\n            \"id\": 10975093,\r\n            \"teamId\": 10520933,\r\n            \"username\": \"1@gmail.com\",\r\n            \"displayName\": \"test1\",\r\n            \"telegram\": \"\",\r\n            \"role\": \"admin\",\r\n            \"teamleads\": [],\r\n            \"created_at\": \"2022-05-19 16:04:19\",\r\n            \"updated_at\": \"2023-04-26 15:03:56\"\r\n        },\r\n        {\r\n            \"id\": 21824633,\r\n            \"teamId\": 10520933,\r\n            \"username\": \"2g.com\",\r\n            \"displayName\": \"test\",\r\n            \"telegram\": \"\",\r\n            \"role\": \"user\",\r\n            \"teamleads\": [],\r\n            \"created_at\": \"2023-02-28 13:27:58\",\r\n            \"updated_at\": \"2023-04-27 14:56:19\"\r\n        }\r\n    ],\r\n    \"links\": {\r\n        \"first\": \"http://apiv2.dolphin-anty-api.com/api/v2/team/users?page=1\",\r\n        \"last\": \"http://apiv2.dolphin-anty-api.com/api/v2/team/users?page=1\",\r\n        \"prev\": null,\r\n        \"next\": null\r\n    },\r\n    \"meta\": {\r\n        \"current_page\": 1,\r\n        \"from\": 1,\r\n        \"last_page\": 1,\r\n        \"links\": [\r\n            {\r\n                \"url\": null,\r\n                \"label\": \"&laquo; Previous\",\r\n                \"active\": false\r\n            },\r\n            {\r\n                \"url\": \"http://apiv2.dolphin-anty-api.com/api/v2/team/users?page=1\",\r\n                \"label\": \"1\",\r\n                \"active\": true\r\n            },\r\n            {\r\n                \"url\": null,\r\n                \"label\": \"Next &raquo;\",\r\n                \"active\": false\r\n            }\r\n        ],\r\n        \"path\": \"http://apiv2.dolphin-anty-api.com/api/v2/team/users\",\r\n        \"per_page\": 50,\r\n        \"to\": 2,\r\n        \"total\": 2\r\n    }\r\n}"
+						}
+					]
+				},
+				{
+					"name": "Update User",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"displayName\": \"test\",\r\n    \"telegram\": \"\",\r\n    \"role\": \"user\",\r\n    \"teamleads\": [],\r\n    \"password\": \"******\",\r\n    \"canCreateBp\": true,\r\n    \"unlimitedBp\": false,\r\n    \"bpLimit\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apiv2.dolphin-anty-api.com/api/v2/team/users/2182463",
+							"protocol": "https",
+							"host": [
+								"apiv2",
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"api",
+								"v2",
+								"team",
+								"users",
+								"2182463"
+							]
+						},
+						"description": "password: Optional only if you want change user password  \ndisplayName: Optional  \nrole: Optional \\['admin', 'teamlead', 'user'\\]  \nteamleads: Optional Array of teamlead ids\n\ninstead of 2182463 you should pass your user ID\n\n**Only Admin can do this and Teamlead!**"
+					},
+					"response": [
+						{
+							"name": "Update User",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"displayName\": \"test\",\r\n    \"telegram\": \"\",\r\n    \"role\": \"user\",\r\n    \"teamleads\": [],\r\n    \"password\": \"******\",\r\n    \"canCreateBp\": true,\r\n    \"unlimitedBp\": false,\r\n    \"bpLimit\": 100\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://apiv2.dolphin-anty-api.com/api/v2/team/users/2182463",
+									"protocol": "https",
+									"host": [
+										"apiv2",
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"api",
+										"v2",
+										"team",
+										"users",
+										"2182463"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\r\n    \"data\": {\r\n        \"id\": 2182463,\r\n        \"teamId\": 1052093,\r\n        \"username\": \"1@g.com\",\r\n        \"displayName\": \"test2\",\r\n        \"telegram\": \"\",\r\n        \"role\": \"user\",\r\n        \"teamleads\": [],\r\n        \"created_at\": \"2023-02-28 13:27:58\",\r\n        \"updated_at\": \"2023-04-27 15:44:26\"\r\n    },\r\n    \"success\": true\r\n}"
+						}
+					]
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"45@g.com\",\r\n    \"displayName\": \"test3\",\r\n    \"password\": \"45@g.com\",\r\n    \"role\": \"user\",\r\n    \"canCreateBp\": true,\r\n    \"unlimitedBp\": false,\r\n    \"bpLimit\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/team/users",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"team",
+								"users"
+							]
+						},
+						"description": "Only Admin can do this!"
+					},
+					"response": [
+						{
+							"name": "Create User",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"data\": {\r\n        \"id\": 2361667,\r\n        \"teamId\": 1052093,\r\n        \"username\": \"45@g.com\",\r\n        \"displayName\": \"test3\",\r\n        \"telegram\": null,\r\n        \"role\": \"user\",\r\n        \"teamleads\": [],\r\n        \"canCreateBp\": true,\r\n        \"unlimitedBp\": false,\r\n        \"bpLimit\": 10\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/team/users",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"team",
+										"users"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\r\n    \"data\": {\r\n        \"id\": 23616627,\r\n        \"teamId\": 10520923,\r\n        \"username\": \"45@g.com\",\r\n        \"displayName\": \"test3\",\r\n        \"telegram\": null,\r\n        \"role\": \"user\",\r\n        \"teamleads\": []\r\n    }\r\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/team/users/23616673",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"team",
+								"users",
+								"23616673"
+							]
+						},
+						"description": "Only Admin can do this!"
+					},
+					"response": [
+						{
+							"name": "Delete user",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "https://dolphin-anty-api.com/team/users/23616673",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"team",
+										"users",
+										"23616673"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\"success\":true}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Extensions",
+			"item": [
+				{
+					"name": "Add extension from chrome store",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "***************",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"url\":\"https://chrome.google.com/webstore/detail/google-translate/aapbdbdomjkkjkaonfhkkikfgjllcleb?hl=ru\",\"sharedToEntireTeam\":true,\"mainWebsite\":[\"google\"]}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/extensions",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"extensions"
+							]
+						},
+						"description": "mainWebsite: you can use one of this value 'all', 'facebook', 'google', 'tiktok', 'crypto',\n\nsharedToEntireTeam: `true` or `false`\n\nurl: Link to Google store extension"
+					},
+					"response": [
+						{
+							"name": "Add extension from chrome store",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"url\":\"https://chrome.google.com/webstore/detail/google-translate/aapbdbdomjkkjkaonfhkkikfgjllcleb?hl=ru\",\"sharedToEntireTeam\":true,\"mainWebsite\":[\"google\"]}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/extensions",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"extensions"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Delete extensions",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "***************",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [\n        235669,\n        246828\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/extensions",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"extensions"
+							]
+						},
+						"description": "Ids is an array of extension is that you want to delete"
+					},
+					"response": [
+						{
+							"name": "Delete extensions",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"ids\": [\n        235669,\n        246828\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/extensions",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"extensions"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"hashes\": [\n        \"ff29bce09dbaf208b1c6b573febff33b4f0db7a8eaaf26d292hff5kdir\"\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Add extension from ZIP",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "***************",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "ptquD-KVz/antry_extension.zip"
+								},
+								{
+									"key": "mainWebsite[]",
+									"value": "mainWebsite[]",
+									"type": "text"
+								},
+								{
+									"key": "sharedToEntireTeam",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "extensionName",
+									"value": "test",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/extensions/upload-zipped",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"extensions",
+								"upload-zipped"
+							]
+						},
+						"description": "file: selected file  \nmainWebsite: array of selected websites 'all', 'facebook', 'google', 'tiktok', 'crypto',  \nsharedToEntireTeam: 0 1"
+					},
+					"response": [
+						{
+							"name": "Add extension from ZIP",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json, text/plain, */*"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "sharedToEntireTeam",
+											"value": "0",
+											"type": "text"
+										},
+										{
+											"key": "mainWebsite[]",
+											"value": "all",
+											"type": "text"
+										},
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/path/to/file"
+										},
+										{
+											"key": "extensionName",
+											"value": "extensionName",
+											"type": "text"
+										},
+										{
+											"key": "sharedToEntireTeam",
+											"value": "0",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/extensions/upload-zipped",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"extensions",
+										"upload-zipped"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Local Storage",
+			"item": [
+				{
+					"name": "Export Local Storage",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, text/plain, */*"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"disabled": true
+							},
+							{
+								"key": "Connection",
+								"value": "keep-alive",
+								"disabled": true
+							},
+							{
+								"key": "Sec-Fetch-Dest",
+								"value": "empty",
+								"disabled": true
+							},
+							{
+								"key": "Sec-Fetch-Mode",
+								"value": "cors",
+								"disabled": true
+							},
+							{
+								"key": "Sec-Fetch-Site",
+								"value": "cross-site",
+								"disabled": true
+							},
+							{
+								"key": "User-Agent",
+								"value": "dolphin_anty_2024.270.100_Linux",
+								"disabled": true
+							},
+							{
+								"key": "sec-ch-ua",
+								"value": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\"",
+								"disabled": true
+							},
+							{
+								"key": "sec-ch-ua-mobile",
+								"value": "?0",
+								"disabled": true
+							},
+							{
+								"key": "sec-ch-ua-platform",
+								"value": "\"Linux\"",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3001/v1.0/local-storage/export/:browser_profile_id?transfer=0&plan=enterprise",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"v1.0",
+								"local-storage",
+								"export",
+								":browser_profile_id"
+							],
+							"query": [
+								{
+									"key": "transfer",
+									"value": "0",
+									"description": "transfer"
+								},
+								{
+									"key": "plan",
+									"value": "enterprise",
+									"description": "plan"
+								},
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "browser_profile_id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Export Local Storage",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json, text/plain, */*"
+									},
+									{
+										"key": "Accept-Language",
+										"value": "en-US",
+										"disabled": true
+									},
+									{
+										"key": "Connection",
+										"value": "keep-alive",
+										"disabled": true
+									},
+									{
+										"key": "Sec-Fetch-Dest",
+										"value": "empty",
+										"disabled": true
+									},
+									{
+										"key": "Sec-Fetch-Mode",
+										"value": "cors",
+										"disabled": true
+									},
+									{
+										"key": "Sec-Fetch-Site",
+										"value": "cross-site",
+										"disabled": true
+									},
+									{
+										"key": "User-Agent",
+										"value": "dolphin_anty_2024.270.100_Linux",
+										"disabled": true
+									},
+									{
+										"key": "sec-ch-ua",
+										"value": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\"",
+										"disabled": true
+									},
+									{
+										"key": "sec-ch-ua-mobile",
+										"value": "?0",
+										"disabled": true
+									},
+									{
+										"key": "sec-ch-ua-platform",
+										"value": "\"Linux\"",
+										"disabled": true
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3001/v1.0/local-storage/export/:browser_profile_id?transfer=0&plan=enterprise",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3001",
+									"path": [
+										"v1.0",
+										"local-storage",
+										"export",
+										":browser_profile_id"
+									],
+									"query": [
+										{
+											"key": "transfer",
+											"value": "0",
+											"description": "transfer"
+										},
+										{
+											"key": "plan",
+											"value": "enterprise",
+											"description": "plan"
+										},
+										{
+											"key": "",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "browser_profile_id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n        \"domain\": \"dolphin-anty-export\",\n        \"data\": {\n            \"...\"\n        }\n    }"
+						}
+					]
+				},
+				{
+					"name": "Import Local Storage",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, text/plain, */*"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"profileId\": 504133437,\n    \"transfer\": 0,\n    \"localStorage\": [\n        {\n            \"domain\": \"dolphin-anty-export\",\n            \"data\": {}\n        }\n    ],\n    \"plan\": \"enterprise\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3001/v1.0/local-storage/import",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"v1.0",
+								"local-storage",
+								"import"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Import Local Storage",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json, text/plain, */*"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"profileId\": 504133437,\n    \"transfer\": 0,\n    \"localStorage\": [\n        {\n            \"domain\": \"dolphin-anty-export\",\n            \"data\": {}\n        }\n    ],\n    \"plan\": \"enterprise\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3001/v1.0/local-storage/import",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3001",
+									"path": [
+										"v1.0",
+										"local-storage",
+										"import"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": null,
+											"disabled": true
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"success\": true\n}"
+						}
+					]
+				}
+			],
+			"description": "Importing and exporting local storage API supports only text data, work with files is impossible."
+		},
+		{
+			"name": "Folders",
+			"item": [
+				{
+					"name": "Create Folder",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "content-type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"folder_name\",\n    \"teamAccess\": false,\n    \"emoji\": \"file_folder\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/folders",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"folders"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Create Folder",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "content-type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"folder_name\",\n    \"teamAccess\": false,\n    \"emoji\": \"file_folder\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/folders",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"folders"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"id\": 100816\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Edit Folder",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "content-type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order\": 3,\n    \"name\": \"folder name\",\n    \"emoji\": \"file_folder\",\n    \"isPinned\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/folders/:folder_id",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"folders",
+								":folder_id"
+							],
+							"variable": [
+								{
+									"key": "folder_id",
+									"value": "",
+									"description": "folder id"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Edit Folder",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "content-type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"order\": 3,\n    \"name\": \"folder name\",\n    \"emoji\": \"file_folder\",\n    \"isPinned\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/folders/:folder_id",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"folders",
+										":folder_id"
+									],
+									"variable": [
+										{
+											"key": "folder_id",
+											"value": "",
+											"description": "folder id"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"success\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete folder",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json, text/plain, */*"
+							}
+						],
+						"url": {
+							"raw": "https://dolphin-anty-api.com/folders/:folder_id?withProfiles=0",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"folders",
+								":folder_id"
+							],
+							"query": [
+								{
+									"key": "withProfiles",
+									"value": "0"
+								}
+							],
+							"variable": [
+								{
+									"key": "folder_id",
+									"value": "",
+									"description": "folder id"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Delete folder",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json, text/plain, */*"
+									}
+								],
+								"url": {
+									"raw": "https://dolphin-anty-api.com/folders/:folder_id?withProfiles=0",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"folders",
+										":folder_id"
+									],
+									"query": [
+										{
+											"key": "withProfiles",
+											"value": "0"
+										}
+									],
+									"variable": [
+										{
+											"key": "folder_id",
+											"value": "",
+											"description": "folder id"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "204 No Content"
+						}
+					]
+				},
+				{
+					"name": "Add profile to folder",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "content-type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"folderId\": 99592,\n    \"profileIds\": [\n        499884970\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/folders/mass/attach-profiles",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"folders",
+								"mass",
+								"attach-profiles"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Add profile to folder",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "content-type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"folderId\": 99592,\n    \"profileIds\": [\n        499884970\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/folders/mass/attach-profiles",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"folders",
+										"mass",
+										"attach-profiles"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"success\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "Move profile to another folder",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "content-type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"folderId\": 99592,\n    \"profileIds\": [\n        499884970\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/folders/mass/attach-profiles",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"folders",
+								"mass",
+								"attach-profiles"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Move profile to another folder",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "content-type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"folderId\": 99592,\n    \"profileIds\": [\n        499884970\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/folders/mass/attach-profiles",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"folders",
+										"mass",
+										"attach-profiles"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"success\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "Remove profile to folder",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "content-type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"profileIds\": [\n        499884970\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dolphin-anty-api.com/folders/mass/detach-profiles",
+							"protocol": "https",
+							"host": [
+								"dolphin-anty-api",
+								"com"
+							],
+							"path": [
+								"folders",
+								"mass",
+								"detach-profiles"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Remove profile to folder",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "content-type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"profileIds\": [\n        499884970\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://dolphin-anty-api.com/folders/mass/detach-profiles",
+									"protocol": "https",
+									"host": [
+										"dolphin-anty-api",
+										"com"
+									],
+									"path": [
+										"folders",
+										"mass",
+										"detach-profiles"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"success\": true\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
