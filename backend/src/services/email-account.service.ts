@@ -10,6 +10,17 @@ interface EmailAccount {
   password: string;
 }
 
+// Define interface for EmailAccount with proxy data
+interface EmailAccountWithProxy extends EmailAccount {
+  createdAt: Date;
+  updatedAt: Date;
+  proxyId: string | null;
+  proxyHost: string | null;
+  proxyPort: number | null;
+  proxyProtocol: string | null;
+  proxyCountry: string | null;
+}
+
 export class EmailAccountService {
   private static instance: EmailAccountService;
 
@@ -24,14 +35,30 @@ export class EmailAccountService {
 
   async getAllEmailAccounts() {
     try {
-      // Use bracket notation to access the model - this bypasses TypeScript errors
-      return await prisma['emailAccount'].findMany({
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+      // Use a join to include proxy information with email accounts
+      // This returns a single integrated query result with proxy data embedded
+      const accounts = await prisma.$queryRaw<EmailAccountWithProxy[]>`
+        SELECT 
+          e.id, 
+          e.email, 
+          e.password, 
+          e."createdAt", 
+          e."updatedAt",
+          p.id as "proxyId", 
+          p.host as "proxyHost", 
+          p.port as "proxyPort",
+          p.protocol as "proxyProtocol",
+          p.country as "proxyCountry"
+        FROM "EmailAccount" e
+        LEFT JOIN "Proxy" p ON e."proxyId" = p.id
+        ORDER BY e."createdAt" DESC
+      `;
+      
+      logger.info(`Retrieved ${accounts.length} email accounts with their proxies`);
+      console.log('Sample account with proxy data:', JSON.stringify(accounts[0], null, 2));
+      return accounts;
     } catch (error) {
-      logger.error('Error getting all email accounts:', error);
+      logger.error('Error getting all email accounts with proxy data:', error);
       // Return mock data in case of error
       return [
         { 
@@ -39,7 +66,12 @@ export class EmailAccountService {
           email: 'example1@test.com', 
           password: 'password123',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          proxyId: null,
+          proxyHost: null,
+          proxyPort: null,
+          proxyProtocol: null,
+          proxyCountry: null
         }
       ];
     }

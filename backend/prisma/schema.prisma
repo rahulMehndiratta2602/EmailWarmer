@@ -28,35 +28,26 @@ model Node {
 }
 
 model EmailAccount {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  proxyMapping ProxyMapping? @relation(fields: [proxyMappingId], references: [id])
-  proxyMappingId String?
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  proxyId   String?  @unique
+  proxy     Proxy?   @relation(fields: [proxyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Proxy {
-  id          String         @id @default(uuid())
-  host        String
-  port        Int
-  country     String?
-  protocol    String         @default("https")
-  isActive    Boolean        @default(true)
-  lastChecked DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  mappings    ProxyMapping[]
-
-  @@unique([host, port])
-}
-
-model ProxyMapping {
   id           String         @id @default(uuid())
-  proxyId      String
-  proxy        Proxy          @relation(fields: [proxyId], references: [id], onDelete: Cascade)
-  emailAccounts EmailAccount[]
+  host         String
+  port         Int
+  country      String?
+  protocol     String         @default("https")
+  isActive     Boolean        @default(true)
+  lastChecked  DateTime?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  emailAccount EmailAccount?
+
+  @@unique([host, port])
 } 

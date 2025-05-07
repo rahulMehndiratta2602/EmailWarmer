@@ -54,7 +54,7 @@ export interface ElectronAPI {
   
   // Proxy mapping operations
   getProxyMappings: () => Promise<ProxyMappingResult[]>;
-  createProxyMapping: (emailIds: string[], maxProxies?: number, maxEmailsPerProxy?: number) => Promise<ProxyMappingResult[]>;
+  createProxyMapping: () => Promise<ProxyMappingResult[]>;
   deleteProxyMapping: (emailId: string) => Promise<boolean>;
   
   // Environment

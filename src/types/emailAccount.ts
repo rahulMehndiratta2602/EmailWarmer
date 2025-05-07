@@ -6,4 +6,11 @@ export interface EmailAccount {
   isEditing?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  
+  // Proxy mapping fields
+  proxyId?: string | null;
+  proxyHost?: string | null;
+  proxyPort?: number | null;
+  proxyProtocol?: string | null;
+  proxyCountry?: string | null;
 } 

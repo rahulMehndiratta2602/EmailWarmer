@@ -15,6 +15,33 @@ interface Proxy {
   updatedAt?: Date;
 }
 
+// Define interface for proxy with mapped email data
+interface ProxyWithMappedEmail extends Proxy {
+  mappedEmailId: string | null;
+  mappedEmail: string | null;
+}
+
+// Define interfaces for mapping results
+interface RawEmailAccount {
+  id: string;
+  email: string;
+}
+
+interface RawProxy {
+  id: string;
+  host: string;
+  port: number;
+  isActive: boolean;
+}
+
+interface ProxyMappingResult {
+  emailId: string;
+  email: string;
+  proxyId: string;
+  proxyHost: string;
+  proxyPort: number;
+}
+
 // Create the Prisma client
 const prisma = new PrismaClient();
 
@@ -140,22 +167,37 @@ export class ProxyService {
    * Get proxies from the database
    * @param limit Maximum number of proxies to retrieve
    * @param offset Offset for pagination
-   * @returns Array of proxies
+   * @returns Array of proxies with email mapping information
    */
-  async getProxies(limit = 100, offset = 0): Promise<Proxy[]> {
+  async getProxies(limit = 100, offset = 0): Promise<ProxyWithMappedEmail[]> {
     try {
-      // Using type assertion because Prisma's generated types don't include the 'proxy' model
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const proxies = await (prisma as any).proxy.findMany({
-        where: { isActive: true },
-        orderBy: { createdAt: 'desc' },
-        skip: offset,
-        take: limit
-      });
+      // Use raw query to get proxies with their mapped emails
+      const proxies = await prisma.$queryRaw<ProxyWithMappedEmail[]>`
+        SELECT 
+          p.id, 
+          p.host, 
+          p.port, 
+          p.country, 
+          p.protocol, 
+          p."isActive",
+          p."lastChecked", 
+          p."createdAt", 
+          p."updatedAt",
+          e.id as "mappedEmailId",
+          e.email as "mappedEmail"
+        FROM "Proxy" p
+        LEFT JOIN "EmailAccount" e ON p.id = e."proxyId"
+        WHERE p."isActive" = true
+        ORDER BY p."createdAt" DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `;
       
+      logger.info(`Retrieved ${proxies.length} proxies with mapped email information`);
+      console.log('Proxy data with mappings:', JSON.stringify(proxies.slice(0, 2), null, 2));
       return proxies;
     } catch (error) {
-      logger.error('Error retrieving proxies from database:', error);
+      logger.error('Error retrieving proxies with mapped emails from database:', error);
       throw new Error('Failed to retrieve proxies from database');
     }
   }
@@ -250,6 +292,114 @@ export class ProxyService {
     } catch (error) {
       logger.error('Error creating session proxy:', error);
       throw new Error('Failed to create session proxy');
+    }
+  }
+
+  /**
+   * Get unmapped email accounts
+   * @returns Array of unmapped email accounts
+   */
+  async getUnmappedEmails(): Promise<RawEmailAccount[]> {
+    try {
+      // Get all unmapped email accounts
+      const emailAccounts = await prisma.$queryRaw<RawEmailAccount[]>`
+        SELECT id, email FROM "EmailAccount" 
+        WHERE "proxyId" IS NULL
+      `;
+        
+      logger.info(`Found ${emailAccounts.length} unmapped email accounts`);
+      return emailAccounts;
+    } catch (error) {
+      logger.error('Error getting unmapped emails:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get unmapped proxies
+   * @returns Array of unmapped proxies
+   */
+  async getUnmappedProxies(): Promise<RawProxy[]> {
+    try {
+      // Get unmapped proxies
+      const unmappedProxies = await prisma.$queryRaw<RawProxy[]>`
+        SELECT p.* FROM "Proxy" p
+        LEFT JOIN "EmailAccount" e ON e."proxyId" = p.id
+        WHERE e.id IS NULL AND p."isActive" = true
+      `;
+        
+      logger.info(`Found ${unmappedProxies.length} unmapped proxies`);
+      return unmappedProxies;
+    } catch (error) {
+      logger.error('Error getting unmapped proxies:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Create mappings between email accounts and proxies
+   * @param emails Unmapped email accounts
+   * @param proxies Unmapped proxies
+   * @returns Array of created mappings
+   */
+  async createMappings(
+    emails: RawEmailAccount[],
+    proxies: RawProxy[]
+  ): Promise<ProxyMappingResult[]> {
+    try {
+      // Determine how many mappings we can create
+      const mappingsToCreate = Math.min(emails.length, proxies.length);
+      logger.info(`Creating ${mappingsToCreate} email-to-proxy mappings`);
+      
+      // Create the mappings
+      const mappingResults: ProxyMappingResult[] = [];
+      
+      for (let i = 0; i < mappingsToCreate; i++) {
+        const emailId = emails[i].id;
+        const proxy = proxies[i];
+        
+        try {
+          // Update the email account with the proxy ID
+          await prisma.$executeRaw`
+            UPDATE "EmailAccount" 
+            SET "proxyId" = ${proxy.id}
+            WHERE id = ${emailId}
+          `;
+          
+          // Get the updated email account
+          const emailAccounts = await prisma.$queryRaw<{ emailId: string; email: string; proxyId: string; proxyHost: string; proxyPort: number }[]>`
+            SELECT 
+              e.id as "emailId", 
+              e.email, 
+              p.id as "proxyId", 
+              p.host as "proxyHost", 
+              p.port as "proxyPort" 
+            FROM "EmailAccount" e
+            JOIN "Proxy" p ON e."proxyId" = p.id
+            WHERE e.id = ${emailId}
+          `;
+          
+          if (emailAccounts.length > 0) {
+            const account = emailAccounts[0];
+            
+            mappingResults.push({
+              emailId: account.emailId,
+              email: account.email,
+              proxyId: account.proxyId,
+              proxyHost: account.proxyHost,
+              proxyPort: account.proxyPort
+            });
+          }
+        } catch (error) {
+          logger.error(`Error creating mapping for email ${emailId}:`, error);
+        }
+      }
+      
+      logger.info(`Successfully created ${mappingResults.length} email-to-proxy mappings`);
+      return mappingResults;
+    } catch (error) {
+      logger.error('Error creating proxy mappings:', error);
+      return [];
     }
   }
 }

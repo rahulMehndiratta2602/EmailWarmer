@@ -1,5 +1,4 @@
 import { proxyService } from '../services/proxy.service';
-import { proxyMappingService } from '../services/proxy-mapping.service';
 import abcProxyClient from '../utils/abc-proxy-client';
 import { PrismaClient } from '@prisma/client';
 
@@ -12,6 +11,8 @@ jest.mock('../utils/abc-proxy-client', () => ({
 jest.mock('@prisma/client', () => {
   const mockPrismaClient: Record<string, any> = {
     $transaction: jest.fn((callback) => callback(mockPrismaClient)),
+    $executeRaw: jest.fn().mockResolvedValue(1),
+    $queryRaw: jest.fn(),
     proxy: {
       findFirst: jest.fn(),
       findMany: jest.fn(),
@@ -25,11 +26,7 @@ jest.mock('@prisma/client', () => {
       findMany: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
-    },
-    proxyMapping: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-    },
+    }
   };
   return {
     PrismaClient: jest.fn(() => mockPrismaClient),
@@ -92,91 +89,72 @@ describe('Proxy Service', () => {
       const result = await proxyService.fetchAndSaveProxies('US');
       
       // Assertions
-      expect(abcProxyClient.getProxies).toHaveBeenCalledWith('US', undefined, undefined, 100);
-      expect((prisma.proxy as any).create).toHaveBeenCalledTimes(2);
+      expect(abcProxyClient.getProxies).toHaveBeenCalledWith('US', 100);
+      expect((prisma.proxy as any).findFirst).toHaveBeenCalledTimes(2);
       expect(result.length).toBe(2);
       expect(result[0].host).toBe('proxy.abcproxy.com');
     });
   });
   
   describe('getProxies', () => {
-    it('should retrieve active proxies from the database', async () => {
-      // Setup mocks
-      (prisma.proxy as any).findMany.mockResolvedValue(
-        sampleProxies.map((proxy, index) => ({
-          id: `proxy-id-${index}`,
-          ...proxy,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }))
-      );
+    it('should retrieve active proxies from the database with mapped email information', async () => {
+      // Setup mocks for raw queries
+      const proxiesWithMappedEmails = sampleProxies.map((proxy, index) => ({
+        id: `proxy-id-${index}`,
+        ...proxy,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        mappedEmailId: index === 0 ? 'email-id-1' : null,
+        mappedEmail: index === 0 ? 'test1@example.com' : null
+      }));
+      
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue(proxiesWithMappedEmails);
       
       // Execute function
       const result = await proxyService.getProxies();
       
       // Assertions
-      expect((prisma.proxy as any).findMany).toHaveBeenCalledWith({
-        where: { isActive: true },
-        orderBy: { createdAt: 'desc' },
-        skip: 0,
-        take: 100,
-      });
+      expect(prisma.$queryRaw).toHaveBeenCalled();
       expect(result.length).toBe(2);
+      expect(result[0].mappedEmail).toBe('test1@example.com');
+      expect(result[1].mappedEmail).toBeNull();
     });
   });
-});
-
-describe('Proxy Mapping Service', () => {
-  const prisma = new PrismaClient();
   
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-  
-  describe('createProxyMapping', () => {
-    it('should map emails to proxies with load balancing', async () => {
-      // Setup mocks
-      (prisma.proxy as any).findMany.mockResolvedValue(
-        sampleProxies.map((proxy, index) => ({
-          id: `proxy-id-${index}`,
-          ...proxy,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }))
-      );
+  describe('createMappings', () => {
+    it('should map emails to proxies with one-to-one relationships', async () => {
+      // Setup test data
+      const unmappedEmails = [
+        { id: 'email-id-1', email: 'test1@example.com' },
+        { id: 'email-id-2', email: 'test2@example.com' }
+      ];
       
-      (prisma.emailAccount as any).updateMany.mockResolvedValue({ count: 2 });
+      const unmappedProxies = [
+        { id: 'proxy-id-1', host: 'proxy1.abcproxy.com', port: 4950, isActive: true },
+        { id: 'proxy-id-2', host: 'proxy2.abcproxy.com', port: 4951, isActive: true }
+      ];
       
-      (prisma.emailAccount as any).findUnique.mockImplementation((args: Record<string, any>) => {
-        const emailId = args.where.id;
-        const emailIndex = parseInt(emailId.split('-').pop()) - 1;
-        return sampleEmails[emailIndex];
-      });
+      const mappingResults = [
+        { 
+          emailId: 'email-id-1', 
+          email: 'test1@example.com',
+          proxyId: 'proxy-id-1',
+          proxyHost: 'proxy1.abcproxy.com',
+          proxyPort: 4950
+        }
+      ];
       
-      (prisma.proxyMapping as any).findFirst.mockResolvedValue(null);
-      
-      (prisma.proxyMapping as any).create.mockImplementation((args: Record<string, any>) => ({
-        id: 'mapping-id',
-        ...args.data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }));
+      // Mock the query raw methods
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue(mappingResults);
       
       // Execute function
-      const result = await proxyMappingService.createProxyMapping(
-        ['email-id-1', 'email-id-2'],
-        1,
-        5
-      );
+      const result = await proxyService.createMappings(unmappedEmails, unmappedProxies);
       
       // Assertions
-      expect((prisma.emailAccount as any).updateMany).toHaveBeenCalled();
-      expect((prisma.proxyMapping as any).create).toHaveBeenCalledTimes(2);
+      expect(prisma.$executeRaw).toHaveBeenCalledTimes(2); // Once for each email
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);  // Once for each email query
       expect(result.length).toBe(2);
-      expect(result[0].email).toBe('test1@example.com');
-      expect(result[0].proxyHost).toBe('proxy.abcproxy.com');
     });
   });
 }); 

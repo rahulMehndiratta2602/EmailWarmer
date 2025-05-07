@@ -1153,73 +1153,22 @@ const registerIpcHandlers = (): void => {
   // Get proxy mappings
   ipcMain.handle('api:getProxyMappings', async () => {
     return new Promise((resolve) => {
-      console.log('Fetching proxy mappings from:', getFullApiUrl('/proxy-mappings'));
-      const request = net.request(getFullApiUrl('/proxy-mappings'));
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log('Proxy mappings response status:', response.statusCode);
-        
-        if (response.statusCode !== 200) {
-          console.error(`API returned error status: ${response.statusCode}`);
-          // Return empty array to avoid breaking the UI
-          resolve([]);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-          console.log('Proxy mappings chunk received, length:', chunk.toString().length);
-        });
-        
-        response.on('end', () => {
-          try {
-            console.log('Raw proxy mappings response:', responseData);
-            if (!responseData || responseData.trim() === '') {
-              console.log('Empty response received for proxy mappings');
-              resolve([]);
-              return;
-            }
-            
-            const data = JSON.parse(responseData);
-            console.log('Received proxy mappings data:', data);
-            
-            // Ensure we always return an array
-            if (Array.isArray(data)) {
-              resolve(data);
-            } else {
-              console.warn('API returned non-array data for proxy mappings:', data);
-              resolve([]);
-            }
-          } catch (error) {
-            console.error('Failed to parse proxy mappings data:', error);
-            console.error('Response data that failed to parse:', responseData);
-            // Resolve with empty array instead of rejecting to avoid breaking the UI
-            resolve([]);
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when fetching proxy mappings:', error);
-        // Resolve with empty array instead of rejecting to avoid breaking the UI
-        resolve([]);
-      });
-      
-      request.end();
+      // Return empty array since we're no longer using separate mapping endpoint
+      // Old endpoint is deprecated
+      console.log('getProxyMappings is deprecated - mappings now included with proxies and emails');
+      resolve([]);
     });
   });
 
   // Create proxy mapping
-  ipcMain.handle('api:createProxyMapping', async (event, emailIds, maxProxies, maxEmailsPerProxy) => {
+  ipcMain.handle('api:createProxyMapping', async () => {
     return new Promise((resolve) => {
-      console.log('Creating proxy mapping:', { emailIds, maxProxies, maxEmailsPerProxy });
+      console.log('Creating proxy mapping - ignoring parameters and mapping all emails');
       
       try {
         const request = net.request({
           method: 'POST',
-          url: getFullApiUrl('/proxy-mappings')
+          url: getFullApiUrl('/proxies/mapping')
         });
         
         request.setHeader('Content-Type', 'application/json');
@@ -1246,7 +1195,7 @@ const registerIpcHandlers = (): void => {
               
               const data = JSON.parse(responseData);
               console.log('Proxy mapping created successfully:', data);
-              resolve(data);
+              resolve(data.mappings || []);
             } catch (error) {
               console.error('Failed to parse create proxy mapping response data:', error);
               console.error('Response data that failed to parse:', responseData);
@@ -1263,21 +1212,8 @@ const registerIpcHandlers = (): void => {
           resolve([]);
         });
         
-        // Make sure to properly convert the mapping data to a JSON string
-        try {
-          const bodyData = JSON.stringify({
-            emailIds,
-            maxProxies,
-            maxEmailsPerProxy
-          });
-          console.log('Sending create proxy mapping request with body:', bodyData);
-          request.write(bodyData);
-        } catch (error) {
-          console.error('Error serializing proxy mapping data:', error);
-          // Return empty array anyway to avoid breaking the UI
-          resolve([]);
-        }
-        
+        // Send empty object as body since the backend doesn't use any parameters
+        request.write('{}');
         request.end();
       } catch (error) {
         console.error('Unexpected error in createProxyMapping:', error);
@@ -1290,36 +1226,10 @@ const registerIpcHandlers = (): void => {
   // Delete proxy mapping
   ipcMain.handle('api:deleteProxyMapping', async (event, emailId) => {
     return new Promise((resolve) => {
-      console.log('Deleting proxy mapping for email:', emailId);
-      
-      const request = net.request({
-        method: 'DELETE',
-        url: getFullApiUrl(`/proxy-mappings/email/${emailId}`)
-      });
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Proxy mapping not found for deletion:', emailId);
-          resolve(false);
-          return;
-        }
-        
-        if (response.statusCode === 204 || response.statusCode === 200) {
-          console.log('Proxy mapping deleted successfully:', emailId);
-          resolve(true);
-          return;
-        }
-        
-        console.error(`Unexpected status code: ${response.statusCode}`);
-        resolve(false);
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when deleting proxy mapping:', error);
-        resolve(false);
-      });
-      
-      request.end();
+      // Return false since we're no longer using separate mapping endpoint
+      // Old endpoint is deprecated
+      console.log('deleteProxyMapping is deprecated - use updateEmailAccount instead');
+      resolve(false);
     });
   });
 

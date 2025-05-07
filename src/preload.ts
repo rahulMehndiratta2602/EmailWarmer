@@ -215,17 +215,17 @@ contextBridge.exposeInMainWorld('api', {
   
   // Proxy mapping operations
   getProxyMappings: () => {
-    console.log('preload: getProxyMappings called');
+    console.log('preload: getProxyMappings called (DEPRECATED - mappings now included with proxies/emails)');
     return ipcRenderer.invoke('api:getProxyMappings');
   },
   
-  createProxyMapping: (emailIds: string[], maxProxies: number, maxEmailsPerProxy: number) => {
-    console.log('preload: createProxyMapping called with:', emailIds, maxProxies, maxEmailsPerProxy);
-    return ipcRenderer.invoke('api:createProxyMapping', emailIds, maxProxies, maxEmailsPerProxy);
+  createProxyMapping: () => {
+    console.log('preload: createProxyMapping called - will map all unmapped emails');
+    return ipcRenderer.invoke('api:createProxyMapping');
   },
   
   deleteProxyMapping: (emailId: string) => {
-    console.log('preload: deleteProxyMapping called with:', emailId);
+    console.log('preload: deleteProxyMapping called (DEPRECATED - use updateEmailAccount instead)');
     return ipcRenderer.invoke('api:deleteProxyMapping', emailId);
   },
   

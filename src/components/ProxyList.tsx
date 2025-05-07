@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Trash2, RefreshCw, Globe, AlertTriangle } from 'lucide-react';
 import Pagination from './Pagination';
 import { proxyService } from '../services/proxyService';
-import { Proxy, ProxyMappingResult } from '../types/proxy';
+import { Proxy } from '../types/proxy';
 import ErrorNotification from './ErrorNotification';
 
 interface ProxyListProps {
@@ -11,7 +11,6 @@ interface ProxyListProps {
 
 const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
   const [proxies, setProxies] = useState<Proxy[]>([]);
-  const [mappings, setMappings] = useState<ProxyMappingResult[]>([]);
   const [showFetchModal, setShowFetchModal] = useState(false);
   const [fetchCountry, setFetchCountry] = useState('');
   const [fetchProtocol, setFetchProtocol] = useState('http');
@@ -89,7 +88,15 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
       setError(null);
       
       const fetchedProxies = await proxyService.getProxies();
-      console.log('Fetched proxies:', fetchedProxies);
+      console.log('Raw proxy data:', fetchedProxies);
+      
+      // Debug: check if mapped email fields are present
+      if (fetchedProxies && fetchedProxies.length > 0) {
+        console.log('First proxy mapped email fields:', {
+          mappedEmailId: fetchedProxies[0].mappedEmailId,
+          mappedEmail: fetchedProxies[0].mappedEmail
+        });
+      }
       
       if (fetchedProxies && Array.isArray(fetchedProxies)) {
         setProxies(fetchedProxies.map((proxy: Proxy) => ({
@@ -101,16 +108,10 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
         setProxies([]);
         setError('No proxies available. The server may not be running.');
       }
-      
-      // Fetch mappings
-      const fetchedMappings = await proxyService.getProxyMappings();
-      if (fetchedMappings && Array.isArray(fetchedMappings)) {
-        setMappings(fetchedMappings);
-      }
-    } catch (err) {
-      console.error('Error fetching proxies:', err);
-      setError('Failed to load proxies from database');
+    } catch (error) {
+      console.error('Error fetching proxies:', error);
       setProxies([]);
+      setError('Failed to fetch proxies. Check if the server is running.');
     } finally {
       setIsLoading(false);
     }
@@ -327,10 +328,12 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
   };
 
   // Get mapped email accounts for a proxy
-  const getMappedEmails = (proxyId: string) => {
-    return mappings
-      .filter(mapping => mapping.proxyId === proxyId)
-      .map(mapping => mapping.email);
+  const getMappedEmails = (proxy: Proxy) => {
+    // Check if proxy has a mapped email
+    if (proxy.mappedEmail && proxy.mappedEmailId) {
+      return [proxy.mappedEmail];
+    }
+    return [];
   };
 
   return (
@@ -455,7 +458,7 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
                   </tr>
                 ) : (
                   currentItems.map((proxy) => {
-                    const mappedEmails = getMappedEmails(proxy.id || '');
+                    const mappedEmails = getMappedEmails(proxy);
                     return (
                       <tr key={proxy.id} className={`hover:${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                         <td className="p-2 sm:p-3">
@@ -489,6 +492,10 @@ const ProxyList: React.FC<ProxyListProps> = ({ isDarkMode }) => {
                                 </span>
                               )}
                             </div>
+                          ) : proxy.mappedEmail ? (
+                            <span className={`inline-flex px-2 py-1 text-xs rounded-full ${isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
+                              {proxy.mappedEmail}
+                            </span>
                           ) : (
                             <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>None</span>
                           )}

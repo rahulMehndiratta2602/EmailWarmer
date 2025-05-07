@@ -1,7 +1,5 @@
 import express from 'express';
 import { proxyService } from '../services/proxy.service';
-import { proxyMappingService } from '../services/proxy-mapping.service';
-import { browserService } from '../services/browser.service';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
@@ -120,28 +118,17 @@ router.delete('/', async (req, res) => {
   }
 });
 
-// Create proxy mapping
+// Create proxy mapping - keep for backward compatibility
 router.post('/mapping', async (req, res) => {
   try {
-    const { emailIds, maxProxies, maxEmailsPerProxy } = req.body;
+    // Since we no longer have a separate mapping service, we'll handle this directly
+    // Get unmapped emails
+    const unmappedEmails = await proxyService.getUnmappedEmails();
+    // Get unmapped proxies
+    const unmappedProxies = await proxyService.getUnmappedProxies();
     
-    if (!emailIds || !Array.isArray(emailIds)) {
-      return res.status(400).json({ error: 'Valid emailIds array is required' });
-    }
-    
-    if (!maxProxies || isNaN(parseInt(maxProxies))) {
-      return res.status(400).json({ error: 'Valid maxProxies is required' });
-    }
-    
-    if (!maxEmailsPerProxy || isNaN(parseInt(maxEmailsPerProxy))) {
-      return res.status(400).json({ error: 'Valid maxEmailsPerProxy is required' });
-    }
-    
-    const mappings = await proxyMappingService.createProxyMapping(
-      emailIds,
-      parseInt(maxProxies as string),
-      parseInt(maxEmailsPerProxy as string)
-    );
+    // Create mappings
+    const mappings = await proxyService.createMappings(unmappedEmails, unmappedProxies);
     
     res.status(201).json({
       message: `Successfully created ${mappings.length} email-to-proxy mappings`,
@@ -150,69 +137,6 @@ router.post('/mapping', async (req, res) => {
   } catch (error) {
     logger.error('Error in POST /proxies/mapping:', error);
     res.status(500).json({ error: 'Failed to create proxy mappings' });
-  }
-});
-
-// Get proxy mappings
-router.get('/mapping', async (req, res) => {
-  try {
-    const mappings = await proxyMappingService.getProxyMappings();
-    res.json(mappings);
-  } catch (error) {
-    logger.error('Error in GET /proxies/mapping:', error);
-    res.status(500).json({ error: 'Failed to get proxy mappings' });
-  }
-});
-
-// Delete proxy mapping for an email
-router.delete('/mapping/:emailId', async (req, res) => {
-  try {
-    const success = await proxyMappingService.deleteProxyMapping(req.params.emailId);
-    if (!success) {
-      return res.status(404).json({ error: 'Proxy mapping not found' });
-    }
-    res.status(204).send();
-  } catch (error) {
-    logger.error(`Error in DELETE /proxies/mapping/${req.params.emailId}:`, error);
-    res.status(500).json({ error: 'Failed to delete proxy mapping' });
-  }
-});
-
-// Open browser windows for email accounts with proxies
-router.post('/browser/open', async (req, res) => {
-  try {
-    const count = await browserService.openBrowserWindows();
-    res.json({
-      message: `Successfully opened ${count} browser windows for email accounts`,
-      count
-    });
-  } catch (error) {
-    logger.error('Error in POST /proxies/browser/open:', error);
-    res.status(500).json({ error: 'Failed to open browser windows' });
-  }
-});
-
-// Close all browser windows
-router.post('/browser/close', async (req, res) => {
-  try {
-    await browserService.closeAllSessions();
-    res.json({ message: 'All browser windows have been closed' });
-  } catch (error) {
-    logger.error('Error in POST /proxies/browser/close:', error);
-    res.status(500).json({ error: 'Failed to close browser windows' });
-  }
-});
-
-// Get browser session stats
-router.get('/browser/stats', async (req, res) => {
-  try {
-    const count = browserService.getActiveSessionCount();
-    res.json({
-      activeSessions: count
-    });
-  } catch (error) {
-    logger.error('Error in GET /proxies/browser/stats:', error);
-    res.status(500).json({ error: 'Failed to get browser stats' });
   }
 });
 

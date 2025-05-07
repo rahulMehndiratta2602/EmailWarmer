@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Trash2, Download, Edit, Save, RefreshCw, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, Download, Edit, Save, RefreshCw, AlertTriangle, Eye, EyeOff, Link } from 'lucide-react';
 import Pagination from './Pagination';
 import { emailAccountService } from '../services/emailAccountService';
 import { proxyService } from '../services/proxyService';
 import { EmailAccount } from '../types/emailAccount';
-import { ProxyMappingResult } from '../types/proxy';
 import ErrorNotification from './ErrorNotification';
 
 interface EmailPasswordListProps {
@@ -13,7 +12,6 @@ interface EmailPasswordListProps {
 
 const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => {
   const [emailPasswords, setEmailPasswords] = useState<EmailAccount[]>([]);
-  const [proxyMappings, setProxyMappings] = useState<ProxyMappingResult[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);
   const [emptyConfirmText, setEmptyConfirmText] = useState('');
@@ -27,10 +25,12 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [passwordVisibility, setPasswordVisibility] = useState<{[key: string]: boolean}>({});
+  const [sortField, setSortField] = useState<string>('createdAt');
+  const [sortDirection, setSortDirection] = useState<string>('desc');
+  const [isMapping, setIsMapping] = useState(false);
+  const [proxyFilterTerm, setProxyFilterTerm] = useState('');
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Calculate pagination values
   const totalPages = Math.ceil(emailPasswords.length / itemsPerPage);
@@ -94,7 +94,16 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
       setError(null);
       
       const accounts = await emailAccountService.getEmailAccounts();
-      console.log('Fetched accounts:', accounts);
+      console.log('Raw email account data:', accounts);
+      
+      // Debug: check if proxy fields are present
+      if (accounts && accounts.length > 0) {
+        console.log('First account proxy fields:', {
+          proxyId: accounts[0].proxyId,
+          proxyHost: accounts[0].proxyHost,
+          proxyPort: accounts[0].proxyPort
+        });
+      }
       
       if (accounts && Array.isArray(accounts)) {
         setEmailPasswords(accounts.map((account: EmailAccount) => ({
@@ -105,22 +114,12 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
       } else {
         console.warn('Received non-array accounts data:', accounts);
         setEmailPasswords([]);
-        setError('No accounts available. The server may not be running.');
+        setError('No email accounts available. The server may not be running.');
       }
-      
-      // Fetch proxy mappings
-      try {
-        const mappings = await proxyService.getProxyMappings();
-        if (mappings && Array.isArray(mappings)) {
-          setProxyMappings(mappings);
-        }
-      } catch (err) {
-        console.error('Error fetching proxy mappings:', err);
-      }
-    } catch (err) {
-      console.error('Error fetching email accounts:', err);
-      setError('Failed to load email accounts from database');
+    } catch (error) {
+      console.error('Error fetching email accounts:', error);
       setEmailPasswords([]);
+      setError('Failed to fetch email accounts. Check if the server is running.');
     } finally {
       setIsLoading(false);
     }
@@ -132,12 +131,12 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
   }, [fetchEmailAccounts]);
 
   // Get proxy info for an email account
-  const getProxyInfo = (emailId: string) => {
-    const mapping = proxyMappings.find(m => m.emailId === emailId);
-    if (mapping) {
+  const getProxyInfo = (account: EmailAccount) => {
+    if (account.proxyHost && account.proxyPort) {
       return {
-        host: mapping.proxyHost,
-        port: mapping.proxyPort
+        host: account.proxyHost,
+        port: account.proxyPort,
+        formatted: `${account.proxyHost}:${account.proxyPort}`
       };
     }
     return null;
@@ -372,13 +371,6 @@ const EmailPasswordList: React.FC<EmailPasswordListProps> = ({ isDarkMode }) => 
     }
   };
 
-  const togglePasswordVisibility = (id: string) => {
-    setPasswordVisibility(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
   const handleDownloadTemplate = () => {
     const template = `example1@email.com,password123
 example2@email.com,password456
@@ -541,6 +533,72 @@ example3@email.com,password789`;
     }
   };
 
+  // Handle mapping emails to proxies
+  const handleMapEmailsToProxy = async () => {
+    try {
+      setIsMapping(true);
+      setError(null);
+      
+      // Simple one-to-one mapping of all emails to proxies
+      // No parameters needed - this will map all unmapped emails to proxies
+      const result = await proxyService.createProxyMapping();
+      
+      console.log('Mapping result:', result);
+      
+      if (result && Array.isArray(result)) {      
+        // Refresh data to get updated mappings
+        await fetchEmailAccounts();
+        
+        setSuccessMessage(`Successfully mapped ${result.length} email accounts to proxies`);
+        setTimeout(() => setSuccessMessage(null), 5000);
+      }
+    } catch (err) {
+      console.error('Error mapping emails to proxies:', err);
+      setError('Failed to map emails to proxies');
+    } finally {
+      setIsMapping(false);
+    }
+  };
+
+  // Filter accounts by proxy mapping status or search term
+  const filterAccountsByProxy = (accounts: EmailAccount[]) => {
+    if (!proxyFilterTerm) return accounts;
+    
+    return accounts.filter(account => {
+      const proxyInfo = getProxyInfo(account);
+      
+      // Filter for "mapped" or "unmapped"
+      if (proxyFilterTerm.toLowerCase() === 'mapped') {
+        return !!proxyInfo;
+      }
+      
+      if (proxyFilterTerm.toLowerCase() === 'unmapped') {
+        return !proxyInfo;
+      }
+      
+      // Search in proxy host/port
+      if (proxyInfo) {
+        const proxyText = `${proxyInfo.host}:${proxyInfo.port}`;
+        return proxyText.toLowerCase().includes(proxyFilterTerm.toLowerCase());
+      }
+      
+      return false;
+    });
+  };
+  
+  // Apply proxy filtering on top of sorting
+  const filteredItems = useMemo(() => {
+    return filterAccountsByProxy(currentItems);
+  }, [currentItems, proxyFilterTerm]);
+
+  // Function to toggle password visibility for a specific row
+  const togglePasswordVisibility = (id: string) => {
+    setVisiblePasswords(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Import Section */}
@@ -620,6 +678,18 @@ example3@email.com,password789`;
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
+              <button
+                onClick={handleMapEmailsToProxy}
+                disabled={isLoading || isMapping}
+                className={`p-2 rounded flex items-center justify-center ${
+                  isDarkMode 
+                    ? 'bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500' 
+                    : 'bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-200 disabled:text-gray-400'
+                }`}
+                title="Map All Emails to Proxies"
+              >
+                <Link className="w-4 h-4" />
+              </button>
               {emailPasswords.some(item => item.selected) && (
                 <button
                   onClick={handleDeleteSelected}
@@ -666,6 +736,31 @@ example3@email.com,password789`;
             onDismiss={() => setError(null)}
             isDarkMode={isDarkMode}
           />
+
+          {successMessage && (
+            <div className={`mb-4 p-3 rounded-md ${
+              isDarkMode ? 'bg-green-800/50 text-green-200' : 'bg-green-100 text-green-800'
+            }`}>
+              <p>{successMessage}</p>
+            </div>
+          )}
+
+          {/* Proxy filter input */}
+          <div className="mb-4">
+            <div className={`flex space-x-2`}>
+              <input
+                type="text"
+                placeholder="Filter by proxy (mapped, unmapped, or proxy address)"
+                value={proxyFilterTerm}
+                onChange={(e) => setProxyFilterTerm(e.target.value)}
+                className={`p-2 text-sm rounded-md w-full
+                  ${isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  } border focus:outline-none focus:ring-1 focus:ring-blue-500`}
+              />
+            </div>
+          </div>
 
           {/* Table Container */}
           <div className="flex-1 max-h-[60vh] overflow-y-auto">
@@ -724,8 +819,8 @@ example3@email.com,password789`;
                       </td>
                     </tr>
                   ) : (
-                    currentItems.map((entry, index) => {
-                      const proxyInfo = getProxyInfo(entry.id || '');
+                    filteredItems.map((entry, index) => {
+                      const proxyInfo = getProxyInfo(entry);
                       return (
                         <tr key={entry.id} className={`hover:${
                           isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
@@ -766,7 +861,7 @@ example3@email.com,password789`;
                               <div className="flex items-center gap-2">
                                 <div className="relative flex-1">
                                   <input
-                                    type={passwordVisibility[entry.id] ? "text" : "password"}
+                                    type={visiblePasswords[entry.id] ? "text" : "password"}
                                     value={editPassword}
                                     onChange={(e) => setEditPassword(e.target.value)}
                                     className={`w-full px-2 py-1 text-sm rounded ${
@@ -780,7 +875,7 @@ example3@email.com,password789`;
                                     onClick={() => togglePasswordVisibility(entry.id)}
                                     className="absolute inset-y-0 right-0 flex items-center pr-2"
                                   >
-                                    {passwordVisibility[entry.id] ? (
+                                    {visiblePasswords[entry.id] ? (
                                       <EyeOff className="w-3 h-3 text-gray-500" />
                                     ) : (
                                       <Eye className="w-3 h-3 text-gray-500" />
@@ -802,14 +897,14 @@ example3@email.com,password789`;
                             ) : (
                               <div className="flex items-center gap-2">
                                 <span className="flex-1">
-                                  {passwordVisibility[entry.id] ? entry.password : '••••••••'}
+                                  {visiblePasswords[entry.id] ? entry.password : '••••••••'}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => togglePasswordVisibility(entry.id)}
                                   className="text-gray-500 hover:text-blue-500"
                                 >
-                                  {passwordVisibility[entry.id] ? (
+                                  {visiblePasswords[entry.id] ? (
                                     <EyeOff className="w-3 h-3" />
                                   ) : (
                                     <Eye className="w-3 h-3" />
@@ -821,7 +916,11 @@ example3@email.com,password789`;
                           <td className="p-2 sm:p-3 text-sm dark:text-gray-300 truncate">
                             {proxyInfo ? (
                               <span className={`inline-flex px-2 py-1 text-xs rounded-full ${isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
-                                {proxyInfo.host}:{proxyInfo.port}
+                                {proxyInfo.formatted}
+                              </span>
+                            ) : entry.proxyHost && entry.proxyPort ? (
+                              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
+                                {`${entry.proxyHost}:${entry.proxyPort}`}
                               </span>
                             ) : (
                               <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>None</span>
@@ -1007,23 +1106,6 @@ example3@email.com,password789`;
                 Delete All Email Accounts
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Success Notification */}
-      {successMessage && (
-        <div className={`fixed bottom-4 right-4 p-4 rounded shadow-lg ${
-          isDarkMode ? 'bg-green-800 text-white' : 'bg-green-100 text-green-800'
-        }`}>
-          <div className="flex items-center gap-2">
-            <span>{successMessage}</span>
-            <button 
-              onClick={() => setSuccessMessage(null)}
-              className="ml-2 text-sm"
-            >
-              ✕
-            </button>
           </div>
         </div>
       )}

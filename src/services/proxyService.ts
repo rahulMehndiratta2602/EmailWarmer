@@ -75,18 +75,10 @@ export class ProxyService {
     }
   }
 
-  async getProxyMappings(): Promise<ProxyMappingResult[]> {
+  // Keep createProxyMapping for compatibility, but getProxyMappings is no longer needed
+  async createProxyMapping(): Promise<ProxyMappingResult[]> {
     try {
-      return await window.api.getProxyMappings();
-    } catch (error) {
-      console.error('Error fetching proxy mappings:', error);
-      throw error;
-    }
-  }
-
-  async createProxyMapping(emailIds: string[], maxProxies: number, maxEmailsPerProxy: number): Promise<ProxyMappingResult[]> {
-    try {
-      return await window.api.createProxyMapping(emailIds, maxProxies, maxEmailsPerProxy);
+      return await window.api.createProxyMapping();
     } catch (error) {
       console.error('Error creating proxy mappings:', error);
       throw error;
