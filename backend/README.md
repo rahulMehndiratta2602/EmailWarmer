@@ -29,7 +29,7 @@ npm install
 2. Create a `.env` file in the root directory with the following variables:
 ```env
 # Server Configuration
-PORT=3001
+PORT=3002
 NODE_ENV=development
 
 # Database Configuration
@@ -64,7 +64,7 @@ Start the development server:
 npm run dev
 ```
 
-The server will start on `http://localhost:3001`
+The server will start on `http://localhost:3002`
 
 ## Database Management
 

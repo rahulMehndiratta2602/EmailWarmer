@@ -46,7 +46,7 @@ if (process.env.NODE_ENV === 'development') {
         const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
         
         // Only proxy backend API requests
-        if (url && url.startsWith('http://localhost:3001')) {
+        if (url && url.startsWith('http://localhost:3002')) {
           console.log(`[Fetch Interceptor] Routing request via proxy: ${url}`);
           return fetchViaProxy(url, init);
         }

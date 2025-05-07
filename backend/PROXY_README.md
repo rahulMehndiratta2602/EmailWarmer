@@ -25,7 +25,7 @@ npm install
 DATABASE_URL="postgresql://username:password@localhost:5432/mydb?schema=public"
 
 # Server Configuration
-PORT=3001
+PORT=3002
 NODE_ENV=development
 
 # ABCProxy Configuration
@@ -56,7 +56,7 @@ The full API documentation can be found in `API_DOCUMENTATION.md`. Here are the 
 To fetch proxies from ABCProxy and save them to the database:
 
 ```bash
-curl -X POST http://localhost:3001/api/proxies/fetch \
+curl -X POST http://localhost:3002/api/proxies/fetch \
   -H "Content-Type: application/json" \
   -d '{"country": "US", "limit": 10}'
 ```
@@ -66,7 +66,7 @@ curl -X POST http://localhost:3001/api/proxies/fetch \
 To map email accounts to proxies with load balancing:
 
 ```bash
-curl -X POST http://localhost:3001/api/proxies/mapping \
+curl -X POST http://localhost:3002/api/proxies/mapping \
   -H "Content-Type: application/json" \
   -d '{
     "emailIds": ["email-uuid-1", "email-uuid-2"],
@@ -80,7 +80,7 @@ curl -X POST http://localhost:3001/api/proxies/mapping \
 To open browser windows for email accounts with their assigned proxies:
 
 ```bash
-curl -X POST http://localhost:3001/api/proxies/browser/open
+curl -X POST http://localhost:3002/api/proxies/browser/open
 ```
 
 ## Architecture

@@ -5,7 +5,7 @@ This guide explains how to use the provided Postman collection to test the ABCPr
 ## Prerequisites
 
 1. [Postman](https://www.postman.com/downloads/) installed
-2. Backend server running locally on port 3001 (or configured in the environment)
+2. Backend server running locally on port 3002 (or configured in the environment)
 3. Database properly set up with the required schema
 
 ## Setup
@@ -25,7 +25,7 @@ This guide explains how to use the provided Postman collection to test the ABCPr
 ### 3. Set Environment Variables
 
 The collection uses the following variables:
-- `base_url`: The base URL of your API (default: `http://localhost:3001`)
+- `base_url`: The base URL of your API (default: `http://localhost:3002`)
 - `email_account_id`: ID of an email account for testing endpoints that require an email ID
 - `proxy_id`: ID of a proxy for testing endpoints that require a proxy ID
 - `email_id`: ID of an email account for testing proxy mapping endpoints

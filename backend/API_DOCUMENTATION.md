@@ -1,6 +1,6 @@
 # API Documentation
 
-This document provides a comprehensive reference for the backend API endpoints. The server runs on port 3001 by default.
+This document provides a comprehensive reference for the backend API endpoints. The server runs on port 3002 by default.
 
 ## Base URL
 

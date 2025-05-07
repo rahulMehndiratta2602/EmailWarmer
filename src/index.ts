@@ -13,10 +13,10 @@ if (require('electron-squirrel-startup')) {
 // Get API base URL based on environment
 const getApiBaseUrl = (): string => {
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3001/api';
+    return 'http://localhost:3002/api';
   } else {
     // In production, API should be on the same host
-    return `http://${process.env.API_HOST || 'localhost:3001'}/api`;
+    return `http://${process.env.API_HOST || 'localhost:3002'}/api`;
   }
 };
 

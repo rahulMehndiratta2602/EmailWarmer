@@ -40,7 +40,7 @@ const setupNetworkDebuggingProxy = () => {
     // Parse URL and prepare to forward
     const url = new URL(req.url || '', 'http://localhost:9876');
     const targetPath = url.pathname.replace('/api-proxy', '');
-    const targetUrl = `http://localhost:3001${targetPath}${url.search}`;
+    const targetUrl = `http://localhost:3002${targetPath}${url.search}`;
     
     console.log(`[Debug Proxy] ${req.method} ${req.url} → ${targetUrl}`);
     

@@ -77,7 +77,7 @@ if (process.env.NODE_ENV === 'development') {
     getProxyUrl: () => mainProcessProxyUrl,
     // Function to intercept a fetch and route it through our proxy
     fetchViaProxy: async (url: string, options?: RequestInit) => {
-      if (!url.startsWith('http://localhost:3001')) {
+      if (!url.startsWith('http://localhost:3002')) {
         // Only proxy backend requests
         return fetch(url, options);
       }
@@ -94,7 +94,7 @@ if (process.env.NODE_ENV === 'development') {
       }
       
       // Transform the URL to go through our proxy
-      const proxyUrl = url.replace('http://localhost:3001', mainProcessProxyUrl);
+      const proxyUrl = url.replace('http://localhost:3002', mainProcessProxyUrl);
       console.log(`Proxying request to ${url} via ${proxyUrl}`);
       
       // Make the fetch request through our proxy
