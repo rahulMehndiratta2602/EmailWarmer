@@ -21,6 +21,7 @@ model Pipeline {
 model Node {
   id         String   @id @default(uuid())
   action     String
+  metadata   Json?    @default("{}")
   pipelineId String
   pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())

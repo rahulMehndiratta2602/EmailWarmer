@@ -7,1408 +7,1454 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
-  app.quit();
+    app.quit();
 }
 
 // Get API base URL based on environment
 const getApiBaseUrl = (): string => {
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3002/api';
-  } else {
-    // In production, API should be on the same host
-    return `http://${process.env.API_HOST || 'localhost:3002'}/api`;
-  }
+    if (process.env.NODE_ENV === 'development') {
+        return 'http://localhost:3002/api';
+    } else {
+        // In production, API should be on the same host
+        return `http://${process.env.API_HOST || 'localhost:3002'}/api`;
+    }
 };
 
 // Function to get full API URL
 const getFullApiUrl = (endpoint: string): string => {
-  return `${getApiBaseUrl()}${endpoint}`;
+    return `${getApiBaseUrl()}${endpoint}`;
 };
 
 const createWindow = (): void => {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    height: 600,
-    width: 800,
-    autoHideMenuBar: true,
-    title: 'Email Warmer',
-    webPreferences: {
-      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-    },
-  });
+    // Create the browser window.
+    const mainWindow = new BrowserWindow({
+        height: 600,
+        width: 800,
+        autoHideMenuBar: true,
+        title: 'Email Warmer',
+        webPreferences: {
+            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+        },
+    });
 
-  // and load the index.html of the app.
-  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-  
-  // Open DevTools in development mode
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.webContents.openDevTools();
-  }
+    // and load the index.html of the app.
+    mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+    // Open DevTools in development mode
+    if (process.env.NODE_ENV === 'development') {
+        mainWindow.webContents.openDevTools();
+    }
 };
 
 // Register IPC handlers for API requests
 const registerIpcHandlers = (): void => {
-  console.log('Registering IPC handlers for API calls...');
-  
-  // Get all pipelines
-  ipcMain.handle('api:getPipelines', async () => {
-    return new Promise((resolve) => {
-      console.log('Fetching pipelines from:', getFullApiUrl('/pipelines'));
-      
-      try {
-        const request = net.request(getFullApiUrl('/pipelines'));
-        
-        let responseData = '';
-        
-        request.on('response', (response) => {
-          console.log('Get pipelines response status:', response.statusCode);
-          
-          response.on('data', (chunk) => {
-            responseData += chunk.toString();
-            console.log('Pipelines chunk received, length:', chunk.toString().length);
-          });
-          
-          response.on('end', () => {
+    console.log('Registering IPC handlers for API calls...');
+
+    // Get all pipelines
+    ipcMain.handle('api:getPipelines', async () => {
+        return new Promise((resolve) => {
+            console.log('Fetching pipelines from:', getFullApiUrl('/pipelines'));
+
             try {
-              console.log('Raw pipelines response:', responseData);
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty response received for pipelines');
+                const request = net.request(getFullApiUrl('/pipelines'));
+
+                let responseData = '';
+
+                request.on('response', (response) => {
+                    console.log('Get pipelines response status:', response.statusCode);
+
+                    response.on('data', (chunk) => {
+                        responseData += chunk.toString();
+                        console.log('Pipelines chunk received, length:', chunk.toString().length);
+                    });
+
+                    response.on('end', () => {
+                        try {
+                            console.log('Raw pipelines response:', responseData);
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for pipelines');
+                                // Return mock data
+                                resolve([
+                                    {
+                                        id: 'mock-1',
+                                        name: 'Demo Pipeline',
+                                        nodes: [
+                                            { id: '1', action: 'Transfer from Spam to Inbox' },
+                                            { id: '2', action: 'Click Link in Email' },
+                                        ],
+                                        createdAt: new Date().toISOString(),
+                                        updatedAt: new Date().toISOString(),
+                                    },
+                                ]);
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Received pipeline data:', data);
+                            resolve(data);
+                        } catch (error) {
+                            console.error('Failed to parse pipeline data:', error);
+                            console.error('Response data that failed to parse:', responseData);
+                            // Return mock data
+                            resolve([
+                                {
+                                    id: 'mock-1',
+                                    name: 'Demo Pipeline',
+                                    nodes: [
+                                        { id: '1', action: 'Transfer from Spam to Inbox' },
+                                        { id: '2', action: 'Click Link in Email' },
+                                    ],
+                                    createdAt: new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
+                                },
+                            ]);
+                        }
+                    });
+                });
+
+                request.on('error', (error) => {
+                    console.error('Network error when fetching pipelines:', error);
+                    // Return mock data
+                    resolve([
+                        {
+                            id: 'mock-1',
+                            name: 'Demo Pipeline',
+                            nodes: [
+                                { id: '1', action: 'Transfer from Spam to Inbox' },
+                                { id: '2', action: 'Click Link in Email' },
+                            ],
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                        },
+                    ]);
+                });
+
+                request.end();
+            } catch (error) {
+                console.error('Unexpected error in getPipelines:', error);
                 // Return mock data
                 resolve([
-                  {
-                    id: 'mock-1',
-                    name: 'Demo Pipeline',
-                    nodes: [
-                      { id: '1', action: 'Transfer from Spam to Inbox' },
-                      { id: '2', action: 'Click Link in Email' }
-                    ],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                  }
+                    {
+                        id: 'mock-1',
+                        name: 'Demo Pipeline',
+                        nodes: [
+                            { id: '1', action: 'Transfer from Spam to Inbox' },
+                            { id: '2', action: 'Click Link in Email' },
+                        ],
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    },
                 ]);
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Received pipeline data:', data);
-              resolve(data);
-            } catch (error) {
-              console.error('Failed to parse pipeline data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              // Return mock data
-              resolve([
-                {
-                  id: 'mock-1',
-                  name: 'Demo Pipeline',
-                  nodes: [
-                    { id: '1', action: 'Transfer from Spam to Inbox' },
-                    { id: '2', action: 'Click Link in Email' }
-                  ],
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
+            }
+        });
+    });
+
+    // Get pipeline by ID
+    ipcMain.handle('api:getPipelineById', async (event, id) => {
+        return new Promise((resolve, reject) => {
+            console.log('Fetching pipeline by ID:', id);
+            const request = net.request(getFullApiUrl(`/pipelines/${id}`));
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                if (response.statusCode === 404) {
+                    console.log('Pipeline not found:', id);
+                    resolve(null);
+                    return;
                 }
-              ]);
-            }
-          });
-        });
-        
-        request.on('error', (error) => {
-          console.error('Network error when fetching pipelines:', error);
-          // Return mock data
-          resolve([
-            {
-              id: 'mock-1',
-              name: 'Demo Pipeline',
-              nodes: [
-                { id: '1', action: 'Transfer from Spam to Inbox' },
-                { id: '2', action: 'Click Link in Email' }
-              ],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ]);
-        });
-        
-        request.end();
-      } catch (error) {
-        console.error('Unexpected error in getPipelines:', error);
-        // Return mock data
-        resolve([
-          {
-            id: 'mock-1',
-            name: 'Demo Pipeline',
-            nodes: [
-              { id: '1', action: 'Transfer from Spam to Inbox' },
-              { id: '2', action: 'Click Link in Email' }
-            ],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-        ]);
-      }
-    });
-  });
-  
-  // Get pipeline by ID
-  ipcMain.handle('api:getPipelineById', async (event, id) => {
-    return new Promise((resolve, reject) => {
-      console.log('Fetching pipeline by ID:', id);
-      const request = net.request(getFullApiUrl(`/pipelines/${id}`));
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Pipeline not found:', id);
-          resolve(null);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          try {
-            const data = JSON.parse(responseData);
-            console.log('Received pipeline:', data);
-            resolve(data);
-          } catch (error) {
-            console.error('Failed to parse pipeline data:', error);
-            reject(new Error('Failed to parse response data'));
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when fetching pipeline:', error);
-        reject(error);
-      });
-      
-      request.end();
-    });
-  });
-  
-  // Save pipeline
-  ipcMain.handle('api:savePipeline', async (event, pipeline) => {
-    return new Promise((resolve, reject) => {
-      const method = pipeline.id ? 'PUT' : 'POST';
-      const url = pipeline.id 
-        ? getFullApiUrl(`/pipelines/${pipeline.id}`)
-        : getFullApiUrl('/pipelines');
-      
-      console.log(`${method} request to save pipeline:`, url, pipeline);
-      
-      const request = net.request({
-        method,
-        url
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          try {
-            const data = JSON.parse(responseData);
-            console.log('Pipeline saved:', data);
-            resolve(data);
-          } catch (error) {
-            console.error('Failed to parse response data:', error);
-            reject(new Error('Failed to parse response data'));
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when saving pipeline:', error);
-        reject(error);
-      });
-      
-      request.write(JSON.stringify(pipeline));
-      request.end();
-    });
-  });
-  
-  // Delete pipeline
-  ipcMain.handle('api:deletePipeline', async (event, id) => {
-    return new Promise((resolve, reject) => {
-      console.log('Deleting pipeline:', id);
-      
-      const request = net.request({
-        method: 'DELETE',
-        url: getFullApiUrl(`/pipelines/${id}`)
-      });
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Pipeline not found for deletion:', id);
-          resolve(false);
-          return;
-        }
-        
-        if (response.statusCode === 204 || response.statusCode === 200) {
-          console.log('Pipeline deleted successfully:', id);
-          resolve(true);
-          return;
-        }
-        
-        reject(new Error(`Unexpected status code: ${response.statusCode}`));
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when deleting pipeline:', error);
-        reject(error);
-      });
-      
-      request.end();
-    });
-  });
-  
-  // Get environment info
-  ipcMain.handle('getEnvironment', async () => {
-    return {
-      nodeEnv: process.env.NODE_ENV || 'production',
-      isPackaged: app.isPackaged,
-      appVersion: app.getVersion(),
-      platform: process.platform,
-      apiBaseUrl: getApiBaseUrl()
-    };
-  });
-  
-  // Get available actions
-  ipcMain.handle('api:getAvailableActions', async () => {
-    return new Promise((resolve) => {
-      console.log('Fetching available actions from:', getFullApiUrl('/actions'));
-      const request = net.request(getFullApiUrl('/actions'));
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          try {
-            const data = JSON.parse(responseData);
-            console.log('Received available actions:', data);
-            resolve(data);
-          } catch (error) {
-            console.error('Failed to parse actions data:', error);
-            // Fallback to predefined actions if API fails
-            resolve([
-              'Transfer from Spam to Inbox',
-              'Click Link in Email',
-              'Mark as Important',
-              'Reply to Email',
-              'Forward Email',
-              'Delete Email'
-            ]);
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when fetching actions:', error);
-        // Fallback to predefined actions if API fails
-        resolve([
-          'Transfer from Spam to Inbox',
-          'Click Link in Email',
-          'Mark as Important',
-          'Reply to Email',
-          'Forward Email',
-          'Delete Email'
-        ]);
-      });
-      
-      request.end();
-    });
-  });
 
-  // Get all email accounts
-  ipcMain.handle('api:getEmailAccounts', async () => {
-    return new Promise((resolve) => {
-      console.log('Fetching email accounts from:', getFullApiUrl('/email-accounts'));
-      const request = net.request(getFullApiUrl('/email-accounts'));
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log('Email accounts response status:', response.statusCode);
-        
-        if (response.statusCode !== 200) {
-          console.error(`API returned error status: ${response.statusCode}`);
-          // Return empty array to avoid breaking the UI
-          resolve([]);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-          console.log('Email accounts chunk received, length:', chunk.toString().length);
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        const data = JSON.parse(responseData);
+                        console.log('Received pipeline:', data);
+                        resolve(data);
+                    } catch (error) {
+                        console.error('Failed to parse pipeline data:', error);
+                        reject(new Error('Failed to parse response data'));
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when fetching pipeline:', error);
+                reject(error);
+            });
+
+            request.end();
         });
-        
-        response.on('end', () => {
-          try {
-            console.log('Raw email accounts response:', responseData);
-            if (!responseData || responseData.trim() === '') {
-              console.log('Empty response received for email accounts');
-              resolve([]);
-              return;
+    });
+
+    // Save pipeline
+    ipcMain.handle('api:savePipeline', async (event, pipeline) => {
+        return new Promise((resolve, reject) => {
+            const method = pipeline.id ? 'PUT' : 'POST';
+            const url = pipeline.id
+                ? getFullApiUrl(`/pipelines/${pipeline.id}`)
+                : getFullApiUrl('/pipelines');
+
+            console.log(`${method} request to save pipeline:`, url, pipeline);
+
+            const request = net.request({
+                method,
+                url,
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        const data = JSON.parse(responseData);
+                        console.log('Pipeline saved:', data);
+                        resolve(data);
+                    } catch (error) {
+                        console.error('Failed to parse response data:', error);
+                        reject(new Error('Failed to parse response data'));
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when saving pipeline:', error);
+                reject(error);
+            });
+
+            request.write(JSON.stringify(pipeline));
+            request.end();
+        });
+    });
+
+    // Delete pipeline
+    ipcMain.handle('api:deletePipeline', async (event, id) => {
+        return new Promise((resolve, reject) => {
+            console.log('Deleting pipeline:', id);
+
+            const request = net.request({
+                method: 'DELETE',
+                url: getFullApiUrl(`/pipelines/${id}`),
+            });
+
+            request.on('response', (response) => {
+                if (response.statusCode === 404) {
+                    console.log('Pipeline not found for deletion:', id);
+                    resolve(false);
+                    return;
+                }
+
+                if (response.statusCode === 204 || response.statusCode === 200) {
+                    console.log('Pipeline deleted successfully:', id);
+                    resolve(true);
+                    return;
+                }
+
+                reject(new Error(`Unexpected status code: ${response.statusCode}`));
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when deleting pipeline:', error);
+                reject(error);
+            });
+
+            request.end();
+        });
+    });
+
+    // Get environment info
+    ipcMain.handle('getEnvironment', async () => {
+        return {
+            nodeEnv: process.env.NODE_ENV || 'production',
+            isPackaged: app.isPackaged,
+            appVersion: app.getVersion(),
+            platform: process.platform,
+            apiBaseUrl: getApiBaseUrl(),
+        };
+    });
+
+    // Get available actions
+    ipcMain.handle('api:getAvailableActions', async () => {
+        return new Promise((resolve) => {
+            console.log('Fetching available actions from:', getFullApiUrl('/actions'));
+            const request = net.request(getFullApiUrl('/actions'));
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        const data = JSON.parse(responseData);
+                        console.log('Received available actions:', data);
+                        resolve(data);
+                    } catch (error) {
+                        console.error('Failed to parse actions data:', error);
+                        // Fallback to predefined actions if API fails
+                        resolve([
+                            'Transfer from Spam to Inbox',
+                            'Click Link in Email',
+                            'Mark as Important',
+                            'Reply to Email',
+                            'Forward Email',
+                            'Delete Email',
+                        ]);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when fetching actions:', error);
+                // Fallback to predefined actions if API fails
+                resolve([
+                    'Transfer from Spam to Inbox',
+                    'Click Link in Email',
+                    'Mark as Important',
+                    'Reply to Email',
+                    'Forward Email',
+                    'Delete Email',
+                ]);
+            });
+
+            request.end();
+        });
+    });
+
+    // Get all email accounts
+    ipcMain.handle('api:getEmailAccounts', async () => {
+        return new Promise((resolve) => {
+            console.log('Fetching email accounts from:', getFullApiUrl('/email-accounts'));
+            const request = net.request(getFullApiUrl('/email-accounts'));
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Email accounts response status:', response.statusCode);
+
+                if (response.statusCode !== 200) {
+                    console.error(`API returned error status: ${response.statusCode}`);
+                    // Return empty array to avoid breaking the UI
+                    resolve([]);
+                    return;
+                }
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                    console.log('Email accounts chunk received, length:', chunk.toString().length);
+                });
+
+                response.on('end', () => {
+                    try {
+                        console.log('Raw email accounts response:', responseData);
+                        if (!responseData || responseData.trim() === '') {
+                            console.log('Empty response received for email accounts');
+                            resolve([]);
+                            return;
+                        }
+
+                        const data = JSON.parse(responseData);
+                        console.log('Received email accounts data:', data);
+
+                        // Ensure we always return an array
+                        if (Array.isArray(data)) {
+                            resolve(data);
+                        } else {
+                            console.warn('API returned non-array data:', data);
+                            resolve([]);
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse email accounts data:', error);
+                        console.error('Response data that failed to parse:', responseData);
+                        // Resolve with empty array instead of rejecting to avoid breaking the UI
+                        resolve([]);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when fetching email accounts:', error);
+                // Resolve with empty array instead of rejecting to avoid breaking the UI
+                resolve([]);
+            });
+
+            request.end();
+        });
+    });
+
+    // Get email account by ID
+    ipcMain.handle('api:getEmailAccountById', async (event, id) => {
+        return new Promise((resolve, reject) => {
+            console.log('Fetching email account by ID:', id);
+            const request = net.request(getFullApiUrl(`/email-accounts/${id}`));
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                if (response.statusCode === 404) {
+                    console.log('Email account not found:', id);
+                    resolve(null);
+                    return;
+                }
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        const data = JSON.parse(responseData);
+                        console.log('Received email account:', data);
+                        resolve(data);
+                    } catch (error) {
+                        console.error('Failed to parse email account data:', error);
+                        reject(new Error('Failed to parse response data'));
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when fetching email account:', error);
+                reject(error);
+            });
+
+            request.end();
+        });
+    });
+
+    // Create new email account
+    ipcMain.handle('api:createEmailAccount', async (event, account) => {
+        return new Promise((resolve, reject) => {
+            console.log('Creating email account:', account);
+
+            try {
+                const request = net.request({
+                    method: 'POST',
+                    url: getFullApiUrl('/email-accounts'),
+                });
+
+                request.setHeader('Content-Type', 'application/json');
+
+                let responseData = '';
+
+                request.on('response', (response) => {
+                    console.log('Create email account response status:', response.statusCode);
+
+                    response.on('data', (chunk) => {
+                        responseData += chunk.toString();
+                        console.log(
+                            'Create email account chunk received, length:',
+                            chunk.toString().length
+                        );
+                    });
+
+                    response.on('end', () => {
+                        try {
+                            console.log('Raw create email account response:', responseData);
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for create email account');
+                                // Return mock data with the account info
+                                resolve({
+                                    id: `mock-${Date.now()}`,
+                                    email: account.email,
+                                    password: account.password,
+                                    createdAt: new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
+                                });
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Email account created successfully:', data);
+                            resolve(data);
+                        } catch (error) {
+                            console.error(
+                                'Failed to parse create email account response data:',
+                                error
+                            );
+                            console.error('Response data that failed to parse:', responseData);
+
+                            if (response.statusCode >= 200 && response.statusCode < 300) {
+                                // If the status code indicates success but JSON parsing failed,
+                                // still return a mock success response
+                                resolve({
+                                    id: `mock-${Date.now()}`,
+                                    email: account.email,
+                                    password: account.password,
+                                    createdAt: new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
+                                });
+                            } else {
+                                // For other status codes, reject with error message
+                                reject(
+                                    new Error(
+                                        `Failed to create account. Status: ${response.statusCode}`
+                                    )
+                                );
+                            }
+                        }
+                    });
+                });
+
+                request.on('error', (error) => {
+                    console.error('Network error when creating email account:', error);
+                    reject(new Error(`Network error: ${error.message}`));
+                });
+
+                // Make sure to properly convert the account to a JSON string
+                try {
+                    const bodyData = JSON.stringify({
+                        email: account.email,
+                        password: account.password,
+                    });
+                    console.log('Sending create email account request with body:', bodyData);
+                    request.write(bodyData);
+                } catch (error) {
+                    console.error('Error serializing account data:', error);
+                    reject(new Error(`Error serializing account data: ${error.message}`));
+                }
+
+                request.end();
+            } catch (error) {
+                console.error('Unexpected error in createEmailAccount:', error);
+                reject(new Error(`Unexpected error: ${error.message}`));
             }
-            
-            const data = JSON.parse(responseData);
-            console.log('Received email accounts data:', data);
-            
-            // Ensure we always return an array
-            if (Array.isArray(data)) {
-              resolve(data);
-            } else {
-              console.warn('API returned non-array data:', data);
-              resolve([]);
+        });
+    });
+
+    // Update email account
+    ipcMain.handle('api:updateEmailAccount', async (event, id, data) => {
+        return new Promise((resolve, reject) => {
+            console.log('Updating email account:', id, data);
+
+            const request = net.request({
+                method: 'PATCH',
+                url: getFullApiUrl(`/email-accounts/${id}`),
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                if (response.statusCode === 404) {
+                    console.log('Email account not found for update:', id);
+                    resolve(null);
+                    return;
+                }
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        const data = JSON.parse(responseData);
+                        console.log('Email account updated:', data);
+                        resolve(data);
+                    } catch (error) {
+                        console.error('Failed to parse response data:', error);
+                        reject(new Error('Failed to parse response data'));
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when updating email account:', error);
+                reject(error);
+            });
+
+            request.write(JSON.stringify(data));
+            request.end();
+        });
+    });
+
+    // Delete email account
+    ipcMain.handle('api:deleteEmailAccount', async (event, id) => {
+        return new Promise((resolve, reject) => {
+            console.log('Deleting email account:', id);
+
+            const request = net.request({
+                method: 'DELETE',
+                url: getFullApiUrl(`/email-accounts/${id}`),
+            });
+
+            request.on('response', (response) => {
+                if (response.statusCode === 404) {
+                    console.log('Email account not found for deletion:', id);
+                    resolve(false);
+                    return;
+                }
+
+                if (response.statusCode === 204 || response.statusCode === 200) {
+                    console.log('Email account deleted successfully:', id);
+                    resolve(true);
+                    return;
+                }
+
+                reject(new Error(`Unexpected status code: ${response.statusCode}`));
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when deleting email account:', error);
+                reject(error);
+            });
+
+            request.end();
+        });
+    });
+
+    // Batch upsert email accounts
+    ipcMain.handle('api:batchUpsertEmailAccounts', async (event, accounts) => {
+        return new Promise((resolve) => {
+            console.log('Batch upserting email accounts:', accounts.length);
+
+            // Make sure accounts is valid
+            if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
+                console.log('No accounts provided for batch upsert');
+                resolve({ count: 0 });
+                return;
             }
-          } catch (error) {
-            console.error('Failed to parse email accounts data:', error);
-            console.error('Response data that failed to parse:', responseData);
-            // Resolve with empty array instead of rejecting to avoid breaking the UI
+
+            // Log first account for debugging (redact password)
+            if (accounts.length > 0) {
+                const sampleAccount = { ...accounts[0], password: '****' };
+                console.log('Sample account format:', sampleAccount);
+            }
+
+            const apiUrl = getFullApiUrl('/email-accounts/batch');
+            console.log('Making API request to:', apiUrl);
+
+            const request = net.request({
+                method: 'POST',
+                url: apiUrl,
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Batch upsert response status:', response.statusCode);
+                console.log('Response headers:', response.headers);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                    console.log('Batch upsert chunk received, length:', chunk.toString().length);
+                });
+
+                response.on('end', () => {
+                    if (response.statusCode >= 200 && response.statusCode < 300) {
+                        try {
+                            console.log('Raw batch upsert response:', responseData);
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for batch upsert');
+                                resolve({ count: accounts.length });
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Batch upsert result:', data);
+                            resolve(data);
+                        } catch (error) {
+                            console.error('Failed to parse batch upsert response data:', error);
+                            console.error('Response data that failed to parse:', responseData);
+                            // Return a success result anyway to avoid breaking the UI
+                            resolve({ count: accounts.length });
+                        }
+                    } else {
+                        console.error(`API returned error status: ${response.statusCode}`);
+                        console.error('Error response body:', responseData);
+                        // Return a success result anyway to avoid breaking the UI
+                        resolve({ count: 0 });
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when batch upserting accounts:', error);
+                console.error('Error details:', JSON.stringify(error));
+                // Return a success result anyway to avoid breaking the UI
+                resolve({ count: 0 });
+            });
+
+            // Make sure to properly convert the accounts to a JSON string
+            try {
+                const requestBody = { accounts };
+                const bodyData = JSON.stringify(requestBody);
+                console.log('bodyData', bodyData);
+                console.log('Sending batch upsert request with body length:', bodyData.length);
+                console.log(
+                    'Request body format:',
+                    JSON.stringify({ ...requestBody, accounts: accounts.length + ' items' })
+                );
+                request.write(bodyData);
+            } catch (error) {
+                console.error('Error serializing accounts data:', error);
+                console.error('Error details:', JSON.stringify(error));
+                // Return a success result anyway to avoid breaking the UI
+                resolve({ count: 0 });
+            }
+
+            request.end();
+        });
+    });
+
+    // Bulk import email accounts from file
+    ipcMain.handle('api:bulkImportEmailAccounts', async (event, accounts) => {
+        return new Promise((resolve) => {
+            console.log('Bulk importing email accounts from file:', accounts.length);
+
+            // Make sure accounts is valid
+            if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
+                console.log('No accounts provided for bulk import');
+                resolve({ count: 0 });
+                return;
+            }
+
+            // Log first account for debugging (redact password)
+            if (accounts.length > 0) {
+                const sampleAccount = { ...accounts[0], password: '****' };
+                console.log('Sample account format:', sampleAccount);
+            }
+
+            const apiUrl = getFullApiUrl('/email-accounts/bulk-import');
+            console.log('Making API request to:', apiUrl);
+
+            const request = net.request({
+                method: 'POST',
+                url: apiUrl,
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log(`Bulk import response status: ${response.statusCode}`);
+                console.log('Response headers:', response.headers);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    console.log('Bulk import complete, raw response:', responseData);
+
+                    // Parse response if possible
+                    try {
+                        const parsedResponse = JSON.parse(responseData);
+                        console.log('Parsed response:', parsedResponse);
+                        resolve(parsedResponse);
+                    } catch (error) {
+                        console.error('Error parsing response from bulk import:', error);
+                        console.error('Response was:', responseData);
+                        // Return a success result anyway to avoid breaking the UI
+                        resolve({ count: accounts.length });
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Error in bulk import request:', error);
+                // Return a success result anyway to avoid breaking the UI
+                resolve({ count: 0 });
+            });
+
+            // Make sure to properly convert the accounts to a JSON string
+            try {
+                const requestBody = { accounts };
+                const bodyData = JSON.stringify(requestBody);
+                console.log('Sending bulk import request with body length:', bodyData.length);
+                console.log(
+                    'Request body format:',
+                    JSON.stringify({ ...requestBody, accounts: accounts.length + ' items' })
+                );
+                request.write(bodyData);
+            } catch (error) {
+                console.error('Error serializing accounts data for bulk import:', error);
+                console.error('Error details:', JSON.stringify(error));
+                // Return a success result anyway to avoid breaking the UI
+                resolve({ count: 0 });
+            }
+
+            request.end();
+        });
+    });
+
+    // Batch delete email accounts
+    ipcMain.handle('api:batchDeleteEmailAccounts', async (event, ids) => {
+        return new Promise((resolve) => {
+            console.log('Batch deleting email accounts:', ids);
+
+            // Handle empty array or null/undefined ids
+            if (!ids || !Array.isArray(ids) || ids.length === 0) {
+                console.log('No ids provided for batch delete');
+                resolve({ count: 0 });
+                return;
+            }
+
+            // Log the actual IDs being sent for debugging
+            console.log('IDs to delete:', JSON.stringify(ids));
+
+            const request = net.request({
+                method: 'DELETE',
+                url: getFullApiUrl('/email-accounts/batch'),
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Batch delete response status:', response.statusCode);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                    console.log('Batch delete chunk received, length:', chunk.toString().length);
+                });
+
+                response.on('end', () => {
+                    // Consider any 2xx status code as success
+                    if (response.statusCode >= 200 && response.statusCode < 300) {
+                        try {
+                            console.log('Raw batch delete response:', responseData);
+
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty success response received for batch delete');
+                                resolve({ count: ids.length });
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Batch delete result:', data);
+                            resolve(data);
+                        } catch (error) {
+                            console.error('Failed to parse batch delete response data:', error);
+                            console.error('Response data that failed to parse:', responseData);
+                            // Success status code but couldn't parse response - still count as success
+                            resolve({ count: ids.length });
+                        }
+                    } else {
+                        // Error status code, but return success with 0 count to avoid UI breaks
+                        console.error(
+                            `API returned error status for batch delete: ${response.statusCode}`
+                        );
+                        console.error('Error response:', responseData);
+                        resolve({ count: 0 });
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when batch deleting accounts:', error);
+                resolve({ count: 0 });
+            });
+
+            try {
+                const bodyData = JSON.stringify({ ids });
+                console.log('Sending batch delete request with body:', bodyData);
+                request.write(bodyData);
+                request.end();
+            } catch (error) {
+                console.error('Error serializing ids data:', error);
+                resolve({ count: 0 });
+            }
+        });
+    });
+
+    // Get all proxies
+    ipcMain.handle('api:getProxies', async () => {
+        return new Promise((resolve) => {
+            console.log('Fetching proxies from:', getFullApiUrl('/proxies'));
+            const request = net.request(getFullApiUrl('/proxies'));
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Proxies response status:', response.statusCode);
+
+                if (response.statusCode !== 200) {
+                    console.error(`API returned error status: ${response.statusCode}`);
+                    // Return empty array to avoid breaking the UI
+                    resolve([]);
+                    return;
+                }
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                    console.log('Proxies chunk received, length:', chunk.toString().length);
+                });
+
+                response.on('end', () => {
+                    try {
+                        console.log('Raw proxies response:', responseData);
+                        if (!responseData || responseData.trim() === '') {
+                            console.log('Empty response received for proxies');
+                            resolve([]);
+                            return;
+                        }
+
+                        const data = JSON.parse(responseData);
+                        console.log('Received proxies data:', data);
+
+                        // Ensure we always return an array
+                        if (Array.isArray(data)) {
+                            resolve(data);
+                        } else {
+                            console.warn('API returned non-array data:', data);
+                            resolve([]);
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse proxies data:', error);
+                        console.error('Response data that failed to parse:', responseData);
+                        // Resolve with empty array instead of rejecting to avoid breaking the UI
+                        resolve([]);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when fetching proxies:', error);
+                console.log('{{base_url}}/api/proxies?limit=10&offset=0');
+                // Resolve with empty array instead of rejecting to avoid breaking the UI
+                resolve([]);
+            });
+
+            request.end();
+        });
+    });
+
+    // Get proxy by ID
+    ipcMain.handle('api:getProxyById', async (event, id) => {
+        return new Promise((resolve, reject) => {
+            console.log('Fetching proxy by ID:', id);
+            const request = net.request(getFullApiUrl(`/proxies/${id}`));
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                if (response.statusCode === 404) {
+                    console.log('Proxy not found:', id);
+                    resolve(null);
+                    return;
+                }
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        const data = JSON.parse(responseData);
+                        console.log('Received proxy:', data);
+                        resolve(data);
+                    } catch (error) {
+                        console.error('Failed to parse proxy data:', error);
+                        reject(new Error('Failed to parse response data'));
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when fetching proxy:', error);
+                reject(error);
+            });
+
+            request.end();
+        });
+    });
+
+    // Create new proxy
+    ipcMain.handle('api:createProxy', async (event, proxy) => {
+        return new Promise((resolve, reject) => {
+            console.log('Creating proxy:', proxy);
+
+            try {
+                const request = net.request({
+                    method: 'POST',
+                    url: getFullApiUrl('/proxies'),
+                });
+
+                request.setHeader('Content-Type', 'application/json');
+
+                let responseData = '';
+
+                request.on('response', (response) => {
+                    console.log('Create proxy response status:', response.statusCode);
+
+                    response.on('data', (chunk) => {
+                        responseData += chunk.toString();
+                        console.log(
+                            'Create proxy chunk received, length:',
+                            chunk.toString().length
+                        );
+                    });
+
+                    response.on('end', () => {
+                        try {
+                            console.log('Raw create proxy response:', responseData);
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for create proxy');
+                                // Return mock data with the proxy info
+                                resolve({
+                                    id: `mock-${Date.now()}`,
+                                    host: proxy.host,
+                                    port: proxy.port,
+                                    protocol: proxy.protocol,
+                                    isActive: proxy.isActive,
+                                    createdAt: new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
+                                });
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Proxy created successfully:', data);
+                            resolve(data);
+                        } catch (error) {
+                            console.error('Failed to parse create proxy response data:', error);
+                            console.error('Response data that failed to parse:', responseData);
+
+                            if (response.statusCode >= 200 && response.statusCode < 300) {
+                                // If the status code indicates success but JSON parsing failed,
+                                // still return a mock success response
+                                resolve({
+                                    id: `mock-${Date.now()}`,
+                                    host: proxy.host,
+                                    port: proxy.port,
+                                    protocol: proxy.protocol,
+                                    isActive: proxy.isActive,
+                                    createdAt: new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
+                                });
+                            } else {
+                                // For other status codes, reject with error message
+                                reject(
+                                    new Error(
+                                        `Failed to create proxy. Status: ${response.statusCode}`
+                                    )
+                                );
+                            }
+                        }
+                    });
+                });
+
+                request.on('error', (error) => {
+                    console.error('Network error when creating proxy:', error);
+                    reject(new Error(`Network error: ${error.message}`));
+                });
+
+                // Make sure to properly convert the proxy to a JSON string
+                try {
+                    const bodyData = JSON.stringify(proxy);
+                    console.log('Sending create proxy request with body:', bodyData);
+                    request.write(bodyData);
+                } catch (error) {
+                    console.error('Error serializing proxy data:', error);
+                    reject(new Error(`Error serializing proxy data: ${error.message}`));
+                }
+
+                request.end();
+            } catch (error) {
+                console.error('Unexpected error in createProxy:', error);
+                reject(new Error(`Unexpected error: ${error.message}`));
+            }
+        });
+    });
+
+    // Update proxy
+    ipcMain.handle('api:updateProxy', async (event, id, data) => {
+        return new Promise((resolve, reject) => {
+            console.log('Updating proxy:', id, data);
+
+            const request = net.request({
+                method: 'PATCH',
+                url: getFullApiUrl(`/proxies/${id}`),
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                if (response.statusCode === 404) {
+                    console.log('Proxy not found for update:', id);
+                    resolve(null);
+                    return;
+                }
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        const data = JSON.parse(responseData);
+                        console.log('Proxy updated:', data);
+                        resolve(data);
+                    } catch (error) {
+                        console.error('Failed to parse response data:', error);
+                        reject(new Error('Failed to parse response data'));
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when updating proxy:', error);
+                reject(error);
+            });
+
+            request.write(JSON.stringify(data));
+            request.end();
+        });
+    });
+
+    // Delete proxy
+    ipcMain.handle('api:deleteProxy', async (event, id) => {
+        return new Promise((resolve) => {
+            console.log('Deleting proxy:', id);
+            const url = getFullApiUrl(`/proxies/${id}`);
+            console.log('Delete proxy request URL:', url);
+
+            const request = net.request({
+                method: 'DELETE',
+                url: url,
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log(`Delete proxy response status: ${response.statusCode}`);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                    console.log('Delete proxy response data:', chunk.toString());
+                });
+
+                response.on('end', () => {
+                    console.log('Delete proxy response complete, data:', responseData);
+
+                    if (response.statusCode === 404) {
+                        console.log('Proxy not found for deletion:', id);
+                        resolve(false);
+                        return;
+                    }
+
+                    if (response.statusCode >= 200 && response.statusCode < 300) {
+                        console.log('Proxy deleted successfully:', id);
+                        resolve(true);
+                        return;
+                    }
+
+                    console.error(`Unexpected status code: ${response.statusCode}`);
+                    // Even with unexpected status, return true to avoid breaking UI
+                    resolve(false);
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when deleting proxy:', error);
+                // Return false to indicate failure but avoid breaking UI
+                resolve(false);
+            });
+
+            request.end();
+        });
+    });
+
+    // Get proxy mappings
+    ipcMain.handle('api:getProxyMappings', async () => {
+        return new Promise((resolve) => {
+            // Return empty array since we're no longer using separate mapping endpoint
+            // Old endpoint is deprecated
+            console.log(
+                'getProxyMappings is deprecated - mappings now included with proxies and emails'
+            );
             resolve([]);
-          }
         });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when fetching email accounts:', error);
-        // Resolve with empty array instead of rejecting to avoid breaking the UI
-        resolve([]);
-      });
-      
-      request.end();
     });
-  });
 
-  // Get email account by ID
-  ipcMain.handle('api:getEmailAccountById', async (event, id) => {
-    return new Promise((resolve, reject) => {
-      console.log('Fetching email account by ID:', id);
-      const request = net.request(getFullApiUrl(`/email-accounts/${id}`));
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Email account not found:', id);
-          resolve(null);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          try {
-            const data = JSON.parse(responseData);
-            console.log('Received email account:', data);
-            resolve(data);
-          } catch (error) {
-            console.error('Failed to parse email account data:', error);
-            reject(new Error('Failed to parse response data'));
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when fetching email account:', error);
-        reject(error);
-      });
-      
-      request.end();
-    });
-  });
+    // Create proxy mapping
+    ipcMain.handle('api:createProxyMapping', async () => {
+        return new Promise((resolve) => {
+            console.log('Creating proxy mapping - ignoring parameters and mapping all emails');
 
-  // Create new email account
-  ipcMain.handle('api:createEmailAccount', async (event, account) => {
-    return new Promise((resolve, reject) => {
-      console.log('Creating email account:', account);
-      
-      try {
-        const request = net.request({
-          method: 'POST',
-          url: getFullApiUrl('/email-accounts')
-        });
-        
-        request.setHeader('Content-Type', 'application/json');
-        
-        let responseData = '';
-        
-        request.on('response', (response) => {
-          console.log('Create email account response status:', response.statusCode);
-          
-          response.on('data', (chunk) => {
-            responseData += chunk.toString();
-            console.log('Create email account chunk received, length:', chunk.toString().length);
-          });
-          
-          response.on('end', () => {
             try {
-              console.log('Raw create email account response:', responseData);
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty response received for create email account');
-                // Return mock data with the account info
-                resolve({
-                  id: `mock-${Date.now()}`,
-                  email: account.email,
-                  password: account.password,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
+                const request = net.request({
+                    method: 'POST',
+                    url: getFullApiUrl('/proxies/mapping'),
                 });
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Email account created successfully:', data);
-              resolve(data);
-            } catch (error) {
-              console.error('Failed to parse create email account response data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              
-              if (response.statusCode >= 200 && response.statusCode < 300) {
-                // If the status code indicates success but JSON parsing failed, 
-                // still return a mock success response
-                resolve({
-                  id: `mock-${Date.now()}`,
-                  email: account.email,
-                  password: account.password,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
+
+                request.setHeader('Content-Type', 'application/json');
+
+                let responseData = '';
+
+                request.on('response', (response) => {
+                    console.log('Create proxy mapping response status:', response.statusCode);
+
+                    response.on('data', (chunk) => {
+                        responseData += chunk.toString();
+                        console.log(
+                            'Create proxy mapping chunk received, length:',
+                            chunk.toString().length
+                        );
+                    });
+
+                    response.on('end', () => {
+                        try {
+                            console.log('Raw create proxy mapping response:', responseData);
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for create proxy mapping');
+                                // Return empty array
+                                resolve([]);
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Proxy mapping created successfully:', data);
+                            resolve(data.mappings || []);
+                        } catch (error) {
+                            console.error(
+                                'Failed to parse create proxy mapping response data:',
+                                error
+                            );
+                            console.error('Response data that failed to parse:', responseData);
+
+                            // Return empty array anyway to avoid breaking the UI
+                            resolve([]);
+                        }
+                    });
                 });
-              } else {
-                // For other status codes, reject with error message
-                reject(new Error(`Failed to create account. Status: ${response.statusCode}`));
-              }
-            }
-          });
-        });
-        
-        request.on('error', (error) => {
-          console.error('Network error when creating email account:', error);
-          reject(new Error(`Network error: ${error.message}`));
-        });
-        
-        // Make sure to properly convert the account to a JSON string
-        try {
-          const bodyData = JSON.stringify({
-            email: account.email,
-            password: account.password
-          });
-          console.log('Sending create email account request with body:', bodyData);
-          request.write(bodyData);
-        } catch (error) {
-          console.error('Error serializing account data:', error);
-          reject(new Error(`Error serializing account data: ${error.message}`));
-        }
-        
-        request.end();
-      } catch (error) {
-        console.error('Unexpected error in createEmailAccount:', error);
-        reject(new Error(`Unexpected error: ${error.message}`));
-      }
-    });
-  });
 
-  // Update email account
-  ipcMain.handle('api:updateEmailAccount', async (event, id, data) => {
-    return new Promise((resolve, reject) => {
-      console.log('Updating email account:', id, data);
-      
-      const request = net.request({
-        method: 'PATCH',
-        url: getFullApiUrl(`/email-accounts/${id}`)
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Email account not found for update:', id);
-          resolve(null);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          try {
-            const data = JSON.parse(responseData);
-            console.log('Email account updated:', data);
-            resolve(data);
-          } catch (error) {
-            console.error('Failed to parse response data:', error);
-            reject(new Error('Failed to parse response data'));
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when updating email account:', error);
-        reject(error);
-      });
-      
-      request.write(JSON.stringify(data));
-      request.end();
-    });
-  });
-
-  // Delete email account
-  ipcMain.handle('api:deleteEmailAccount', async (event, id) => {
-    return new Promise((resolve, reject) => {
-      console.log('Deleting email account:', id);
-      
-      const request = net.request({
-        method: 'DELETE',
-        url: getFullApiUrl(`/email-accounts/${id}`)
-      });
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Email account not found for deletion:', id);
-          resolve(false);
-          return;
-        }
-        
-        if (response.statusCode === 204 || response.statusCode === 200) {
-          console.log('Email account deleted successfully:', id);
-          resolve(true);
-          return;
-        }
-        
-        reject(new Error(`Unexpected status code: ${response.statusCode}`));
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when deleting email account:', error);
-        reject(error);
-      });
-      
-      request.end();
-    });
-  });
-
-  // Batch upsert email accounts
-  ipcMain.handle('api:batchUpsertEmailAccounts', async (event, accounts) => {
-    return new Promise((resolve) => {
-      console.log('Batch upserting email accounts:', accounts.length);
-      
-      // Make sure accounts is valid
-      if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-        console.log('No accounts provided for batch upsert');
-        resolve({ count: 0 });
-        return;
-      }
-      
-      // Log first account for debugging (redact password)
-      if (accounts.length > 0) {
-        const sampleAccount = {...accounts[0], password: '****'};
-        console.log('Sample account format:', sampleAccount);
-      }
-      
-      const apiUrl = getFullApiUrl('/email-accounts/batch');
-      console.log('Making API request to:', apiUrl);
-      
-      const request = net.request({
-        method: 'POST',
-        url: apiUrl
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log('Batch upsert response status:', response.statusCode);
-        console.log('Response headers:', response.headers);
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-          console.log('Batch upsert chunk received, length:', chunk.toString().length);
-        });
-        
-        response.on('end', () => {
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            try {
-              console.log('Raw batch upsert response:', responseData);
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty response received for batch upsert');
-                resolve({ count: accounts.length });
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Batch upsert result:', data);
-              resolve(data);
-            } catch (error) {
-              console.error('Failed to parse batch upsert response data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              // Return a success result anyway to avoid breaking the UI
-              resolve({ count: accounts.length });
-            }
-          } else {
-            console.error(`API returned error status: ${response.statusCode}`);
-            console.error('Error response body:', responseData);
-            // Return a success result anyway to avoid breaking the UI
-            resolve({ count: 0 });
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when batch upserting accounts:', error);
-        console.error('Error details:', JSON.stringify(error));
-        // Return a success result anyway to avoid breaking the UI
-        resolve({ count: 0 });
-      });
-      
-      // Make sure to properly convert the accounts to a JSON string
-      try {
-        const requestBody = { accounts };
-        const bodyData = JSON.stringify(requestBody);
-        console.log("bodyData",bodyData)
-        console.log('Sending batch upsert request with body length:', bodyData.length);
-        console.log('Request body format:', JSON.stringify({...requestBody, accounts: accounts.length + ' items'}));
-        request.write(bodyData);
-      } catch (error) {
-        console.error('Error serializing accounts data:', error);
-        console.error('Error details:', JSON.stringify(error));
-        // Return a success result anyway to avoid breaking the UI
-        resolve({ count: 0 });
-      }
-      
-      request.end();
-    });
-  });
-
-  // Bulk import email accounts from file
-  ipcMain.handle('api:bulkImportEmailAccounts', async (event, accounts) => {
-    return new Promise((resolve) => {
-      console.log('Bulk importing email accounts from file:', accounts.length);
-      
-      // Make sure accounts is valid
-      if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-        console.log('No accounts provided for bulk import');
-        resolve({ count: 0 });
-        return;
-      }
-      
-      // Log first account for debugging (redact password)
-      if (accounts.length > 0) {
-        const sampleAccount = {...accounts[0], password: '****'};
-        console.log('Sample account format:', sampleAccount);
-      }
-      
-      const apiUrl = getFullApiUrl('/email-accounts/bulk-import');
-      console.log('Making API request to:', apiUrl);
-      
-      const request = net.request({
-        method: 'POST',
-        url: apiUrl
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log(`Bulk import response status: ${response.statusCode}`);
-        console.log('Response headers:', response.headers);
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          console.log('Bulk import complete, raw response:', responseData);
-          
-          // Parse response if possible
-          try {
-            const parsedResponse = JSON.parse(responseData);
-            console.log('Parsed response:', parsedResponse);
-            resolve(parsedResponse);
-          } catch (error) {
-            console.error('Error parsing response from bulk import:', error);
-            console.error('Response was:', responseData);
-            // Return a success result anyway to avoid breaking the UI
-            resolve({ count: accounts.length });
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Error in bulk import request:', error);
-        // Return a success result anyway to avoid breaking the UI
-        resolve({ count: 0 });
-      });
-      
-      // Make sure to properly convert the accounts to a JSON string
-      try {
-        const requestBody = { accounts };
-        const bodyData = JSON.stringify(requestBody);
-        console.log('Sending bulk import request with body length:', bodyData.length);
-        console.log('Request body format:', JSON.stringify({...requestBody, accounts: accounts.length + ' items'}));
-        request.write(bodyData);
-      } catch (error) {
-        console.error('Error serializing accounts data for bulk import:', error);
-        console.error('Error details:', JSON.stringify(error));
-        // Return a success result anyway to avoid breaking the UI
-        resolve({ count: 0 });
-      }
-      
-      request.end();
-    });
-  });
-
-  // Batch delete email accounts
-  ipcMain.handle('api:batchDeleteEmailAccounts', async (event, ids) => {
-    return new Promise((resolve) => {
-      console.log('Batch deleting email accounts:', ids);
-      
-      // Handle empty array or null/undefined ids
-      if (!ids || !Array.isArray(ids) || ids.length === 0) {
-        console.log('No ids provided for batch delete');
-        resolve({ count: 0 });
-        return;
-      }
-      
-      // Log the actual IDs being sent for debugging
-      console.log('IDs to delete:', JSON.stringify(ids));
-      
-      const request = net.request({
-        method: 'DELETE',
-        url: getFullApiUrl('/email-accounts/batch')
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log('Batch delete response status:', response.statusCode);
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-          console.log('Batch delete chunk received, length:', chunk.toString().length);
-        });
-        
-        response.on('end', () => {
-          // Consider any 2xx status code as success
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            try {
-              console.log('Raw batch delete response:', responseData);
-              
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty success response received for batch delete');
-                resolve({ count: ids.length });
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Batch delete result:', data);
-              resolve(data);
-            } catch (error) {
-              console.error('Failed to parse batch delete response data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              // Success status code but couldn't parse response - still count as success
-              resolve({ count: ids.length });
-            }
-          } else {
-            // Error status code, but return success with 0 count to avoid UI breaks
-            console.error(`API returned error status for batch delete: ${response.statusCode}`);
-            console.error('Error response:', responseData);
-            resolve({ count: 0 });
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when batch deleting accounts:', error);
-        resolve({ count: 0 });
-      });
-      
-      try {
-        const bodyData = JSON.stringify({ ids });
-        console.log('Sending batch delete request with body:', bodyData);
-        request.write(bodyData);
-        request.end();
-      } catch (error) {
-        console.error('Error serializing ids data:', error);
-        resolve({ count: 0 });
-      }
-    });
-  });
-
-  // Get all proxies
-  ipcMain.handle('api:getProxies', async () => {
-    return new Promise((resolve) => {
-      console.log('Fetching proxies from:', getFullApiUrl('/proxies'));
-      const request = net.request(getFullApiUrl('/proxies'));
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log('Proxies response status:', response.statusCode);
-        
-        if (response.statusCode !== 200) {
-          console.error(`API returned error status: ${response.statusCode}`);
-          // Return empty array to avoid breaking the UI
-          resolve([]);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-          console.log('Proxies chunk received, length:', chunk.toString().length);
-        });
-        
-        response.on('end', () => {
-          try {
-            console.log('Raw proxies response:', responseData);
-            if (!responseData || responseData.trim() === '') {
-              console.log('Empty response received for proxies');
-              resolve([]);
-              return;
-            }
-            
-            const data = JSON.parse(responseData);
-            console.log('Received proxies data:', data);
-            
-            // Ensure we always return an array
-            if (Array.isArray(data)) {
-              resolve(data);
-            } else {
-              console.warn('API returned non-array data:', data);
-              resolve([]);
-            }
-          } catch (error) {
-            console.error('Failed to parse proxies data:', error);
-            console.error('Response data that failed to parse:', responseData);
-            // Resolve with empty array instead of rejecting to avoid breaking the UI
-            resolve([]);
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when fetching proxies:', error);
-        console.log('{{base_url}}/api/proxies?limit=10&offset=0');
-        // Resolve with empty array instead of rejecting to avoid breaking the UI
-        resolve([]);
-      });
-      
-      request.end();
-    });
-  });
-
-  // Get proxy by ID
-  ipcMain.handle('api:getProxyById', async (event, id) => {
-    return new Promise((resolve, reject) => {
-      console.log('Fetching proxy by ID:', id);
-      const request = net.request(getFullApiUrl(`/proxies/${id}`));
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Proxy not found:', id);
-          resolve(null);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          try {
-            const data = JSON.parse(responseData);
-            console.log('Received proxy:', data);
-            resolve(data);
-          } catch (error) {
-            console.error('Failed to parse proxy data:', error);
-            reject(new Error('Failed to parse response data'));
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when fetching proxy:', error);
-        reject(error);
-      });
-      
-      request.end();
-    });
-  });
-
-  // Create new proxy
-  ipcMain.handle('api:createProxy', async (event, proxy) => {
-    return new Promise((resolve, reject) => {
-      console.log('Creating proxy:', proxy);
-      
-      try {
-        const request = net.request({
-          method: 'POST',
-          url: getFullApiUrl('/proxies')
-        });
-        
-        request.setHeader('Content-Type', 'application/json');
-        
-        let responseData = '';
-        
-        request.on('response', (response) => {
-          console.log('Create proxy response status:', response.statusCode);
-          
-          response.on('data', (chunk) => {
-            responseData += chunk.toString();
-            console.log('Create proxy chunk received, length:', chunk.toString().length);
-          });
-          
-          response.on('end', () => {
-            try {
-              console.log('Raw create proxy response:', responseData);
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty response received for create proxy');
-                // Return mock data with the proxy info
-                resolve({
-                  id: `mock-${Date.now()}`,
-                  host: proxy.host,
-                  port: proxy.port,
-                  protocol: proxy.protocol,
-                  isActive: proxy.isActive,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
+                request.on('error', (error) => {
+                    console.error('Network error when creating proxy mapping:', error);
+                    // Return empty array anyway to avoid breaking the UI
+                    resolve([]);
                 });
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Proxy created successfully:', data);
-              resolve(data);
+
+                // Send empty object as body since the backend doesn't use any parameters
+                request.write('{}');
+                request.end();
             } catch (error) {
-              console.error('Failed to parse create proxy response data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              
-              if (response.statusCode >= 200 && response.statusCode < 300) {
-                // If the status code indicates success but JSON parsing failed, 
-                // still return a mock success response
-                resolve({
-                  id: `mock-${Date.now()}`,
-                  host: proxy.host,
-                  port: proxy.port,
-                  protocol: proxy.protocol,
-                  isActive: proxy.isActive,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                });
-              } else {
-                // For other status codes, reject with error message
-                reject(new Error(`Failed to create proxy. Status: ${response.statusCode}`));
-              }
+                console.error('Unexpected error in createProxyMapping:', error);
+                // Return empty array anyway to avoid breaking the UI
+                resolve([]);
             }
-          });
         });
-        
-        request.on('error', (error) => {
-          console.error('Network error when creating proxy:', error);
-          reject(new Error(`Network error: ${error.message}`));
-        });
-        
-        // Make sure to properly convert the proxy to a JSON string
-        try {
-          const bodyData = JSON.stringify(proxy);
-          console.log('Sending create proxy request with body:', bodyData);
-          request.write(bodyData);
-        } catch (error) {
-          console.error('Error serializing proxy data:', error);
-          reject(new Error(`Error serializing proxy data: ${error.message}`));
-        }
-        
-        request.end();
-      } catch (error) {
-        console.error('Unexpected error in createProxy:', error);
-        reject(new Error(`Unexpected error: ${error.message}`));
-      }
     });
-  });
 
-  // Update proxy
-  ipcMain.handle('api:updateProxy', async (event, id, data) => {
-    return new Promise((resolve, reject) => {
-      console.log('Updating proxy:', id, data);
-      
-      const request = net.request({
-        method: 'PATCH',
-        url: getFullApiUrl(`/proxies/${id}`)
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        if (response.statusCode === 404) {
-          console.log('Proxy not found for update:', id);
-          resolve(null);
-          return;
-        }
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-        });
-        
-        response.on('end', () => {
-          try {
-            const data = JSON.parse(responseData);
-            console.log('Proxy updated:', data);
-            resolve(data);
-          } catch (error) {
-            console.error('Failed to parse response data:', error);
-            reject(new Error('Failed to parse response data'));
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when updating proxy:', error);
-        reject(error);
-      });
-      
-      request.write(JSON.stringify(data));
-      request.end();
-    });
-  });
-
-  // Delete proxy
-  ipcMain.handle('api:deleteProxy', async (event, id) => {
-    return new Promise((resolve) => {
-      console.log('Deleting proxy:', id);
-      const url = getFullApiUrl(`/proxies/${id}`);
-      console.log('Delete proxy request URL:', url);
-      
-      const request = net.request({
-        method: 'DELETE',
-        url: url
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log(`Delete proxy response status: ${response.statusCode}`);
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-          console.log('Delete proxy response data:', chunk.toString());
-        });
-        
-        response.on('end', () => {
-          console.log('Delete proxy response complete, data:', responseData);
-          
-          if (response.statusCode === 404) {
-            console.log('Proxy not found for deletion:', id);
+    // Delete proxy mapping
+    ipcMain.handle('api:deleteProxyMapping', async (event, emailId) => {
+        return new Promise((resolve) => {
+            // Return false since we're no longer using separate mapping endpoint
+            // Old endpoint is deprecated
+            console.log('deleteProxyMapping is deprecated - use updateEmailAccount instead');
             resolve(false);
-            return;
-          }
-          
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            console.log('Proxy deleted successfully:', id);
-            resolve(true);
-            return;
-          }
-          
-          console.error(`Unexpected status code: ${response.statusCode}`);
-          // Even with unexpected status, return true to avoid breaking UI
-          resolve(false);
         });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when deleting proxy:', error);
-        // Return false to indicate failure but avoid breaking UI
-        resolve(false);
-      });
-      
-      request.end();
     });
-  });
 
-  // Get proxy mappings
-  ipcMain.handle('api:getProxyMappings', async () => {
-    return new Promise((resolve) => {
-      // Return empty array since we're no longer using separate mapping endpoint
-      // Old endpoint is deprecated
-      console.log('getProxyMappings is deprecated - mappings now included with proxies and emails');
-      resolve([]);
-    });
-  });
+    // Fetch proxies from provider by country and protocol
+    ipcMain.handle('api:fetchProxies', async (event, { country, protocol, limit }) => {
+        return new Promise((resolve, reject) => {
+            console.log('Fetching proxies from provider:', { country, protocol, limit });
 
-  // Create proxy mapping
-  ipcMain.handle('api:createProxyMapping', async () => {
-    return new Promise((resolve) => {
-      console.log('Creating proxy mapping - ignoring parameters and mapping all emails');
-      
-      try {
-        const request = net.request({
-          method: 'POST',
-          url: getFullApiUrl('/proxies/mapping')
-        });
-        
-        request.setHeader('Content-Type', 'application/json');
-        
-        let responseData = '';
-        
-        request.on('response', (response) => {
-          console.log('Create proxy mapping response status:', response.statusCode);
-          
-          response.on('data', (chunk) => {
-            responseData += chunk.toString();
-            console.log('Create proxy mapping chunk received, length:', chunk.toString().length);
-          });
-          
-          response.on('end', () => {
             try {
-              console.log('Raw create proxy mapping response:', responseData);
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty response received for create proxy mapping');
-                // Return empty array
-                resolve([]);
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Proxy mapping created successfully:', data);
-              resolve(data.mappings || []);
+                const request = net.request({
+                    method: 'POST',
+                    url: getFullApiUrl('/proxies/fetch'),
+                });
+
+                request.setHeader('Content-Type', 'application/json');
+
+                let responseData = '';
+
+                request.on('response', (response) => {
+                    console.log('Fetch proxies response status:', response.statusCode);
+
+                    response.on('data', (chunk) => {
+                        responseData += chunk.toString();
+                        console.log(
+                            'Fetch proxies chunk received, length:',
+                            chunk.toString().length
+                        );
+                    });
+
+                    response.on('end', () => {
+                        try {
+                            console.log('Raw fetch proxies response:', responseData);
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for fetch proxies');
+                                resolve([]);
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Proxies fetched successfully:', data);
+                            resolve(data);
+                        } catch (error) {
+                            console.error('Failed to parse fetch proxies response data:', error);
+                            console.error('Response data that failed to parse:', responseData);
+                            reject(new Error('Failed to parse response data'));
+                        }
+                    });
+                });
+
+                request.on('error', (error) => {
+                    console.error('Network error when fetching proxies from provider:', error);
+                    reject(new Error(`Network error: ${error.message}`));
+                });
+
+                // Make sure to properly convert the request to a JSON string
+                try {
+                    const bodyData = JSON.stringify({
+                        country,
+                        protocol,
+                        limit,
+                    });
+                    console.log('Sending fetch proxies request with body:', bodyData);
+                    request.write(bodyData);
+                } catch (error) {
+                    console.error('Error serializing fetch proxies data:', error);
+                    reject(new Error(`Error serializing fetch proxies data: ${error.message}`));
+                }
+
+                request.end();
             } catch (error) {
-              console.error('Failed to parse create proxy mapping response data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              
-              // Return empty array anyway to avoid breaking the UI
-              resolve([]);
+                console.error('Unexpected error in fetchProxies:', error);
+                reject(new Error(`Unexpected error: ${error.message}`));
             }
-          });
         });
-        
-        request.on('error', (error) => {
-          console.error('Network error when creating proxy mapping:', error);
-          // Return empty array anyway to avoid breaking the UI
-          resolve([]);
-        });
-        
-        // Send empty object as body since the backend doesn't use any parameters
-        request.write('{}');
-        request.end();
-      } catch (error) {
-        console.error('Unexpected error in createProxyMapping:', error);
-        // Return empty array anyway to avoid breaking the UI
-        resolve([]);
-      }
     });
-  });
 
-  // Delete proxy mapping
-  ipcMain.handle('api:deleteProxyMapping', async (event, emailId) => {
-    return new Promise((resolve) => {
-      // Return false since we're no longer using separate mapping endpoint
-      // Old endpoint is deprecated
-      console.log('deleteProxyMapping is deprecated - use updateEmailAccount instead');
-      resolve(false);
-    });
-  });
+    // Batch delete proxies
+    ipcMain.handle('api:batchDeleteProxies', async (event, ids) => {
+        return new Promise((resolve) => {
+            console.log('Batch deleting proxies:', ids);
 
-  // Fetch proxies from provider by country and protocol
-  ipcMain.handle('api:fetchProxies', async (event, { country, protocol, limit }) => {
-    return new Promise((resolve, reject) => {
-      console.log('Fetching proxies from provider:', { country, protocol, limit });
-      
-      try {
-        const request = net.request({
-          method: 'POST',
-          url: getFullApiUrl('/proxies/fetch')
-        });
-        
-        request.setHeader('Content-Type', 'application/json');
-        
-        let responseData = '';
-        
-        request.on('response', (response) => {
-          console.log('Fetch proxies response status:', response.statusCode);
-          
-          response.on('data', (chunk) => {
-            responseData += chunk.toString();
-            console.log('Fetch proxies chunk received, length:', chunk.toString().length);
-          });
-          
-          response.on('end', () => {
+            // Handle empty array or null/undefined ids
+            if (!ids || !Array.isArray(ids) || ids.length === 0) {
+                console.log('No ids provided for batch delete');
+                resolve({ count: 0 });
+                return;
+            }
+
+            // Log the actual IDs being sent for debugging
+            console.log('IDs to delete:', JSON.stringify(ids));
+
+            const request = net.request({
+                method: 'DELETE',
+                url: getFullApiUrl('/proxies'),
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Batch delete proxies response status:', response.statusCode);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                    console.log(
+                        'Batch delete proxies chunk received, length:',
+                        chunk.toString().length
+                    );
+                });
+
+                response.on('end', () => {
+                    // Consider any 2xx status code as success
+                    if (response.statusCode >= 200 && response.statusCode < 300) {
+                        try {
+                            console.log('Raw batch delete proxies response:', responseData);
+
+                            if (!responseData || responseData.trim() === '') {
+                                console.log(
+                                    'Empty success response received for batch delete proxies'
+                                );
+                                resolve({ count: ids.length });
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Batch delete proxies result:', data);
+                            resolve(data);
+                        } catch (error) {
+                            console.error(
+                                'Failed to parse batch delete proxies response data:',
+                                error
+                            );
+                            console.error('Response data that failed to parse:', responseData);
+                            // Success status code but couldn't parse response - still count as success
+                            resolve({ count: ids.length });
+                        }
+                    } else {
+                        // Error status code, but return success with 0 count to avoid UI breaks
+                        console.error(
+                            `API returned error status for batch delete proxies: ${response.statusCode}`
+                        );
+                        console.error('Error response:', responseData);
+                        resolve({ count: 0 });
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when batch deleting proxies:', error);
+                resolve({ count: 0 });
+            });
+
             try {
-              console.log('Raw fetch proxies response:', responseData);
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty response received for fetch proxies');
-                resolve([]);
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Proxies fetched successfully:', data);
-              resolve(data);
+                const bodyData = JSON.stringify({ ids });
+                console.log('Sending batch delete proxies request with body:', bodyData);
+                request.write(bodyData);
+                request.end();
             } catch (error) {
-              console.error('Failed to parse fetch proxies response data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              reject(new Error('Failed to parse response data'));
+                console.error('Error serializing proxy ids data:', error);
+                resolve({ count: 0 });
             }
-          });
         });
-        
-        request.on('error', (error) => {
-          console.error('Network error when fetching proxies from provider:', error);
-          reject(new Error(`Network error: ${error.message}`));
-        });
-        
-        // Make sure to properly convert the request to a JSON string
-        try {
-          const bodyData = JSON.stringify({
-            country,
-            protocol,
-            limit
-          });
-          console.log('Sending fetch proxies request with body:', bodyData);
-          request.write(bodyData);
-        } catch (error) {
-          console.error('Error serializing fetch proxies data:', error);
-          reject(new Error(`Error serializing fetch proxies data: ${error.message}`));
-        }
-        
-        request.end();
-      } catch (error) {
-        console.error('Unexpected error in fetchProxies:', error);
-        reject(new Error(`Unexpected error: ${error.message}`));
-      }
     });
-  });
-
-  // Batch delete proxies
-  ipcMain.handle('api:batchDeleteProxies', async (event, ids) => {
-    return new Promise((resolve) => {
-      console.log('Batch deleting proxies:', ids);
-      
-      // Handle empty array or null/undefined ids
-      if (!ids || !Array.isArray(ids) || ids.length === 0) {
-        console.log('No ids provided for batch delete');
-        resolve({ count: 0 });
-        return;
-      }
-      
-      // Log the actual IDs being sent for debugging
-      console.log('IDs to delete:', JSON.stringify(ids));
-      
-      const request = net.request({
-        method: 'DELETE',
-        url: getFullApiUrl('/proxies')
-      });
-      
-      request.setHeader('Content-Type', 'application/json');
-      
-      let responseData = '';
-      
-      request.on('response', (response) => {
-        console.log('Batch delete proxies response status:', response.statusCode);
-        
-        response.on('data', (chunk) => {
-          responseData += chunk.toString();
-          console.log('Batch delete proxies chunk received, length:', chunk.toString().length);
-        });
-        
-        response.on('end', () => {
-          // Consider any 2xx status code as success
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            try {
-              console.log('Raw batch delete proxies response:', responseData);
-              
-              if (!responseData || responseData.trim() === '') {
-                console.log('Empty success response received for batch delete proxies');
-                resolve({ count: ids.length });
-                return;
-              }
-              
-              const data = JSON.parse(responseData);
-              console.log('Batch delete proxies result:', data);
-              resolve(data);
-            } catch (error) {
-              console.error('Failed to parse batch delete proxies response data:', error);
-              console.error('Response data that failed to parse:', responseData);
-              // Success status code but couldn't parse response - still count as success
-              resolve({ count: ids.length });
-            }
-          } else {
-            // Error status code, but return success with 0 count to avoid UI breaks
-            console.error(`API returned error status for batch delete proxies: ${response.statusCode}`);
-            console.error('Error response:', responseData);
-            resolve({ count: 0 });
-          }
-        });
-      });
-      
-      request.on('error', (error) => {
-        console.error('Network error when batch deleting proxies:', error);
-        resolve({ count: 0 });
-      });
-      
-      try {
-        const bodyData = JSON.stringify({ ids });
-        console.log('Sending batch delete proxies request with body:', bodyData);
-        request.write(bodyData);
-        request.end();
-      } catch (error) {
-        console.error('Error serializing proxy ids data:', error);
-        resolve({ count: 0 });
-      }
-    });
-  });
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  // Register IPC handlers first
-  registerIpcHandlers();
-  
-  // Then create the window
-  createWindow();
+    // Register IPC handlers first
+    registerIpcHandlers();
+
+    // Then create the window
+    createWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+    // On OS X it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+    }
 });
 
 // In this file you can include the rest of your app's specific main process
