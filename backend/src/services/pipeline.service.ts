@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import { redisService } from './redis.service';
 import { logger } from '../utils/logger';
+import { redisService } from './redis.service';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -23,20 +23,23 @@ export class PipelineService {
     async getAllPipelines() {
         try {
             // Try to get from cache first
-            const cached = await redisService.get(this.getCacheKey());
-            if (cached) {
-                return JSON.parse(cached);
+            const cachedPipelines = await redisService.get(this.getCacheKey());
+            if (cachedPipelines) {
+                logger.debug('Returning pipelines from cache');
+                return JSON.parse(cachedPipelines);
             }
 
-            // If not in cache, get from database
             const pipelines = await prisma.pipeline.findMany({
                 include: {
                     nodes: true,
                 },
+                orderBy: {
+                    createdAt: 'desc',
+                },
             });
 
-            // Cache the result
-            await redisService.set(this.getCacheKey(), JSON.stringify(pipelines), 3600); // 1 hour cache
+            // Cache the results for future requests (expire after 1 hour)
+            await redisService.set(this.getCacheKey(), JSON.stringify(pipelines), 3600);
 
             return pipelines;
         } catch (error) {
@@ -48,12 +51,12 @@ export class PipelineService {
     async getPipelineById(id: string) {
         try {
             // Try to get from cache first
-            const cached = await redisService.get(this.getCacheKey(id));
-            if (cached) {
-                return JSON.parse(cached);
+            const cachedPipeline = await redisService.get(this.getCacheKey(id));
+            if (cachedPipeline) {
+                logger.debug(`Returning pipeline ${id} from cache`);
+                return JSON.parse(cachedPipeline);
             }
 
-            // If not in cache, get from database
             const pipeline = await prisma.pipeline.findUnique({
                 where: { id },
                 include: {
@@ -62,7 +65,7 @@ export class PipelineService {
             });
 
             if (pipeline) {
-                // Cache the result
+                // Cache the result for future requests (expire after 1 hour)
                 await redisService.set(this.getCacheKey(id), JSON.stringify(pipeline), 3600);
             }
 
@@ -78,13 +81,15 @@ export class PipelineService {
         nodes: { action: string; metadata?: Record<string, unknown> }[];
     }) {
         try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const pipeline = await prisma.pipeline.create({
                 data: {
                     name: data.name,
                     nodes: {
                         create: data.nodes.map((node) => ({
                             action: node.action,
-                            metadata: node.metadata || {},
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            metadata: node.metadata as any,
                         })),
                     },
                 },
@@ -113,6 +118,7 @@ export class PipelineService {
                 where: { pipelineId: id },
             });
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const pipeline = await prisma.pipeline.update({
                 where: { id },
                 data: {
@@ -120,7 +126,8 @@ export class PipelineService {
                     nodes: {
                         create: data.nodes.map((node) => ({
                             action: node.action,
-                            metadata: node.metadata || {},
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            metadata: node.metadata as any,
                         })),
                     },
                 },

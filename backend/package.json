@@ -13,6 +13,8 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.2",
+    "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.7.0",
     "@types/ioredis": "^4.28.10",
     "@types/uuid": "^10.0.0",
