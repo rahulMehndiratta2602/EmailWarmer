@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface BasicInfoStepProps {
     profileData: any;
@@ -12,6 +12,12 @@ const operatingSystems = [
 ];
 
 const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ profileData, updateProfileData }) => {
+    useEffect(() => {
+        if (profileData.startUrl === undefined) {
+            updateProfileData({ startUrl: '' });
+        }
+    }, [profileData.startUrl, updateProfileData]);
+
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
@@ -110,12 +116,13 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ profileData, updateProfil
                         name="startUrl"
                         value={profileData.startUrl}
                         onChange={handleChange}
-                        placeholder="https://example.com"
+                        placeholder="https://mail.google.com"
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 
                        focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        The URL to open when the profile is launched
+                        The URL that will open when the browser profile launches (e.g.,
+                        https://mail.google.com)
                     </p>
                 </div>
             </div>

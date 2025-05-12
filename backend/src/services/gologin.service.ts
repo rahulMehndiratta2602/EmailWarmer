@@ -171,6 +171,48 @@ export class GoLoginService {
     }
 
     /**
+     * Batch delete multiple profiles at once using GoLogin's native API
+     */
+    static async batchDeleteProfiles(
+        profileIds: string[]
+    ): Promise<{ success: boolean; message: string }> {
+        try {
+            console.log(`Batch deleting ${profileIds.length} profiles via GoLogin API`);
+            const response = await axios.delete(`${GOLOGIN_API_URL}/browser`, {
+                headers: {
+                    Authorization: `Bearer ${GOLOGIN_API_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                data: {
+                    profilesToDelete: profileIds,
+                },
+            });
+
+            console.log('Batch delete response:', response.status, response.data);
+
+            // Status 204 No Content means successful deletion with no response body
+            if (response.status === 200 || response.status === 204) {
+                return {
+                    success: true,
+                    message: `Successfully deleted ${profileIds.length} profiles`,
+                };
+            } else {
+                throw new Error(`Unexpected response status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error batch deleting GoLogin profiles:', error);
+            if (axios.isAxiosError(error) && error.response) {
+                console.error(
+                    'Batch delete GoLogin profiles response status:',
+                    error.response.status
+                );
+                console.error('Response:', error.response.data);
+            }
+            throw error;
+        }
+    }
+
+    /**
      * Create a new profile
      */
     static async createProfile(profileData: Partial<GoLoginProfile>): Promise<GoLoginProfile> {

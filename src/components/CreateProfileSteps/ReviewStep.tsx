@@ -51,16 +51,14 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ profileData }) => {
                                 </span>
                             </div>
                         )}
-                        {profileData.startUrl && (
-                            <div className="grid grid-cols-3 gap-4">
-                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                    Start URL:
-                                </span>
-                                <span className="text-sm text-gray-900 dark:text-white col-span-2">
-                                    {profileData.startUrl}
-                                </span>
-                            </div>
-                        )}
+                        <div className="grid grid-cols-3 gap-4">
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                Start URL:
+                            </span>
+                            <span className="text-sm text-gray-900 dark:text-white col-span-2">
+                                {profileData.startUrl || 'Not set'}
+                            </span>
+                        </div>
                     </div>
                 </div>
 

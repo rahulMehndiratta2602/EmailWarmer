@@ -21,6 +21,7 @@ const defaultProfile = {
     name: '',
     os: 'win',
     osSpec: '',
+    autoLang: false,
     proxy: {
         mode: 'none',
         host: '',
@@ -127,6 +128,14 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
     const [profileData, setProfileData] = useState(defaultProfile);
     const [error, setError] = useState<string | null>(null);
 
+    // Reset form data when opened in create mode
+    useEffect(() => {
+        if (isOpen && mode === 'create') {
+            setProfileData(defaultProfile);
+            setCurrentStep(0);
+        }
+    }, [isOpen, mode]);
+
     // Fetch profile data if in update mode
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -202,9 +211,17 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
             setIsLoading(true);
             const api = window.api as ExtendedAPI;
 
+            // Log the profile data before sending to API
+            console.log('Profile data being sent:', profileData);
+            console.log('Start URL value:', profileData.startUrl);
+
             if (mode === 'create') {
                 await api.createGoLoginProfile(profileData);
                 toast.success('Profile created successfully!');
+
+                // Reset form data and step after successful creation
+                setProfileData(defaultProfile);
+                setCurrentStep(0);
             } else {
                 await api.updateGoLoginProfile(profileId, profileData);
                 toast.success('Profile updated successfully!');

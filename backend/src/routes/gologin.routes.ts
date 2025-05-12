@@ -60,6 +60,123 @@ router.delete('/profiles/:id', async (req, res) => {
 });
 
 /**
+ * @route   DELETE /api/gologin/profiles
+ * @desc    Batch delete multiple GoLogin profiles
+ * @access  Private
+ */
+router.delete('/profiles', async (req, res) => {
+    try {
+        const profileIds = req.body.profileIds;
+
+        if (!profileIds || !Array.isArray(profileIds) || profileIds.length === 0) {
+            return res.status(400).json({
+                error: 'Failed to delete profiles',
+                details: 'A non-empty array of profileIds is required in the request body',
+            });
+        }
+
+        console.log(`Attempting to batch delete ${profileIds.length} profiles:`, profileIds);
+
+        // Delete profiles one by one
+        const results = await Promise.allSettled(
+            profileIds.map((id) => GoLoginService.deleteProfile(id))
+        );
+
+        // Count successes and failures
+        const successes = results.filter((r) => r.status === 'fulfilled').length;
+        const failures = results.filter((r) => r.status === 'rejected');
+
+        // Log any failures
+        if (failures.length > 0) {
+            failures.forEach((failure, index) => {
+                if (failure.status === 'rejected') {
+                    console.error(`Failed to delete profile ${profileIds[index]}:`, failure.reason);
+                }
+            });
+        }
+
+        res.json({
+            success: true,
+            message: `${successes} profiles deleted successfully, ${failures.length} failed`,
+            failedCount: failures.length,
+            totalCount: profileIds.length,
+        });
+    } catch (error) {
+        console.error('Error batch deleting GoLogin profiles:', error);
+        res.status(500).json({
+            error: 'Failed to batch delete profiles',
+            details: error instanceof Error ? error.message : String(error),
+        });
+    }
+});
+
+/**
+ * @route   DELETE /api/gologin/browser
+ * @desc    Batch delete multiple GoLogin profiles using GoLogin's native API format
+ * @access  Private
+ */
+router.delete('/browser', async (req, res) => {
+    try {
+        const profilesToDelete = req.body.profilesToDelete;
+
+        if (
+            !profilesToDelete ||
+            !Array.isArray(profilesToDelete) ||
+            profilesToDelete.length === 0
+        ) {
+            return res.status(400).json({
+                error: 'Failed to delete profiles',
+                details: 'A non-empty array of profilesToDelete is required in the request body',
+            });
+        }
+
+        console.log(`Batch deleting GoLogin profiles:`, profilesToDelete);
+        console.log('Sending batch delete request with body:', JSON.stringify(req.body));
+
+        try {
+            const result = await GoLoginService.batchDeleteProfiles(profilesToDelete);
+            res.json(result);
+        } catch (batchError) {
+            console.error('Batch delete failed, attempting individual deletions:', batchError);
+
+            // Fallback to deleting individually if batch delete fails
+            const results = await Promise.allSettled(
+                profilesToDelete.map((id) => GoLoginService.deleteProfile(id))
+            );
+
+            // Count successes and failures
+            const successes = results.filter((r) => r.status === 'fulfilled').length;
+            const failures = results.filter((r) => r.status === 'rejected');
+
+            // Log any failures
+            if (failures.length > 0) {
+                failures.forEach((failure, index) => {
+                    if (failure.status === 'rejected') {
+                        console.error(
+                            `Failed to delete profile ${profilesToDelete[index]}:`,
+                            failure.reason
+                        );
+                    }
+                });
+            }
+
+            res.json({
+                success: successes > 0,
+                message: `${successes} profiles deleted successfully, ${failures.length} failed (fallback mode)`,
+                failedCount: failures.length,
+                totalCount: profilesToDelete.length,
+            });
+        }
+    } catch (error) {
+        console.error('Error batch deleting GoLogin profiles:', error);
+        res.status(500).json({
+            error: 'Failed to delete profiles',
+            details: error instanceof Error ? error.message : String(error),
+        });
+    }
+});
+
+/**
  * @route   POST /api/gologin/profiles
  * @desc    Create a new GoLogin profile
  * @access  Private
