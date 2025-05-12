@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Copy,
     Play,
@@ -14,6 +14,7 @@ import {
 import { toast } from 'react-hot-toast';
 import CreateProfileModal from './CreateProfileModal';
 import ConfirmationModal from './ConfirmationModal';
+import GoLoginDirectService from '../services/goLoginDirectService';
 
 interface GoLoginProfile {
     id: string;
@@ -46,22 +47,25 @@ type SortDirection = 'asc' | 'desc' | 'none';
 const AutomationSession: React.FC = () => {
     const [profiles, setProfiles] = useState<GoLoginProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [totalProfiles, setTotalProfiles] = useState(0);
-    const [sortField, setSortField] = useState<SortField | null>(null);
-    const [sortDirection, setSortDirection] = useState<SortDirection>('none');
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-    const [selectedProfileId, setSelectedProfileId] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [sortField, setSortField] = useState<SortField | null>('lastActivity');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isAllSelected, setIsAllSelected] = useState(false);
+    const [totalProfiles, setTotalProfiles] = useState(0);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
     const [isDeleteAllConfirmModalOpen, setIsDeleteAllConfirmModalOpen] = useState(false);
-    const [deleteMode, setDeleteMode] = useState<'single' | 'multiple' | 'all'>('single');
-    const [profileToDelete, setProfileToDelete] = useState<string>('');
     const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteMode, setDeleteMode] = useState<'single' | 'multiple' | 'all'>('single');
+    const [profileToDelete, setProfileToDelete] = useState('');
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [selectedProfileId, setSelectedProfileId] = useState('');
+    // Add states for profile actions
+    const [startingProfiles, setStartingProfiles] = useState<string[]>([]);
+    const [stoppingProfiles, setStoppingProfiles] = useState<string[]>([]);
 
     const sortProfiles = (
         profiles: GoLoginProfile[],
@@ -208,14 +212,44 @@ const AutomationSession: React.FC = () => {
         toast.success('Profile ID copied to clipboard');
     };
 
-    const handleRun = (id: string) => {
-        console.log('Run profile:', id);
-        toast.error('Run functionality not implemented yet');
+    const handleRun = async (id: string) => {
+        console.log('Running profile:', id);
+        try {
+            // Add to loading state
+            setStartingProfiles((prev) => [...prev, id]);
+            await GoLoginDirectService.startProfile(id, false);
+            toast.success('Profile started successfully');
+        } catch (error) {
+            console.error('Error starting profile:', error);
+            toast.error(
+                `Failed to start profile: ${error instanceof Error ? error.message : String(error)}`
+            );
+        } finally {
+            // Remove from loading state
+            setStartingProfiles((prev) => prev.filter((profileId) => profileId !== id));
+            // Refresh the profiles list to show updated status
+            fetchProfiles();
+        }
     };
 
-    const handleStop = (id: string) => {
-        console.log('Stop profile:', id);
-        toast.error('Stop functionality not implemented yet');
+    const handleStop = async (id: string) => {
+        console.log('Stopping profile:', id);
+        try {
+            // Add to loading state
+            setStoppingProfiles((prev) => [...prev, id]);
+            await GoLoginDirectService.stopProfile(id);
+            toast.success('Profile stopped successfully');
+        } catch (error) {
+            console.error('Error stopping profile:', error);
+            toast.error(
+                `Failed to stop profile: ${error instanceof Error ? error.message : String(error)}`
+            );
+        } finally {
+            // Remove from loading state
+            setStoppingProfiles((prev) => prev.filter((profileId) => profileId !== id));
+            // Refresh the profiles list to show updated status
+            fetchProfiles();
+        }
     };
 
     const handleEdit = (id: string) => {
@@ -685,17 +719,31 @@ const AutomationSession: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => handleRun(profile.id)}
-                                                    className="text-gray-400 hover:text-green-600 dark:hover:text-green-400"
+                                                    className={`${
+                                                        startingProfiles.includes(profile.id)
+                                                            ? 'text-green-500 animate-pulse'
+                                                            : 'text-gray-400 hover:text-green-600 dark:hover:text-green-400'
+                                                    }`}
                                                     title="Run Profile"
-                                                    disabled={!profile.canBeRunning}
+                                                    disabled={
+                                                        startingProfiles.includes(profile.id) ||
+                                                        stoppingProfiles.includes(profile.id)
+                                                    }
                                                 >
                                                     <Play size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleStop(profile.id)}
-                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                                    className={`${
+                                                        stoppingProfiles.includes(profile.id)
+                                                            ? 'text-red-500 animate-pulse'
+                                                            : 'text-gray-400 hover:text-red-600 dark:hover:text-red-400'
+                                                    }`}
                                                     title="Stop Profile"
-                                                    disabled={!profile.canBeRunning}
+                                                    disabled={
+                                                        startingProfiles.includes(profile.id) ||
+                                                        stoppingProfiles.includes(profile.id)
+                                                    }
                                                 >
                                                     <Square size={16} />
                                                 </button>

@@ -1957,6 +1957,168 @@ const registerIpcHandlers = (): void => {
             }
         });
     });
+
+    // Start GoLogin profile
+    ipcMain.handle('api:startGoLoginProfile', async (event, { profileId, sync = false }) => {
+        return new Promise((resolve, reject) => {
+            console.log(`Starting GoLogin profile: ${profileId}, sync: ${sync}`);
+
+            const request = net.request({
+                method: 'POST',
+                url: 'http://localhost:36912/browser/start-profile',
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Start GoLogin profile response status:', response.statusCode);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        if (response.statusCode >= 200 && response.statusCode < 300) {
+                            console.log('GoLogin profile started successfully');
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for GoLogin profile start');
+                                resolve({});
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Received start GoLogin profile data:', data);
+                            resolve(data);
+                        } else {
+                            console.error(
+                                'Failed to start GoLogin profile. Status:',
+                                response.statusCode
+                            );
+                            console.error('Response:', responseData);
+                            let errorMessage = 'Failed to start profile';
+                            try {
+                                const errorData = JSON.parse(responseData);
+                                if (errorData && errorData.error) {
+                                    errorMessage = errorData.error;
+                                }
+                                if (errorData && errorData.details) {
+                                    errorMessage += ': ' + errorData.details;
+                                }
+                            } catch (e) {
+                                // Ignore parsing error
+                                console.error('Could not parse error response:', e);
+                            }
+                            reject(new Error(errorMessage));
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse GoLogin profile start data:', error);
+                        console.error('Response data that failed to parse:', responseData);
+                        reject(error);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when starting GoLogin profile:', error);
+                reject(error);
+            });
+
+            try {
+                // Send the profile data
+                const bodyData = JSON.stringify({ profileId, sync });
+                console.log('Sending start GoLogin profile request with body:', bodyData);
+                request.write(bodyData);
+                request.end();
+            } catch (error) {
+                console.error('Error serializing GoLogin profile start data:', error);
+                reject(new Error(`Error serializing GoLogin profile start data: ${error.message}`));
+            }
+        });
+    });
+
+    // Stop GoLogin profile
+    ipcMain.handle('api:stopGoLoginProfile', async (event, { profileId }) => {
+        return new Promise((resolve, reject) => {
+            console.log(`Stopping GoLogin profile: ${profileId}`);
+
+            const request = net.request({
+                method: 'POST',
+                url: 'http://localhost:36912/browser/stop-profile',
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Stop GoLogin profile response status:', response.statusCode);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        if (response.statusCode >= 200 && response.statusCode < 300) {
+                            console.log('GoLogin profile stopped successfully');
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for GoLogin profile stop');
+                                resolve({});
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Received stop GoLogin profile data:', data);
+                            resolve(data);
+                        } else {
+                            console.error(
+                                'Failed to stop GoLogin profile. Status:',
+                                response.statusCode
+                            );
+                            console.error('Response:', responseData);
+                            let errorMessage = 'Failed to stop profile';
+                            try {
+                                const errorData = JSON.parse(responseData);
+                                if (errorData && errorData.error) {
+                                    errorMessage = errorData.error;
+                                }
+                                if (errorData && errorData.details) {
+                                    errorMessage += ': ' + errorData.details;
+                                }
+                            } catch (e) {
+                                // Ignore parsing error
+                                console.error('Could not parse error response:', e);
+                            }
+                            reject(new Error(errorMessage));
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse GoLogin profile stop data:', error);
+                        console.error('Response data that failed to parse:', responseData);
+                        reject(error);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when stopping GoLogin profile:', error);
+                reject(error);
+            });
+
+            try {
+                // Send the profile data
+                const bodyData = JSON.stringify({ profileId });
+                console.log('Sending stop GoLogin profile request with body:', bodyData);
+                request.write(bodyData);
+                request.end();
+            } catch (error) {
+                console.error('Error serializing GoLogin profile stop data:', error);
+                reject(new Error(`Error serializing GoLogin profile stop data: ${error.message}`));
+            }
+        });
+    });
 };
 
 // This method will be called when Electron has finished

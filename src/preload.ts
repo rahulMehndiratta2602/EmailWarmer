@@ -37,7 +37,7 @@ interface Proxy {
 // Define types for IPC channels
 type ValidSendChannel = 'toMain' | 'network-debug-proxy-ready';
 type ValidReceiveChannel = 'fromMain' | 'network-debug-proxy-ready';
-type ValidInvokeChannel = 'getEnvironment';
+type ValidInvokeChannel = 'getEnvironment' | 'gologin:start-profile' | 'gologin:stop-profile';
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -252,6 +252,10 @@ contextBridge.exposeInMainWorld('api', {
         ipcRenderer.invoke('api:updateGoLoginProfile', id, profile),
     batchDeleteGoLoginProfiles: (ids: string[]) =>
         ipcRenderer.invoke('api:batchDeleteGoLoginProfiles', ids),
+    startGoLoginProfile: (profileId: string, sync: boolean = false) =>
+        ipcRenderer.invoke('api:startGoLoginProfile', { profileId, sync }),
+    stopGoLoginProfile: (profileId: string) =>
+        ipcRenderer.invoke('api:stopGoLoginProfile', { profileId }),
 
     // Proxy mapping operations
     getProxyMappings: () => {

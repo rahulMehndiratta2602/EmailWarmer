@@ -1,8 +1,12 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import * as http from 'http';
+import axios from 'axios';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
+// Configuration for GoLogin
+const GOLOGIN_API_BASE_URL = 'http://localhost:36912';
 
 // Disable security for development
 if (process.env.NODE_ENV === 'development') {
@@ -20,6 +24,61 @@ if (require('electron-squirrel-startup')) {
 
 // Set up a simple HTTP proxy server for development to make main process network requests visible
 let debugProxyServer: http.Server | null = null;
+
+// Add IPC handlers for GoLogin profile operations
+const setupGoLoginIPC = () => {
+    // Start profile
+    ipcMain.handle('gologin:start-profile', async (event, { profileId, sync = false }) => {
+        try {
+            console.log(`[GoLogin IPC] Starting profile ${profileId}, sync: ${sync}`);
+
+            const response = await axios.post(
+                `${GOLOGIN_API_BASE_URL}/browser/start-profile`,
+                {
+                    profileId,
+                    sync,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            console.log(`[GoLogin IPC] Profile ${profileId} started:`, response.data);
+            return response.data;
+        } catch (error) {
+            console.error(`[GoLogin IPC] Error starting profile ${profileId}:`, error);
+            throw error;
+        }
+    });
+
+    // Stop profile
+    ipcMain.handle('gologin:stop-profile', async (event, { profileId }) => {
+        try {
+            console.log(`[GoLogin IPC] Stopping profile ${profileId}`);
+
+            const response = await axios.post(
+                `${GOLOGIN_API_BASE_URL}/browser/stop-profile`,
+                {
+                    profileId,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            console.log(`[GoLogin IPC] Profile ${profileId} stopped:`, response.data);
+            return response.data;
+        } catch (error) {
+            console.error(`[GoLogin IPC] Error stopping profile ${profileId}:`, error);
+            throw error;
+        }
+    });
+};
+
 const setupNetworkDebuggingProxy = () => {
     if (process.env.NODE_ENV !== 'development') return;
 
@@ -126,6 +185,9 @@ app.on('ready', () => {
     if (process.env.NODE_ENV === 'development') {
         setupNetworkDebuggingProxy();
     }
+
+    // Set up GoLogin IPC handlers
+    setupGoLoginIPC();
 
     createWindow();
 });

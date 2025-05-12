@@ -186,6 +186,8 @@ export interface ElectronAPI {
         message: string;
         count?: number;
     }>;
+    startGoLoginProfile: (profileId: string, sync?: boolean) => Promise<any>;
+    stopGoLoginProfile: (profileId: string) => Promise<any>;
 
     // Environment
     getEnvironment: () => Promise<{
