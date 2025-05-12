@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import {
     Copy,
     Play,
-    Square,
-    Edit,
-    Trash2,
     RefreshCw,
+    Square,
+    Trash2,
+    RotateCw,
+    Edit,
     ArrowUp,
     ArrowDown,
-    Plus,
+    AlertCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import CreateProfileModal from './CreateProfileModal';
+import ConfirmationModal from './ConfirmationModal';
 
 interface GoLoginProfile {
     id: string;
@@ -38,22 +40,6 @@ interface RawGoLoginProfile {
     [key: string]: unknown;
 }
 
-interface GoLoginResponse {
-    profiles: RawGoLoginProfile[];
-    allProfilesCount: number;
-}
-
-// Declare the window APIs for TypeScript
-declare global {
-    interface Window {
-        api: {
-            // Add for GoLogin profiles
-            getGoLoginProfiles: () => Promise<GoLoginResponse>;
-            deleteGoLoginProfile: (id: string) => Promise<{ success: boolean; message: string }>;
-        };
-    }
-}
-
 type SortField = 'name' | 'lastActivity';
 type SortDirection = 'asc' | 'desc' | 'none';
 
@@ -66,6 +52,16 @@ const AutomationSession: React.FC = () => {
     const [sortDirection, setSortDirection] = useState<SortDirection>('none');
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [selectedProfileId, setSelectedProfileId] = useState('');
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isAllSelected, setIsAllSelected] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+    const [isDeleteAllConfirmModalOpen, setIsDeleteAllConfirmModalOpen] = useState(false);
+    const [deleteMode, setDeleteMode] = useState<'single' | 'multiple' | 'all'>('single');
+    const [profileToDelete, setProfileToDelete] = useState<string>('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const sortProfiles = (
         profiles: GoLoginProfile[],
@@ -124,6 +120,8 @@ const AutomationSession: React.FC = () => {
         try {
             setIsRefreshing(true);
             setError(null);
+            setSelectedIds([]); // Clear selections when refreshing
+            setIsAllSelected(false);
 
             // Use the IPC bridge instead of direct fetch
             const data = await window.api.getGoLoginProfiles();
@@ -180,6 +178,31 @@ const AutomationSession: React.FC = () => {
         }
     }, [sortField, sortDirection]);
 
+    // Toggle selection for a single profile
+    const toggleProfileSelection = (id: string) => {
+        if (selectedIds.includes(id)) {
+            setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
+            setIsAllSelected(false);
+        } else {
+            setSelectedIds([...selectedIds, id]);
+            // Check if all are now selected
+            if (selectedIds.length + 1 === profiles.length) {
+                setIsAllSelected(true);
+            }
+        }
+    };
+
+    // Toggle select all profiles
+    const toggleSelectAll = () => {
+        if (isAllSelected) {
+            setSelectedIds([]);
+            setIsAllSelected(false);
+        } else {
+            setSelectedIds(profiles.map((profile) => profile.id));
+            setIsAllSelected(true);
+        }
+    };
+
     const handleCopyId = (id: string) => {
         navigator.clipboard.writeText(id);
         toast.success('Profile ID copied to clipboard');
@@ -196,19 +219,81 @@ const AutomationSession: React.FC = () => {
     };
 
     const handleEdit = (id: string) => {
-        console.log('Edit profile:', id);
-        toast.error('Edit functionality not implemented yet');
+        setSelectedProfileId(id);
+        setIsUpdateModalOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
+    // Show confirmation dialog for single delete
+    const confirmDelete = (id: string) => {
+        setProfileToDelete(id);
+        setDeleteMode('single');
+        setIsDeleteModalOpen(true);
+    };
+
+    // Show confirmation dialog for batch delete
+    const confirmBatchDelete = () => {
+        if (selectedIds.length === 0) {
+            toast.error('No profiles selected');
+            return;
+        }
+        setDeleteMode('multiple');
+        setIsDeleteModalOpen(true);
+    };
+
+    // First confirmation for delete all
+    const confirmDeleteAll = () => {
+        if (profiles.length === 0) {
+            toast.error('No profiles to delete');
+            return;
+        }
+        setDeleteMode('all');
+        setIsDeleteAllModalOpen(true);
+    };
+
+    // Second confirmation for delete all
+    const confirmDeleteAllFinal = () => {
+        setIsDeleteAllModalOpen(false);
+        setIsDeleteAllConfirmModalOpen(true);
+    };
+
+    // Handle actual deletion based on mode
+    const handleDelete = async () => {
+        setIsDeleting(true);
         try {
-            // Use the IPC bridge instead of direct fetch
+            switch (deleteMode) {
+                case 'single':
+                    await deleteSingleProfile(profileToDelete);
+                    break;
+                case 'multiple':
+                    await deleteMultipleProfiles(selectedIds);
+                    break;
+                case 'all':
+                    await deleteAllProfiles();
+                    break;
+            }
+        } catch (err) {
+            console.error('Error deleting profiles:', err);
+            toast.error(
+                `Failed to delete profiles: ${err instanceof Error ? err.message : String(err)}`
+            );
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteModalOpen(false);
+            setIsDeleteAllModalOpen(false);
+            setIsDeleteAllConfirmModalOpen(false);
+        }
+    };
+
+    // Delete a single profile
+    const deleteSingleProfile = async (id: string) => {
+        try {
             const result = await window.api.deleteGoLoginProfile(id);
 
             if (result.success) {
                 // Remove from local state
                 setProfiles(profiles.filter((profile) => profile.id !== id));
                 setTotalProfiles((prev) => prev - 1);
+                setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
                 toast.success('Profile deleted successfully');
             } else {
                 throw new Error(result.message || 'Failed to delete profile');
@@ -217,6 +302,55 @@ const AutomationSession: React.FC = () => {
             console.error(`Error deleting profile ${id}:`, err);
             toast.error(
                 `Failed to delete profile: ${err instanceof Error ? err.message : String(err)}`
+            );
+        }
+    };
+
+    // Delete multiple profiles
+    const deleteMultipleProfiles = async (ids: string[]) => {
+        try {
+            // Use the IPC bridge instead of direct API call
+            const result = await window.api.batchDeleteGoLoginProfiles(ids);
+
+            if (result.success) {
+                // Remove from local state
+                setProfiles(profiles.filter((profile) => !ids.includes(profile.id)));
+                setTotalProfiles((prev) => prev - ids.length);
+                setSelectedIds([]);
+                setIsAllSelected(false);
+                toast.success(`${ids.length} profiles deleted successfully`);
+            } else {
+                throw new Error(result.message || 'Failed to delete profiles');
+            }
+        } catch (err) {
+            console.error('Error deleting multiple profiles:', err);
+            toast.error(
+                `Failed to delete profiles: ${err instanceof Error ? err.message : String(err)}`
+            );
+        }
+    };
+
+    // Delete all profiles
+    const deleteAllProfiles = async () => {
+        try {
+            const allIds = profiles.map((profile) => profile.id);
+
+            // Use the IPC bridge instead of direct API call
+            const result = await window.api.batchDeleteGoLoginProfiles(allIds);
+
+            if (result.success) {
+                setProfiles([]);
+                setTotalProfiles(0);
+                setSelectedIds([]);
+                setIsAllSelected(false);
+                toast.success('All profiles deleted successfully');
+            } else {
+                throw new Error(result.message || 'Failed to delete all profiles');
+            }
+        } catch (err) {
+            console.error('Error deleting all profiles:', err);
+            toast.error(
+                `Failed to delete all profiles: ${err instanceof Error ? err.message : String(err)}`
             );
         }
     };
@@ -282,25 +416,37 @@ const AutomationSession: React.FC = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-2 sm:space-y-0">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                     GoLogin Profiles
                 </h1>
                 <div className="flex space-x-2">
                     <button
-                        onClick={fetchProfiles}
-                        className="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white rounded-md flex items-center"
-                        disabled={isLoading}
+                        onClick={handleRefresh}
+                        className={`px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 flex items-center space-x-1 ${
+                            isRefreshing ? 'opacity-70 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isRefreshing}
+                        title="Refresh"
                     >
-                        <RefreshCw size={16} className="mr-2" />
-                        Refresh
+                        {isRefreshing ? (
+                            <>
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                <span>Refreshing...</span>
+                            </>
+                        ) : (
+                            <>
+                                <RotateCw className="h-4 w-4" />
+                                <span>Refresh</span>
+                            </>
+                        )}
                     </button>
                     <button
                         onClick={handleCreateProfile}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center hover:bg-blue-700"
+                        className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-1"
+                        title="Create Profile"
                     >
-                        <Plus size={16} className="mr-2" />
-                        Create Profile
+                        <span>Create Profile</span>
                     </button>
                 </div>
             </div>
@@ -309,7 +455,74 @@ const AutomationSession: React.FC = () => {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onProfileCreated={handleProfileCreated}
+                mode="create"
             />
+
+            <CreateProfileModal
+                isOpen={isUpdateModalOpen}
+                onClose={() => setIsUpdateModalOpen(false)}
+                onProfileCreated={handleProfileCreated}
+                mode="update"
+                profileId={selectedProfileId}
+            />
+
+            {/* Single/Batch Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDelete}
+                title={deleteMode === 'single' ? 'Delete Profile' : 'Delete Selected Profiles'}
+                confirmText={isDeleting ? 'Deleting...' : 'Delete'}
+                cancelText="Cancel"
+                isLoading={isDeleting}
+                variant="danger"
+            >
+                <p>
+                    {deleteMode === 'single'
+                        ? 'Are you sure you want to delete this profile? This action cannot be undone.'
+                        : `Are you sure you want to delete ${selectedIds.length} selected profiles? This action cannot be undone.`}
+                </p>
+            </ConfirmationModal>
+
+            {/* Delete All First Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isDeleteAllModalOpen}
+                onClose={() => setIsDeleteAllModalOpen(false)}
+                onConfirm={confirmDeleteAllFinal}
+                title="Delete All Profiles"
+                confirmText="Yes, Delete All"
+                cancelText="Cancel"
+                variant="danger"
+            >
+                <p>
+                    Are you sure you want to delete ALL {profiles.length} profiles? This action
+                    cannot be undone.
+                </p>
+            </ConfirmationModal>
+
+            {/* Delete All Second Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isDeleteAllConfirmModalOpen}
+                onClose={() => setIsDeleteAllConfirmModalOpen(false)}
+                onConfirm={handleDelete}
+                title="Final Confirmation"
+                confirmText={isDeleting ? 'Deleting...' : 'Yes, I am sure'}
+                cancelText="Cancel"
+                isLoading={isDeleting}
+                variant="danger"
+            >
+                <div className="space-y-2">
+                    <div className="flex items-center text-red-600">
+                        <AlertCircle className="w-5 h-5 mr-2" />
+                        <span className="font-bold">Double-check your decision</span>
+                    </div>
+                    <p>
+                        You are about to permanently delete ALL {profiles.length} profiles. This is
+                        irreversible and will remove all your GoLogin browser profiles.
+                    </p>
+                    <p className="font-semibold">Are you absolutely sure you want to proceed?</p>
+                </div>
+            </ConfirmationModal>
 
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">Automation Sessions</h2>
@@ -348,10 +561,49 @@ const AutomationSession: React.FC = () => {
                 </div>
             ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    {/* Batch actions */}
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {selectedIds.length} selected
+                            </span>
+                            {selectedIds.length > 0 && (
+                                <button
+                                    onClick={confirmBatchDelete}
+                                    className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 flex items-center"
+                                    title="Delete Selected"
+                                >
+                                    <Trash2 className="w-3 h-3 mr-1" />
+                                    <span>Delete Selected</span>
+                                </button>
+                            )}
+                        </div>
+                        <button
+                            onClick={confirmDeleteAll}
+                            className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                            title="Delete All"
+                        >
+                            Delete All
+                        </button>
+                    </div>
+
                     <div className={`${isRefreshing ? 'opacity-60' : ''}`}>
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-700">
                                 <tr>
+                                    <th className="px-3 py-3 text-left">
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                checked={isAllSelected}
+                                                onChange={toggleSelectAll}
+                                                title={
+                                                    isAllSelected ? 'Deselect All' : 'Select All'
+                                                }
+                                            />
+                                        </div>
+                                    </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         ID
                                     </th>
@@ -385,8 +637,25 @@ const AutomationSession: React.FC = () => {
                                 {profiles.map((profile) => (
                                     <tr
                                         key={profile.id}
-                                        className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                        className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                                            selectedIds.includes(profile.id)
+                                                ? 'bg-blue-50 dark:bg-blue-900/20'
+                                                : ''
+                                        }`}
                                     >
+                                        <td className="px-3 py-4 whitespace-nowrap">
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                checked={selectedIds.includes(profile.id)}
+                                                onChange={() => toggleProfileSelection(profile.id)}
+                                                title={
+                                                    selectedIds.includes(profile.id)
+                                                        ? 'Deselect'
+                                                        : 'Select'
+                                                }
+                                            />
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm text-gray-900 dark:text-gray-100">
@@ -395,6 +664,7 @@ const AutomationSession: React.FC = () => {
                                                 <button
                                                     onClick={() => handleCopyId(profile.id)}
                                                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                                    title="Copy ID"
                                                 >
                                                     <Copy size={16} />
                                                 </button>
@@ -415,29 +685,30 @@ const AutomationSession: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => handleRun(profile.id)}
-                                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                                    disabled={!profile.canBeRunning}
+                                                    className="text-gray-400 hover:text-green-600 dark:hover:text-green-400"
                                                     title="Run Profile"
+                                                    disabled={!profile.canBeRunning}
                                                 >
                                                     <Play size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleStop(profile.id)}
-                                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
                                                     title="Stop Profile"
+                                                    disabled={!profile.canBeRunning}
                                                 >
                                                     <Square size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleEdit(profile.id)}
-                                                    className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+                                                    className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                                                     title="Edit Profile"
                                                 >
                                                     <Edit size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(profile.id)}
-                                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                    onClick={() => confirmDelete(profile.id)}
+                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
                                                     title="Delete Profile"
                                                 >
                                                     <Trash2 size={16} />

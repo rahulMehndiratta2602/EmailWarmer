@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import BasicInfoStep from './CreateProfileSteps/BasicInfoStep';
@@ -6,11 +6,14 @@ import ProxyStep from './CreateProfileSteps/ProxyStep';
 import BrowserStep from './CreateProfileSteps/BrowserStep';
 import PrivacyStep from './CreateProfileSteps/PrivacyStep';
 import ReviewStep from './CreateProfileSteps/ReviewStep';
+import { GoLoginProfile, GoLoginResponse } from '../types/window.d';
 
 interface CreateProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
     onProfileCreated: () => void;
+    mode?: 'create' | 'update';
+    profileId?: string;
 }
 
 // Default profile structure
@@ -90,7 +93,7 @@ const defaultProfile = {
     clientRects: {
         mode: 'noise',
     },
-    chromeExtensions: [],
+    chromeExtensions: [] as string[],
 };
 
 // Step titles
@@ -102,14 +105,81 @@ const steps = [
     'Review & Create',
 ];
 
+// Define a proper interface for the API
+interface ExtendedAPI {
+    getGoLoginProfiles: () => Promise<GoLoginResponse>;
+    deleteGoLoginProfile: (id: string) => Promise<{ success: boolean; message: string }>;
+    createGoLoginProfile: (profile: typeof defaultProfile) => Promise<GoLoginProfile>;
+    getGoLoginProfileById: (id: string) => Promise<GoLoginProfile>;
+    updateGoLoginProfile: (id: string, profile: typeof defaultProfile) => Promise<GoLoginProfile>;
+}
+
 const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
     isOpen,
     onClose,
     onProfileCreated,
+    mode = 'create',
+    profileId = '',
 }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [profileData, setProfileData] = useState(defaultProfile);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch profile data if in update mode
+    useEffect(() => {
+        const fetchProfileData = async () => {
+            if (mode === 'update' && profileId && isOpen) {
+                try {
+                    setIsLoadingProfile(true);
+                    setError(null);
+                    const api = window.api as ExtendedAPI;
+                    const profile = await api.getGoLoginProfileById(profileId);
+
+                    // Transform the profile data to match our form structure
+                    // We need to ensure all required fields exist with proper defaults
+                    const formattedProfile = {
+                        ...defaultProfile,
+                        ...profile,
+                        // Ensure nested objects have all required fields
+                        proxy: { ...defaultProfile.proxy, ...profile.proxy },
+                        navigator: { ...defaultProfile.navigator, ...profile.navigator },
+                        fonts: { ...defaultProfile.fonts, ...profile.fonts },
+                        webGLMetadata: {
+                            ...defaultProfile.webGLMetadata,
+                            ...profile.webGLMetadata,
+                        },
+                        // Use type assertion for properties that might not be in the GoLoginProfile type
+                        storage: { ...defaultProfile.storage, ...(profile as any).storage },
+                        plugins: { ...defaultProfile.plugins, ...(profile as any).plugins },
+                        timezone: { ...defaultProfile.timezone, ...profile.timezone },
+                        audioContext: { ...defaultProfile.audioContext, ...profile.audioContext },
+                        canvas: { ...defaultProfile.canvas, ...profile.canvas },
+                        mediaDevices: { ...defaultProfile.mediaDevices, ...profile.mediaDevices },
+                        webRTC: { ...defaultProfile.webRTC, ...profile.webRTC },
+                        webGL: { ...defaultProfile.webGL, ...profile.webGL },
+                        clientRects: { ...defaultProfile.clientRects, ...profile.clientRects },
+                        chromeExtensions: profile.chromeExtensions || [],
+                    };
+
+                    setProfileData(formattedProfile);
+                    setIsLoadingProfile(false);
+                } catch (err) {
+                    console.error('Error fetching profile:', err);
+                    setError(err instanceof Error ? err.message : String(err));
+                    toast.error(
+                        `Failed to fetch profile: ${
+                            err instanceof Error ? err.message : String(err)
+                        }`
+                    );
+                    setIsLoadingProfile(false);
+                }
+            }
+        };
+
+        fetchProfileData();
+    }, [isOpen, mode, profileId]);
 
     const handleNextStep = () => {
         if (currentStep < steps.length - 1) {
@@ -123,23 +193,30 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
         }
     };
 
-    const updateProfileData = (data: any) => {
+    const updateProfileData = (data: Partial<typeof profileData>) => {
         setProfileData((prev) => ({ ...prev, ...data }));
     };
 
-    const handleCreateProfile = async () => {
+    const handleSubmitProfile = async () => {
         try {
             setIsLoading(true);
-            const result = await window.api.createGoLoginProfile(profileData);
+            const api = window.api as ExtendedAPI;
 
-            toast.success('Profile created successfully!');
+            if (mode === 'create') {
+                await api.createGoLoginProfile(profileData);
+                toast.success('Profile created successfully!');
+            } else {
+                await api.updateGoLoginProfile(profileId, profileData);
+                toast.success('Profile updated successfully!');
+            }
+
             setIsLoading(false);
             onProfileCreated();
             onClose();
         } catch (error) {
-            console.error('Error creating profile:', error);
+            console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} profile:`, error);
             toast.error(
-                `Failed to create profile: ${
+                `Failed to ${mode === 'create' ? 'create' : 'update'} profile: ${
                     error instanceof Error ? error.message : String(error)
                 }`
             );
@@ -149,13 +226,46 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
 
     if (!isOpen) return null;
 
+    if (isLoadingProfile) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+                        <p className="text-gray-700 dark:text-gray-300">Loading profile data...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md">
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="text-red-600 text-5xl">⚠️</div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Error</h3>
+                        <p className="text-gray-700 dark:text-gray-300 text-center">{error}</p>
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-11/12 max-w-4xl max-h-[90vh] overflow-hidden">
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                        Create GoLogin Profile
+                        {mode === 'create' ? 'Create' : 'Update'} GoLogin Profile
                     </h2>
                     <button
                         onClick={onClose}
@@ -261,7 +371,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                         </button>
                     ) : (
                         <button
-                            onClick={handleCreateProfile}
+                            onClick={handleSubmitProfile}
                             disabled={isLoading}
                             className={`px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center ${
                                 isLoading ? 'opacity-70 cursor-not-allowed' : ''
@@ -269,11 +379,13 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({
                         >
                             {isLoading ? (
                                 <>
-                                    <span className="mr-2">Creating...</span>
+                                    <span className="mr-2">
+                                        {mode === 'create' ? 'Creating' : 'Updating'}...
+                                    </span>
                                     <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                                 </>
                             ) : (
-                                'Create Profile'
+                                `${mode === 'create' ? 'Create' : 'Update'} Profile`
                             )}
                         </button>
                     )}

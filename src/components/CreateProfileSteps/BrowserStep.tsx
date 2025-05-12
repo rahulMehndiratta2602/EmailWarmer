@@ -1,8 +1,28 @@
 import React, { useState, useEffect } from 'react';
 
+// Define the necessary types inline instead of importing from problematic paths
+interface GoLoginProfile {
+    navigator?: {
+        userAgent?: string;
+        resolution?: string;
+        language?: string;
+        platform?: string;
+    };
+    webGLMetadata?: {
+        mode?: string;
+        vendor?: string;
+        renderer?: string;
+    };
+    fonts?: {
+        families?: string[];
+        enableMasking?: boolean;
+        enableDomRect?: boolean;
+    };
+}
+
 interface BrowserStepProps {
-    profileData: any;
-    updateProfileData: (data: any) => void;
+    profileData: GoLoginProfile;
+    updateProfileData: (data: Partial<GoLoginProfile>) => void;
 }
 
 const resolutions = [
@@ -77,12 +97,12 @@ const userAgents = [
 
 const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileData }) => {
     const [showWebGLMetadata, setShowWebGLMetadata] = useState(
-        profileData.webGLMetadata.mode !== 'off'
+        profileData.webGLMetadata?.mode !== 'off'
     );
 
     useEffect(() => {
-        setShowWebGLMetadata(profileData.webGLMetadata.mode !== 'off');
-    }, [profileData.webGLMetadata.mode]);
+        setShowWebGLMetadata(profileData.webGLMetadata?.mode !== 'off');
+    }, [profileData.webGLMetadata?.mode]);
 
     const handleNavigatorChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -105,7 +125,9 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
     };
 
     const handleFontsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, checked, value } = e.target;
+        const { name, value } = e.target;
+        const isCheckbox = (e.target as HTMLInputElement).type === 'checkbox';
+        const checked = isCheckbox ? (e.target as HTMLInputElement).checked : undefined;
 
         if (name === 'enableMasking' || name === 'enableDomRect') {
             updateProfileData({
@@ -149,7 +171,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                             <select
                                 id="userAgent"
                                 name="userAgent"
-                                value={profileData.navigator.userAgent}
+                                value={profileData.navigator?.userAgent}
                                 onChange={handleNavigatorChange}
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
                        focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
@@ -175,7 +197,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                             <select
                                 id="resolution"
                                 name="resolution"
-                                value={profileData.navigator.resolution}
+                                value={profileData.navigator?.resolution}
                                 onChange={handleNavigatorChange}
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
                        focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
@@ -199,7 +221,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                                 <select
                                     id="language"
                                     name="language"
-                                    value={profileData.navigator.language}
+                                    value={profileData.navigator?.language}
                                     onChange={handleNavigatorChange}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
                          focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
@@ -222,7 +244,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                                 <select
                                     id="platform"
                                     name="platform"
-                                    value={profileData.navigator.platform}
+                                    value={profileData.navigator?.platform}
                                     onChange={handleNavigatorChange}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
                          focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
@@ -254,7 +276,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                             <select
                                 id="mode"
                                 name="mode"
-                                value={profileData.webGLMetadata.mode}
+                                value={profileData.webGLMetadata?.mode}
                                 onChange={handleWebGLChange}
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
                        focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
@@ -283,7 +305,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                                         type="text"
                                         id="vendor"
                                         name="vendor"
-                                        value={profileData.webGLMetadata.vendor}
+                                        value={profileData.webGLMetadata?.vendor}
                                         onChange={handleWebGLChange}
                                         placeholder="Google Inc. (AMD)"
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 
@@ -302,7 +324,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                                         type="text"
                                         id="renderer"
                                         name="renderer"
-                                        value={profileData.webGLMetadata.renderer}
+                                        value={profileData.webGLMetadata?.renderer}
                                         onChange={handleWebGLChange}
                                         placeholder="ANGLE (AMD, AMD Radeon(TM) R5 Graphics Direct3D11)"
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 
@@ -325,7 +347,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                                 type="checkbox"
                                 id="enableMasking"
                                 name="enableMasking"
-                                checked={profileData.fonts.enableMasking}
+                                checked={profileData.fonts?.enableMasking}
                                 onChange={handleFontsChange}
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
@@ -345,7 +367,7 @@ const BrowserStep: React.FC<BrowserStepProps> = ({ profileData, updateProfileDat
                                 type="checkbox"
                                 id="enableDomRect"
                                 name="enableDomRect"
-                                checked={profileData.fonts.enableDomRect}
+                                checked={profileData.fonts?.enableDomRect}
                                 onChange={handleFontsChange}
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />

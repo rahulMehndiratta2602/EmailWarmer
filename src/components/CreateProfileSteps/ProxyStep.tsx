@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { proxyService } from '../../services/proxyService';
 
-interface ProxyStepProps {
-    profileData: any;
-    updateProfileData: (data: any) => void;
-}
-
-interface Proxy {
+// Define the proxy interface locally
+interface APIProxy {
     id: string;
     host: string;
     port: number;
@@ -14,6 +11,28 @@ interface Proxy {
     country?: string;
     isActive: boolean;
     mappedEmail?: string;
+}
+
+// Define the profile interface locally
+interface GoLoginProfile {
+    name?: string;
+    os?: string;
+    proxy?: {
+        mode?: string;
+        host?: string;
+        port?: number;
+        username?: string;
+        password?: string;
+        changeIpUrl?: string;
+        customName?: string;
+        autoProxyRegion?: string;
+        torProxyRegion?: string;
+    };
+}
+
+interface ProxyStepProps {
+    profileData: GoLoginProfile;
+    updateProfileData: (data: Partial<GoLoginProfile>) => void;
 }
 
 const proxyModes = [
@@ -47,15 +66,17 @@ const regions = [
 ];
 
 const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData }) => {
-    const [proxyMode, setProxyMode] = useState(profileData.proxy.mode);
+    const [proxyMode, setProxyMode] = useState(profileData.proxy?.mode || 'none');
     const [showProxyOptions, setShowProxyOptions] = useState(proxyMode !== 'none');
-    const [availableProxies, setAvailableProxies] = useState<Proxy[]>([]);
+    const [availableProxies, setAvailableProxies] = useState<APIProxy[]>([]);
     const [isLoadingProxies, setIsLoadingProxies] = useState(false);
     const [selectedProxy, setSelectedProxy] = useState<string>('');
 
     useEffect(() => {
-        fetchProxies();
-    }, []);
+        if (profileData.proxy && profileData.proxy.mode) {
+            setProxyMode(profileData.proxy.mode);
+        }
+    }, [profileData]);
 
     useEffect(() => {
         setShowProxyOptions(proxyMode !== 'none');
@@ -64,8 +85,8 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
     const fetchProxies = async () => {
         try {
             setIsLoadingProxies(true);
-            const proxies = await window.api.getProxies();
-            setAvailableProxies(proxies || []);
+            const proxies = await proxyService.getProxies();
+            setAvailableProxies(proxies as unknown as APIProxy[]);
         } catch (error) {
             console.error('Error fetching proxies:', error);
             toast.error('Failed to load proxies');
@@ -215,7 +236,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                         onChange={handleProxyChange}
                                         placeholder="proxy.example.com"
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     />
                                 </div>
 
@@ -236,7 +257,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                         min="1"
                                         max="65535"
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -257,7 +278,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                         onChange={handleProxyChange}
                                         placeholder="proxyuser"
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     />
                                 </div>
 
@@ -276,7 +297,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                         onChange={handleProxyChange}
                                         placeholder="••••••••"
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -296,7 +317,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                     onChange={handleProxyChange}
                                     placeholder="My Home Proxy"
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                 />
                             </div>
 
@@ -315,7 +336,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                     onChange={handleProxyChange}
                                     placeholder="https://proxy.example.com/rotate-ip?key=abc123"
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                 />
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     URL to call to rotate your IP address (if supported by your
@@ -337,7 +358,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                         value={profileData.proxy.autoProxyRegion}
                                         onChange={handleProxyChange}
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     >
                                         <option value="">Select a region</option>
                                         {regions.map((region) => (
@@ -363,7 +384,7 @@ const ProxyStep: React.FC<ProxyStepProps> = ({ profileData, updateProfileData })
                                         value={profileData.proxy.torProxyRegion}
                                         onChange={handleProxyChange}
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                           focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                               focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     >
                                         <option value="">Select a region</option>
                                         {regions.map((region) => (

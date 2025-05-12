@@ -208,7 +208,33 @@ export class GoLoginService {
                     extensions: ['EXT_color_buffer_float'],
                 },
                 chromeExtensions: profileData.chromeExtensions || [],
+                // Add browserType if missing (required by GoLogin API)
+                browserType: profileData.browserType || 'chrome',
+                // Add navigator if missing or ensure it has required fields
+                navigator: {
+                    // Default navigator values
+                    userAgent:
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.36 Safari/537.36',
+                    resolution: '1280x720',
+                    language: 'en-US',
+                    platform: 'Win32',
+                    // Override with any provided values
+                    ...(profileData.navigator || {}),
+                },
             };
+
+            // Make sure navigator has all required fields even if partial navigator was provided
+            if (!fullProfileData.navigator.userAgent) {
+                fullProfileData.navigator.userAgent =
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.36 Safari/537.36';
+            }
+
+            if (!fullProfileData.navigator.resolution) {
+                fullProfileData.navigator.resolution = '1280x720';
+            }
+
+            console.log('Sending to GoLogin API:', JSON.stringify(fullProfileData, null, 2));
+            console.log(`Using endpoint: ${GOLOGIN_API_URL}/browser/custom`);
 
             // Use browser/custom endpoint instead of browser
             const response = await axios.post(
@@ -232,6 +258,25 @@ export class GoLoginService {
             if (axios.isAxiosError(error) && error.response) {
                 console.error('Response status:', error.response.status);
                 console.error('Response data:', JSON.stringify(error.response.data, null, 2));
+                // Add more detailed error information
+                const responseData = error.response.data;
+                if (typeof responseData === 'object' && responseData !== null) {
+                    // Log specific validation errors if available
+                    if (responseData.errors) {
+                        console.error(
+                            'Validation errors:',
+                            JSON.stringify(responseData.errors, null, 2)
+                        );
+                    }
+                    if (responseData.message) {
+                        console.error('Error message:', responseData.message);
+                    }
+                }
+                throw new Error(
+                    `Request failed with status code ${error.response.status}: ${JSON.stringify(
+                        error.response.data
+                    )}`
+                );
             }
             throw error;
         }

@@ -2,6 +2,114 @@ import { Pipeline } from './pipeline';
 import { EmailAccount } from './emailAccount';
 import { Proxy, ProxyMappingResult } from './proxy';
 
+// GoLogin interfaces
+export interface GoLoginProfile {
+    id: string;
+    name: string;
+    notes?: string;
+    browserType?: string;
+    os: string;
+    startUrl?: string;
+    googleServicesEnabled?: boolean;
+    lockEnabled?: boolean;
+    debugMode?: boolean;
+    navigator?: {
+        userAgent?: string;
+        resolution?: string;
+        language?: string;
+        platform?: string;
+        doNotTrack?: boolean;
+        hardwareConcurrency?: number;
+        deviceMemory?: number;
+    };
+    geoProfiles?: {
+        [key: string]: unknown;
+    }[];
+    proxy?: {
+        mode?: string;
+        host?: string;
+        port?: number;
+        username?: string;
+        password?: string;
+        changeIpUrl?: string;
+        customName?: string;
+        autoProxyRegion?: string;
+        torProxyRegion?: string;
+    };
+    dns?: string;
+    plugins?: {
+        enableVulnerable?: boolean;
+        enableFlash?: boolean;
+    };
+    timezone?: {
+        id?: string;
+        GMT?: string;
+        enabled?: boolean;
+        fillBasedOnIp?: boolean;
+        timezone?: string;
+    };
+    webGLMetadata?: {
+        mode?: string;
+        vendor?: string;
+        renderer?: string;
+    };
+    webglParams?: {
+        glCanvas?: string;
+        supportedFunctions?: Array<{
+            name: string;
+            supported: boolean;
+        }>;
+        glParamValues?: Array<{
+            name: string;
+            value: {
+                [key: string]: number;
+            };
+        }>;
+        antialiasing?: boolean;
+        textureMaxAnisotropyExt?: number;
+        shaiderPrecisionFormat?: string;
+        extensions?: string[];
+    };
+    fonts?: {
+        families?: string[];
+        enableMasking?: boolean;
+        enableDomRect?: boolean;
+    };
+    audioContext?: {
+        mode?: string;
+    };
+    canvas?: {
+        mode?: string;
+    };
+    mediaDevices?: {
+        enableMasking?: boolean;
+        videoInputs?: number;
+        audioInputs?: number;
+        audioOutputs?: number;
+    };
+    webRTC?: {
+        mode?: string;
+    };
+    webGL?: {
+        mode?: string;
+    };
+    clientRects?: {
+        mode?: string;
+    };
+    chromeExtensions?: string[];
+    createDate?: string;
+    lastActivity?: string;
+    canBeRunning?: boolean;
+    osSpec?: string;
+}
+
+export interface GoLoginResponse {
+    profiles: GoLoginProfile[];
+    allProfilesCount: number;
+}
+
+export type GoLoginProfileCreateParams = Partial<GoLoginProfile>;
+
 // Define IPC renderer interface
 interface IpcRenderer {
     send: (channel: string, ...args: unknown[]) => void;
@@ -63,6 +171,21 @@ export interface ElectronAPI {
     getProxyMappings: () => Promise<ProxyMappingResult[]>;
     createProxyMapping: () => Promise<ProxyMappingResult[]>;
     deleteProxyMapping: (emailId: string) => Promise<boolean>;
+
+    // GoLogin profile operations
+    getGoLoginProfiles: () => Promise<GoLoginResponse>;
+    deleteGoLoginProfile: (id: string) => Promise<{ success: boolean; message: string }>;
+    createGoLoginProfile: (profile: GoLoginProfileCreateParams) => Promise<GoLoginProfile>;
+    getGoLoginProfileById: (id: string) => Promise<GoLoginProfile>;
+    updateGoLoginProfile: (
+        id: string,
+        profile: GoLoginProfileCreateParams
+    ) => Promise<GoLoginProfile>;
+    batchDeleteGoLoginProfiles: (ids: string[]) => Promise<{
+        success: boolean;
+        message: string;
+        count?: number;
+    }>;
 
     // Environment
     getEnvironment: () => Promise<{

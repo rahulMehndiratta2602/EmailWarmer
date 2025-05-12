@@ -1332,7 +1332,7 @@ const registerIpcHandlers = (): void => {
     });
 
     // Delete proxy mapping
-    ipcMain.handle('api:deleteProxyMapping', async (event, emailId) => {
+    ipcMain.handle('api:deleteProxyMapping', async () => {
         return new Promise((resolve) => {
             // Return false since we're no longer using separate mapping endpoint
             // Old endpoint is deprecated
@@ -1611,6 +1611,86 @@ const registerIpcHandlers = (): void => {
         });
     });
 
+    // Batch delete GoLogin profiles
+    ipcMain.handle('api:batchDeleteGoLoginProfiles', async (event, ids) => {
+        return new Promise((resolve, reject) => {
+            console.log('Batch deleting GoLogin profiles:', ids);
+
+            if (!ids || !Array.isArray(ids) || ids.length === 0) {
+                console.log('No IDs provided for batch delete');
+                resolve({ success: false, message: 'No profiles specified for deletion' });
+                return;
+            }
+
+            const request = net.request({
+                method: 'DELETE',
+                url: getFullApiUrl('/gologin/browser'),
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Batch delete GoLogin profiles response status:', response.statusCode);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        if (response.statusCode >= 200 && response.statusCode < 300) {
+                            console.log('GoLogin profiles deleted successfully');
+                            resolve({
+                                success: true,
+                                message: `Successfully deleted ${ids.length} profile(s)`,
+                                count: ids.length,
+                            });
+                        } else {
+                            console.error(
+                                'Failed to delete GoLogin profiles. Status:',
+                                response.statusCode
+                            );
+                            console.error('Response:', responseData);
+
+                            let errorMessage = 'Failed to delete profiles';
+                            try {
+                                const errorData = JSON.parse(responseData);
+                                if (errorData && errorData.error) {
+                                    errorMessage = errorData.error;
+                                }
+                            } catch (e) {
+                                // Ignore parsing error
+                            }
+
+                            resolve({ success: false, message: errorMessage });
+                        }
+                    } catch (error) {
+                        console.error('Error processing batch delete response:', error);
+                        reject(error);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when batch deleting GoLogin profiles:', error);
+                reject(error);
+            });
+
+            try {
+                // Send the profile IDs to delete
+                const bodyData = JSON.stringify({ profilesToDelete: ids });
+                console.log('Sending batch delete request with body:', bodyData);
+                request.write(bodyData);
+                request.end();
+            } catch (error) {
+                console.error('Error serializing profile IDs:', error);
+                reject(new Error(`Error serializing profile IDs: ${error.message}`));
+            }
+        });
+    });
+
     // Create GoLogin profile
     ipcMain.handle('api:createGoLoginProfile', async (event, profileData) => {
         return new Promise((resolve, reject) => {
@@ -1713,6 +1793,162 @@ const registerIpcHandlers = (): void => {
                 // Send the profile data
                 const bodyData = JSON.stringify(profileData);
                 console.log('Sending create GoLogin profile request with body:', bodyData);
+                request.write(bodyData);
+                request.end();
+            } catch (error) {
+                console.error('Error serializing GoLogin profile data:', error);
+                reject(new Error(`Error serializing GoLogin profile data: ${error.message}`));
+            }
+        });
+    });
+
+    // Get GoLogin profile by ID
+    ipcMain.handle('api:getGoLoginProfileById', async (event, profileId) => {
+        return new Promise((resolve, reject) => {
+            console.log('Getting GoLogin profile by ID:', profileId);
+
+            const request = net.request({
+                method: 'GET',
+                url: getFullApiUrl(`/gologin/profiles/${profileId}`),
+            });
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Get GoLogin profile response status:', response.statusCode);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        if (response.statusCode >= 200 && response.statusCode < 300) {
+                            console.log('Got GoLogin profile successfully');
+                            const data = JSON.parse(responseData);
+                            resolve(data);
+                        } else {
+                            console.error(
+                                'Failed to get GoLogin profile. Status:',
+                                response.statusCode
+                            );
+                            console.error('Response:', responseData);
+                            reject(new Error('Failed to get profile'));
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse GoLogin profile data:', error);
+                        reject(error);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when getting GoLogin profile:', error);
+                reject(error);
+            });
+
+            request.end();
+        });
+    });
+
+    // Update GoLogin profile
+    ipcMain.handle('api:updateGoLoginProfile', async (event, profileId, profileData) => {
+        return new Promise((resolve, reject) => {
+            console.log('Updating GoLogin profile:', profileId);
+            console.log(
+                'Profile data received from renderer:',
+                JSON.stringify(profileData, null, 2)
+            );
+
+            // Ensure webglParams are included
+            if (!profileData.webglParams) {
+                console.log('Adding required webglParams field which was missing');
+                profileData.webglParams = {
+                    glCanvas: 'webgl2',
+                    supportedFunctions: [{ name: 'beginQuery', supported: true }],
+                    glParamValues: [
+                        { name: 'ALIASED_LINE_WIDTH_RANGE', value: { '0': 1, '1': 8 } },
+                    ],
+                    antialiasing: true,
+                    textureMaxAnisotropyExt: 16,
+                    shaiderPrecisionFormat: 'highp/highp',
+                    extensions: ['EXT_color_buffer_float'],
+                };
+            }
+
+            // Ensure chromeExtensions is at least an empty array
+            if (!profileData.chromeExtensions) {
+                console.log('Adding required chromeExtensions field which was missing');
+                profileData.chromeExtensions = [];
+            }
+
+            const request = net.request({
+                method: 'PUT',
+                url: getFullApiUrl(`/gologin/profiles/${profileId}`),
+            });
+
+            request.setHeader('Content-Type', 'application/json');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                console.log('Update GoLogin profile response status:', response.statusCode);
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    try {
+                        if (response.statusCode >= 200 && response.statusCode < 300) {
+                            console.log('GoLogin profile updated successfully');
+                            if (!responseData || responseData.trim() === '') {
+                                console.log('Empty response received for GoLogin profile update');
+                                resolve({});
+                                return;
+                            }
+
+                            const data = JSON.parse(responseData);
+                            console.log('Received updated GoLogin profile data');
+                            resolve(data);
+                        } else {
+                            console.error(
+                                'Failed to update GoLogin profile. Status:',
+                                response.statusCode
+                            );
+                            console.error('Response:', responseData);
+                            let errorMessage = 'Failed to update profile';
+                            try {
+                                const errorData = JSON.parse(responseData);
+                                if (errorData && errorData.error) {
+                                    errorMessage = errorData.error;
+                                }
+                                if (errorData && errorData.details) {
+                                    errorMessage += ': ' + errorData.details;
+                                }
+                            } catch (e) {
+                                // Ignore parsing error
+                                console.error('Could not parse error response:', e);
+                            }
+                            reject(new Error(errorMessage));
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse GoLogin profile update data:', error);
+                        console.error('Response data that failed to parse:', responseData);
+                        reject(error);
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Network error when updating GoLogin profile:', error);
+                reject(error);
+            });
+
+            try {
+                // Send the profile data
+                const bodyData = JSON.stringify(profileData);
+                console.log('Sending update GoLogin profile request with body:', bodyData);
                 request.write(bodyData);
                 request.end();
             } catch (error) {
