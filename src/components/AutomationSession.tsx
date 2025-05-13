@@ -10,11 +10,15 @@ import {
     ArrowUp,
     ArrowDown,
     AlertCircle,
+    PlayCircle,
+    StopCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import CreateProfileModal from './CreateProfileModal';
 import ConfirmationModal from './ConfirmationModal';
 import GoLoginDirectService from '../services/goLoginDirectService';
+import PipelineSelectionModal from './PipelineSelectionModal';
+import AutomationService from '../services/automationService';
 
 interface GoLoginProfile {
     id: string;
@@ -66,6 +70,8 @@ const AutomationSession: React.FC = () => {
     // Add states for profile actions
     const [startingProfiles, setStartingProfiles] = useState<string[]>([]);
     const [stoppingProfiles, setStoppingProfiles] = useState<string[]>([]);
+    const [isAutomationRunning, setIsAutomationRunning] = useState(false);
+    const [isPipelineModalOpen, setIsPipelineModalOpen] = useState(false);
 
     const sortProfiles = (
         profiles: GoLoginProfile[],
@@ -402,6 +408,41 @@ const AutomationSession: React.FC = () => {
         fetchProfiles();
     };
 
+    const handleStartAutomation = () => {
+        setIsPipelineModalOpen(true);
+    };
+
+    const handlePipelineSelected = async (pipelineId: string) => {
+        setIsPipelineModalOpen(false);
+
+        try {
+            setIsAutomationRunning(true);
+            await AutomationService.startAutomation(pipelineId);
+        } catch (error) {
+            console.error('Error starting automation:', error);
+            toast.error(
+                `Failed to start automation: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+            setIsAutomationRunning(false);
+        }
+    };
+
+    const handleStopAutomation = async () => {
+        try {
+            await AutomationService.stopAllAutomations();
+            setIsAutomationRunning(false);
+        } catch (error) {
+            console.error('Error stopping automation:', error);
+            toast.error(
+                `Failed to stop automation: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+        }
+    };
+
     const renderSortIcon = (field: SortField) => {
         if (sortField !== field) return null;
 
@@ -475,6 +516,34 @@ const AutomationSession: React.FC = () => {
                             </>
                         )}
                     </button>
+                    <div className="inline-flex items-center space-x-2 ml-2">
+                        <button
+                            onClick={handleStartAutomation}
+                            disabled={isAutomationRunning}
+                            className={`flex items-center text-xs rounded px-2 py-1 ${
+                                isAutomationRunning
+                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                    : 'bg-green-700 hover:bg-green-600 text-white'
+                            }`}
+                            title="Start Automation"
+                        >
+                            <PlayCircle size={16} className="mr-1" />
+                            Start Automation
+                        </button>
+                        <button
+                            onClick={handleStopAutomation}
+                            disabled={!isAutomationRunning}
+                            className={`flex items-center text-xs rounded px-2 py-1 ${
+                                !isAutomationRunning
+                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                    : 'bg-red-700 hover:bg-red-600 text-white'
+                            }`}
+                            title="Stop Automations"
+                        >
+                            <StopCircle size={16} className="mr-1" />
+                            Stop Automations
+                        </button>
+                    </div>
                     <button
                         onClick={handleCreateProfile}
                         className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-1"
@@ -770,6 +839,12 @@ const AutomationSession: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <PipelineSelectionModal
+                isOpen={isPipelineModalOpen}
+                onClose={() => setIsPipelineModalOpen(false)}
+                onConfirm={handlePipelineSelected}
+            />
         </div>
     );
 };

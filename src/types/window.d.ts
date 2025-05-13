@@ -175,19 +175,20 @@ export interface ElectronAPI {
     // GoLogin profile operations
     getGoLoginProfiles: () => Promise<GoLoginResponse>;
     deleteGoLoginProfile: (id: string) => Promise<{ success: boolean; message: string }>;
-    createGoLoginProfile: (profile: GoLoginProfileCreateParams) => Promise<GoLoginProfile>;
-    getGoLoginProfileById: (id: string) => Promise<GoLoginProfile>;
-    updateGoLoginProfile: (
-        id: string,
-        profile: GoLoginProfileCreateParams
-    ) => Promise<GoLoginProfile>;
-    batchDeleteGoLoginProfiles: (ids: string[]) => Promise<{
-        success: boolean;
-        message: string;
-        count?: number;
-    }>;
+    createGoLoginProfile: (profileData: any) => Promise<any>;
+    getGoLoginProfileById: (profileId: string) => Promise<any>;
+    updateGoLoginProfile: (profileId: string, profileData: any) => Promise<any>;
+    batchDeleteGoLoginProfiles: (profileIds: string[]) => Promise<any>;
     startGoLoginProfile: (profileId: string, sync?: boolean) => Promise<any>;
     stopGoLoginProfile: (profileId: string) => Promise<any>;
+
+    // Gmail automation
+    automateGmail: (params: {
+        profileId: string;
+        email: string;
+        password: string;
+        fromAddresses?: string[];
+    }) => Promise<any>;
 
     // Environment
     getEnvironment: () => Promise<{

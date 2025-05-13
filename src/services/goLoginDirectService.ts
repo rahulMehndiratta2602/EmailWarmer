@@ -1,47 +1,50 @@
 /**
- * Service for direct interaction with the GoLogin API running on localhost
+ * GoLoginDirectService - Service for direct operations with GoLogin profiles
+ * This service provides methods to start and stop GoLogin profiles
  */
-export const GoLoginDirectService = {
+class GoLoginDirectService {
     /**
-     * Start a profile
-     * @param profileId The ID of the profile to start
-     * @param sync Whether to start synchronously (default: false)
-     * @returns Promise resolving to the API response
+     * Start a GoLogin profile
+     * @param profileId - The ID of the profile to start
+     * @param sync - Whether to wait for the profile to start before returning
+     * @returns A promise that resolves with the profile start response, which includes the debuggerAddress
      */
-    async startProfile(profileId: string, sync: boolean = false): Promise<any> {
+    static async startProfile(profileId: string, sync: boolean = true): Promise<any> {
         try {
-            console.log(`Starting profile ${profileId}, sync mode: ${sync}`);
-
-            // Use the API bridge instead of direct IPC
+            console.log(`Starting GoLogin profile: ${profileId} (sync: ${sync})`);
             const result = await window.api.startGoLoginProfile(profileId, sync);
+            console.log(`GoLogin profile started: ${profileId}`);
 
-            console.log(`Profile ${profileId} started successfully:`, result);
+            // Log the debugging address if available
+            if (result && result.debuggingAddress) {
+                console.log(`Debugging address: ${result.debuggingAddress}`);
+            } else if (result && result.wsUrl) {
+                console.log(`WebSocket URL: ${result.wsUrl}`);
+            }
+
             return result;
         } catch (error) {
-            console.error(`Error starting profile ${profileId}:`, error);
+            console.error(`Error starting GoLogin profile ${profileId}:`, error);
             throw error;
         }
-    },
+    }
 
     /**
-     * Stop a profile
-     * @param profileId The ID of the profile to stop
-     * @returns Promise resolving to the API response
+     * Stop a GoLogin profile
+     * @param profileId - The ID of the profile to stop
+     * @returns A promise that resolves when the profile has stopped
      */
-    async stopProfile(profileId: string): Promise<any> {
+    static async stopProfile(profileId: string): Promise<any> {
         try {
-            console.log(`Stopping profile ${profileId}`);
-
-            // Use the API bridge instead of direct IPC
+            console.log(`Stopping GoLogin profile: ${profileId}`);
             const result = await window.api.stopGoLoginProfile(profileId);
-
-            console.log(`Profile ${profileId} stopped successfully:`, result);
+            console.log(`GoLogin profile stopped: ${profileId}`);
             return result;
         } catch (error) {
-            console.error(`Error stopping profile ${profileId}:`, error);
+            console.error(`Error stopping GoLogin profile ${profileId}:`, error);
             throw error;
         }
-    },
-};
+    }
+}
 
 export default GoLoginDirectService;

@@ -257,6 +257,14 @@ contextBridge.exposeInMainWorld('api', {
     stopGoLoginProfile: (profileId: string) =>
         ipcRenderer.invoke('api:stopGoLoginProfile', { profileId }),
 
+    // Gmail automation
+    automateGmail: (
+        profileId: string,
+        email: string,
+        password: string,
+        fromAddresses: string[] = []
+    ) => ipcRenderer.invoke('api:automateGmail', { profileId, email, password, fromAddresses }),
+
     // Proxy mapping operations
     getProxyMappings: () => {
         console.log(
